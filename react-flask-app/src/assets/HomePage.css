@@ -1,0 +1,57 @@
+.home {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .home-header {
+    background-color: #282c34;
+    padding: 20px;
+    color: white;
+  }
+  
+  .home-header nav {
+    margin-top: 10px;
+  }
+  
+  .home-header nav a {
+    color: #61dafb;
+    margin: 0 10px;
+    text-decoration: none;
+  }
+  
+  .home-header nav a:hover {
+    text-decoration: underline;
+  }
+  
+  .products-grid {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  .product-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    max-width: 200px;
+    text-align: center;
+  }
+  
+  .product-image {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .product-card h2 {
+    font-size: 1.2em;
+    margin: 10px 0;
+  }
+  
+  .product-card p {
+    color: #333;
+  }
+  
