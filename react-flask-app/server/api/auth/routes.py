@@ -1,9 +1,8 @@
 from flask import jsonify, request, session
 from api.auth import bp
-from api.models import Account, Sessions
+from api.models import Account
 from api import db
 from datetime import datetime
-import uuid
 from api.session_utils import login_required
 
 @bp.route('/register', methods=['POST'])
@@ -51,25 +50,11 @@ def login():
     session['role'] = account.role
     session.permanent = True  
 
-    # Create a new session entry in the database
-    session_entry = Sessions(
-        ssid=str(uuid.uuid4()),
-        token=session.sid,
-        referer=request.headers.get('Referer')
-    )
-    db.session.add(session_entry)
-    db.session.commit()
-
     return jsonify({'message': 'Login successful'}), 200
 
 @bp.route('/logout', methods=['POST'])
 def logout():
     if 'user_id' in session:
-        session_entry = Sessions.query.filter_by(token=session.sid).first()
-        if session_entry:
-            db.session.delete(session_entry)
-            db.session.commit()
-        
         session.clear()
     
     return jsonify({'message': 'Logout successful'}), 200

@@ -2,11 +2,11 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import Config
-from flask_jwt_extended import JWTManager
+from flask_session import Session
 
 db = SQLAlchemy()
 migrate = Migrate()
-jwt = JWTManager()
+sess = Session()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -14,8 +14,8 @@ def create_app(config_class=Config):
 
     db.init_app(app)
     migrate.init_app(app, db)
-    jwt.init_app(app)
-
+    app.config['SESSION_SQLALCHEMY'] = db
+    sess.init_app(app)
 
     from api.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')

@@ -1,8 +1,8 @@
-"""migrate
+"""migration
 
-Revision ID: 7f87962febe6
+Revision ID: 533da561cb86
 Revises: 
-Create Date: 2024-06-19 01:55:20.726147
+Create Date: 2024-06-19 02:29:26.058533
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '7f87962febe6'
+revision = '533da561cb86'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -23,13 +23,6 @@ def upgrade():
     sa.Column('timestamp', sa.DateTime(), nullable=True),
     sa.Column('permissions', sa.JSON(), nullable=True),
     sa.PrimaryKeyConstraint('role')
-    )
-    op.create_table('sessions',
-    sa.Column('ssid', sa.String(length=255), nullable=False),
-    sa.Column('timestamp', sa.DateTime(), nullable=True),
-    sa.Column('token', sa.String(length=255), nullable=True),
-    sa.Column('referer', sa.String(length=255), nullable=True),
-    sa.PrimaryKeyConstraint('ssid')
     )
     op.create_table('account',
     sa.Column('account_id', sa.Integer(), nullable=False),
@@ -54,6 +47,5 @@ def downgrade():
         batch_op.drop_index(batch_op.f('ix_account_email'))
 
     op.drop_table('account')
-    op.drop_table('sessions')
     op.drop_table('permission')
     # ### end Alembic commands ###

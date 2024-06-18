@@ -21,15 +21,7 @@ class Account(db.Model):
 
     def __repr__(self):
         return f'<Account {self.name}>'
-
-class Sessions(db.Model):
-    ssid = db.Column(db.String(255), primary_key=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    token = db.Column(db.String(255))
-    referer = db.Column(db.String(255))
-
-    def __repr__(self):
-        return f'<Sessions {self.ssid}>'
+    
 
 class Permission(db.Model):
     role = db.Column(db.String(255), primary_key=True)
