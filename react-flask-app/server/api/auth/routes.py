@@ -1,6 +1,7 @@
 from flask import jsonify, request, session
 from api.auth import bp
-from api.models import Account, db, Sessions
+from api.models import Account, Sessions
+from api import db
 from datetime import datetime
 import uuid
 from api.session_utils import login_required

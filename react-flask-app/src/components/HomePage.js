@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Link, Navigate } from 'react-router-dom';
+import axios from 'axios';
 import '../assets/HomePage.css';
 import Login from './Login';
 import Register from './Register';
@@ -9,10 +10,16 @@ function Home() {
   const [username, setUsername] = useState('');
 
   useEffect(() => {
-    const storedUsername = localStorage.getItem('username');
-    if (storedUsername) {
-      setUsername(storedUsername);
-    }
+    const checkSession = async () => {
+      try {
+        const response = await axios.get('/auth/protected');
+        setUsername(response.data.logged_in_as);
+      } catch (error) {
+        console.log('No active session');
+      }
+    };
+
+    checkSession();
 
     setProducts([
       { id: 1, name: 'Whiskey', price: '$50', image: 'whiskey.jpg' },
@@ -21,15 +28,26 @@ function Home() {
     ]);
   }, []);
 
+  const handleLogout = async () => {
+    await axios.post('/auth/logout');
+    setUsername('');
+  };
+
   return (
     <div className="home">
       <header className="home-header">
         <h1>Welcome to Alcoholic Beverages Store</h1>
-        {username && <h2>Welcome, {username}!</h2>}
-        <nav>
-          <Link to="/login">Login</Link>
-          <Link to="/register">Register</Link>
-        </nav>
+        {username ? (
+          <div>
+            <h2>Welcome, {username}!</h2>
+            <button onClick={handleLogout}>Logout</button>
+          </div>
+        ) : (
+          <nav>
+            <Link to="/login">Login</Link>
+            <Link to="/register">Register</Link>
+          </nav>
+        )}
       </header>
       <main>
         <div className="products-grid">

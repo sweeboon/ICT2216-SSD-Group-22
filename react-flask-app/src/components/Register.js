@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import '../assets/Auth.css';
@@ -11,7 +11,23 @@ function Register() {
   const [address, setAddress] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await axios.get('/auth/protected');
+        if (response.data.logged_in_as) {
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        console.log('No active session');
+      }
+    };
+
+    checkSession();
+  }, []);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -23,8 +39,6 @@ function Register() {
         date_of_birth: dateOfBirth,
         address
       });
-      localStorage.setItem('username', username);
-      localStorage.setItem('email', email);
       setMessage(response.data.message);
       setError('');
       navigate('/');
@@ -33,6 +47,10 @@ function Register() {
       setMessage('');
     }
   };
+
+  if (isLoggedIn) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="auth-container">

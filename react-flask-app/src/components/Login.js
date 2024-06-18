@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import '../assets/Auth.css';
@@ -8,7 +8,23 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await axios.get('/auth/protected');
+        if (response.data.logged_in_as) {
+          setIsLoggedIn(true);
+        }
+      } catch (error) {
+        console.log('No active session');
+      }
+    };
+
+    checkSession();
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -17,10 +33,7 @@ function Login() {
         email,
         password
       });
-      const { name, email: userEmail } = response.data.user;
-      localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('username', name);
-      localStorage.setItem('email', userEmail);
+
       setMessage('Login successful');
       setError('');
       navigate('/');
@@ -28,6 +41,10 @@ function Login() {
       setError('Invalid email or password');
     }
   };
+
+  if (isLoggedIn) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="auth-container">
