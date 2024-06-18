@@ -4,6 +4,7 @@ from api.models import Account
 from api import db
 from datetime import datetime
 from api.session_utils import login_required
+from flask_wtf.csrf import generate_csrf
 
 @bp.route('/register', methods=['POST'])
 def register():
@@ -64,3 +65,8 @@ def logout():
 def protected():
     current_user = session['email']
     return jsonify(logged_in_as=current_user), 200
+
+@bp.route('/csrf-token', methods=['GET'])
+def get_csrf_token():
+    token = generate_csrf()
+    return jsonify(csrf_token=token)

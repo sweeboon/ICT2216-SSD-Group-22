@@ -1,41 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import '../assets/Auth.css';
 
-function Login() {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, handleLogin } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const response = await axios.get('/auth/protected');
-        if (response.data.logged_in_as) {
-          setIsLoggedIn(true);
-        }
-      } catch (error) {
-        console.log('No active session');
-      }
-    };
-
-    checkSession();
-  }, []);
-
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/auth/login', {
-        email,
-        password
-      });
-
-      setMessage('Login successful');
-      setError('');
+      await handleLogin(email, password);
       navigate('/');
     } catch (error) {
       setError('Invalid email or password');
@@ -49,7 +28,7 @@ function Login() {
   return (
     <div className="auth-container">
       <h2>Login</h2>
-      <form onSubmit={handleLogin}>
+      <form onSubmit={handleSubmit}>
         <div>
           <label>Email:</label>
           <input
@@ -72,6 +51,6 @@ function Login() {
       </form>
     </div>
   );
-}
+};
 
 export default Login;

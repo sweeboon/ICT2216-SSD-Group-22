@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import '../assets/Auth.css';
 
-function Register() {
+const Register = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,26 +12,17 @@ function Register() {
   const [address, setAddress] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, handleLogin } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const response = await axios.get('/auth/protected');
-        if (response.data.logged_in_as) {
-          setIsLoggedIn(true);
-        }
-      } catch (error) {
-        console.log('No active session');
-      }
-    };
-
-    checkSession();
-  }, []);
+  const getCsrfToken = async () => {
+    const response = await axios.get('/auth/csrf-token');
+    return response.data.csrf_token;
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    const csrfToken = await getCsrfToken();
     try {
       const response = await axios.post('/auth/register', {
         username,
@@ -38,9 +30,14 @@ function Register() {
         password,
         date_of_birth: dateOfBirth,
         address
+      }, {
+        headers: {
+          'X-CSRFToken': csrfToken
+        }
       });
       setMessage(response.data.message);
       setError('');
+      await handleLogin(email, password); // Automatically log in after registration
       navigate('/');
     } catch (error) {
       setError(error.response.data.message || 'Error occurred during registration');
@@ -102,6 +99,6 @@ function Register() {
       </form>
     </div>
   );
-}
+};
 
 export default Register;
