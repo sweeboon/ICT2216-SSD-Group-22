@@ -10,7 +10,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 // Checkout code from a source control management system (e.g., Git)
-                git url: 'https://github.com/Geek-shikha/Flask_model_sentiment_analysis.git', branch: 'main'
+                git url: 'hhttps://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main'
             }
         }
 
