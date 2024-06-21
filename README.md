@@ -35,3 +35,5 @@ Logging
 Programming Languages and Packages to be used
 Programming Languages: HTML, CSS, JavaScript, Kotlin, Python
 Possible Packages: React, Firebase, NodeJS, Express, Crypto-js, GUID, Moment, Cors, Tailwind, Web-push
+
+(new txt for Jenkins setup)
