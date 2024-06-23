@@ -35,6 +35,7 @@ const Register = () => {
     }
   };
 
+
   if (isLoggedIn) {
     return <Navigate to="/" replace />;
   }

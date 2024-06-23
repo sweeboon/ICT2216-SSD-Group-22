@@ -8,7 +8,7 @@ export const useAuth = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const response = await axios.get('/auth/protected');
+        const response = await axios.get('/auth/protected', { withCredentials: true });
         setUsername(response.data.logged_in_as);
         setIsLoggedIn(true);
       } catch (error) {
@@ -21,7 +21,7 @@ export const useAuth = () => {
 
   const handleLogin = async (email, password) => {
     try {
-      const response = await axios.post('/auth/login', { email, password });
+      const response = await axios.post('/auth/login', { email, password }, { withCredentials: true });
       setUsername(response.data.logged_in_as);
       setIsLoggedIn(true);
     } catch (error) {
@@ -31,7 +31,7 @@ export const useAuth = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post('/auth/logout');
+      await axios.post('/auth/logout', {}, { withCredentials: true });
       setIsLoggedIn(false);
       setUsername('');
     } catch (error) {

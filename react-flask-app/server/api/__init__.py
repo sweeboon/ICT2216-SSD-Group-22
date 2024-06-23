@@ -4,9 +4,14 @@ from flask_migrate import Migrate
 from config import Config
 from flask_session import Session
 from flask_security import Security, SQLAlchemyUserDatastore
+from dotenv import load_dotenv
+import os
+from flask_mailman import Mail
 
+load_dotenv()
 db = SQLAlchemy()
 migrate = Migrate()
+mail = Mail()
 security = Security()
 
 def create_app(config_class=Config):
@@ -14,6 +19,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
     db.init_app(app)
     migrate.init_app(app, db)
+    mail.init_app(app)
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
     security.init_app(app, user_datastore)
     from api.auth import bp as auth_bp

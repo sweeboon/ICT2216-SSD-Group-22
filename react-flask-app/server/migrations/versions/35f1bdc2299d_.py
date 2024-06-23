@@ -1,16 +1,16 @@
 """empty message
 
-Revision ID: 3ce3f2536f35
+Revision ID: 35f1bdc2299d
 Revises: 
-Create Date: 2024-06-23 17:20:32.964088
+Create Date: 2024-06-24 01:32:23.222169
 
 """
 from alembic import op
 import sqlalchemy as sa
-import flask_sqlalchemy
+
 
 # revision identifiers, used by Alembic.
-revision = '3ce3f2536f35'
+revision = '35f1bdc2299d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -30,6 +30,13 @@ def upgrade():
     sa.Column('email', sa.String(length=255), nullable=True),
     sa.Column('password', sa.String(length=255), nullable=True),
     sa.Column('active', sa.Boolean(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('confirmed_at', sa.DateTime(), nullable=True),
+    sa.Column('last_login_at', sa.DateTime(), nullable=True),
+    sa.Column('current_login_at', sa.DateTime(), nullable=True),
+    sa.Column('last_login_ip', sa.String(length=100), nullable=True),
+    sa.Column('current_login_ip', sa.String(length=100), nullable=True),
+    sa.Column('login_count', sa.Integer(), nullable=True),
     sa.Column('fs_uniquifier', sa.String(length=255), nullable=False),
     sa.PrimaryKeyConstraint('user_id'),
     sa.UniqueConstraint('email'),

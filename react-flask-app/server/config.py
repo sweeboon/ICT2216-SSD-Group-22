@@ -1,28 +1,38 @@
 import os
-from dotenv import load_dotenv
 from datetime import timedelta
-
 basedir = os.path.abspath(os.path.dirname(__file__))
-#load_dotenv(os.path.join(basedir, '.env'))
-
 
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", 'pf9Wkove4IKEAXvy-cQkeDPhv9Cb3Ag-wyJILbq_dFw')
-    SECURITY_PASSWORD_SALT = os.environ.get("SECURITY_PASSWORD_SALT", '146585145368132386173505678016728509634')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'app.db')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SESSION_TYPE = 'sqlalchemy'  # Use SQLAlchemy for session storage
+    # General configurations
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+    SECURITY_PASSWORD_SALT = os.environ.get("SECURITY_PASSWORD_SALT")
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+
+    # Session configurations
+    SESSION_TYPE = 'sqlalchemy'
     SESSION_PERMANENT = True
-    SESSION_SQLALCHEMY = None 
-    SESSION_USE_SIGNER = True  # Encrypt the session cookie
-    SESSION_SQLALCHEMY_TABLE = 'sessions'  # Name of the sessions table
-    SESSION_COOKIE_SECURE = True  # Ensure cookies are only sent over HTTPS
-    SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to cookies
-    SESSION_COOKIE_SAMESITE = 'strict'  # Restrict cookies to same-site requests
-    REMEMBER_COOKIE_SAMESITE = "strict"
-    SQLALCHEMY_ENGINE_OPTIONS = {
-    "pool_pre_ping": True,
-}
-    DEBUG = True
+    SESSION_SQLALCHEMY_TABLE = 'sessions'
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Strict'
+    REMEMBER_COOKIE_SAMESITE = "Strict"
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
+
+    # Mail configurations
+    MAIL_SERVER = os.environ.get('MAIL_SERVER')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT'))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') == 'True'
+    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL') == 'True'
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
+
+    # Security configurations
+    SECURITY_CONFIRMABLE = True
+    SECURITY_RECOVERABLE = True
+    SECURITY_REGISTERABLE = True
+    SECURITY_TRACKABLE = True
+    SECURITY_SEND_REGISTER_EMAIL = True
+    SECURITY_CONFIRM_URL = '/auth/confirm/{token}'
+    SECURITY_CONFIRM_SALT = 'confirm-salt'
+    SECURITY_CONFIRM_EXPIRES = timedelta(days=1)  # Set to 1 day for token expiration
