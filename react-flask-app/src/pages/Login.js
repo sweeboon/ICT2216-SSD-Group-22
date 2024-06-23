@@ -7,7 +7,6 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const { isLoggedIn, handleLogin } = useAuth();
   const navigate = useNavigate();
 
@@ -46,7 +45,6 @@ const Login = () => {
           />
         </div>
         <button type="submit">Login</button>
-        {message && <p>{message}</p>}
         {error && <p>{error}</p>}
       </form>
     </div>

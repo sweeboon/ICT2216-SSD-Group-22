@@ -19,17 +19,9 @@ export const useAuth = () => {
     checkSession();
   }, []);
 
-  const getCsrfToken = async () => {
-    const response = await axios.get('/auth/csrf-token');
-    return response.data.csrf_token;
-  };
-
   const handleLogin = async (email, password) => {
-    const csrfToken = await getCsrfToken();
     try {
-      const response = await axios.post('/auth/login', { email, password }, {
-        headers: { 'X-CSRFToken': csrfToken }
-      });
+      const response = await axios.post('/auth/login', { email, password });
       setUsername(response.data.logged_in_as);
       setIsLoggedIn(true);
     } catch (error) {
@@ -38,11 +30,8 @@ export const useAuth = () => {
   };
 
   const handleLogout = async () => {
-    const csrfToken = await getCsrfToken();
     try {
-      await axios.post('/auth/logout', {}, {
-        headers: { 'X-CSRFToken': csrfToken }
-      });
+      await axios.post('/auth/logout');
       setIsLoggedIn(false);
       setUsername('');
     } catch (error) {

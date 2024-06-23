@@ -15,14 +15,8 @@ const Register = () => {
   const { isLoggedIn, handleLogin } = useAuth();
   const navigate = useNavigate();
 
-  const getCsrfToken = async () => {
-    const response = await axios.get('/auth/csrf-token');
-    return response.data.csrf_token;
-  };
-
   const handleRegister = async (e) => {
     e.preventDefault();
-    const csrfToken = await getCsrfToken();
     try {
       const response = await axios.post('/auth/register', {
         username,
@@ -30,10 +24,6 @@ const Register = () => {
         password,
         date_of_birth: dateOfBirth,
         address
-      }, {
-        headers: {
-          'X-CSRFToken': csrfToken
-        }
       });
       setMessage(response.data.message);
       setError('');

@@ -1,36 +1,39 @@
-from flask import jsonify, request, session
+from flask import jsonify, request
+from flask_security import auth_required, current_user, login_user, logout_user, hash_password
 from api.auth import bp
-from api.models import Account
-from api import db
+from api.models import User, Profile
+from api import db, security 
 from datetime import datetime
-from api.session_utils import login_required
-from flask_wtf.csrf import generate_csrf
 
 @bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
     
-    # Check if account already exists
-    if Account.query.filter_by(email=data['email']).first():
-        return jsonify({'message': 'Account already exists'}), 400
+    # Check if user already exists
+    if security.datastore.find_user(email=data['email']):
+        return jsonify({'message': 'User already exists'}), 400
     
-    date_of_birth = datetime.strptime(data.get('date_of_birth'), '%Y-%m-%d').date() if data.get('date_of_birth') else None
-    
-    # Create a new account
-    account = Account(
-        name=data['username'],
+    # Create a new user using user_datastore
+    user = security.datastore.create_user(
         email=data['email'],
+        password=hash_password(data['password']),
+    )
+    
+    # Create a profile
+    date_of_birth = datetime.strptime(data.get('date_of_birth'), '%Y-%m-%d').date() if data.get('date_of_birth') else None
+    profile = Profile(
+        name=data['username'],
         date_of_birth=date_of_birth,
         address=data.get('address'),
-        role=data.get('role')  # Uncomment if role is needed
+        user=user
     )
-    account.set_password(data['password'])
     
-    # Save the account to the database
-    db.session.add(account)
+    # Save the user and profile to the database
+    db.session.add(user)
+    db.session.add(profile)
     db.session.commit()
     
-    return jsonify({'message': 'Account registered successfully'}), 201
+    return jsonify({'message': 'User and profile registered successfully'}), 201
 
 @bp.route('/login', methods=['POST'])
 def login():
@@ -41,32 +44,21 @@ def login():
     if 'password' not in data:
         return jsonify({'message': 'Password is required'}), 400
 
-    account = Account.query.filter_by(email=data['email']).first()
-    if account is None or not account.check_password(data['password']):
+    user = User.query.filter_by(email=data['email']).first()
+    if user is None or not user.verify_and_update_password(data['password']):
         return jsonify({'message': 'Invalid email or password'}), 401
     
-    # Create a session for the user
-    session['user_id'] = account.account_id
-    session['email'] = account.email
-    session['role'] = account.role
-    session.permanent = True  
+    # Log in the user
+    login_user(user)
 
     return jsonify({'message': 'Login successful'}), 200
 
 @bp.route('/logout', methods=['POST'])
 def logout():
-    if 'user_id' in session:
-        session.clear()
-    
+    logout_user()
     return jsonify({'message': 'Logout successful'}), 200
 
 @bp.route('/protected', methods=['GET'])
-@login_required
+@auth_required()
 def protected():
-    current_user = session['email']
-    return jsonify(logged_in_as=current_user), 200
-
-@bp.route('/csrf-token', methods=['GET'])
-def get_csrf_token():
-    token = generate_csrf()
-    return jsonify(csrf_token=token)
+    return jsonify(logged_in_as=current_user.email), 200

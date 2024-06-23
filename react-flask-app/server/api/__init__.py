@@ -3,23 +3,19 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import Config
 from flask_session import Session
-from flask_wtf.csrf import CSRFProtect
+from flask_security import Security, SQLAlchemyUserDatastore
 
 db = SQLAlchemy()
 migrate = Migrate()
-sess = Session()
-csrf = CSRFProtect()
+security = Security()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
-
     db.init_app(app)
     migrate.init_app(app, db)
-    app.config['SESSION_SQLALCHEMY'] = db
-    sess.init_app(app)
-    csrf.init_app(app)
-
+    user_datastore = SQLAlchemyUserDatastore(db, User, Role)
+    security.init_app(app, user_datastore)
     from api.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
@@ -28,4 +24,5 @@ def create_app(config_class=Config):
 
     return app
 
-from api import models
+# Ensure models are imported so that they are registered with SQLAlchemy
+from api.models import User, Role  # Correct import path
