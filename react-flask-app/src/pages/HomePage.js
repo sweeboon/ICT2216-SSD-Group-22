@@ -6,6 +6,7 @@ import Register from './Register';
 import ConfirmEmail from './ConfirmEmail';
 import ConfirmationResult from './ConfirmationResult';
 import '../assets/HomePage.css';
+import LandingPage from './LandingPage';
 
 const HomePage = () => {
   const { isLoggedIn, username, handleLogout } = useAuth();
@@ -15,7 +16,7 @@ const HomePage = () => {
       <Routes>
         <Route
           path="/"
-          element={
+          element={isLoggedIn ? <Navigate to="/landing" replace /> : (
             <div className="home">
               <header className="home-header">
                 <h1>Welcome to Alcoholic Beverages Store</h1>
@@ -32,12 +33,13 @@ const HomePage = () => {
                 )}
               </header>
             </div>
-          }
+          )}
         />
-        <Route path="/login" element={isLoggedIn ? <Navigate to="/" replace /> : <Login />} />
-        <Route path="/register" element={isLoggedIn ? <Navigate to="/" replace /> : <Register />} />
+        <Route path="/login" element={isLoggedIn ? <Navigate to="/" replace /> : <Login />} /> {/* If logged in, redirect to Landing Page else show Register */}
+        <Route path="/register" element={isLoggedIn ? <Navigate to="/" replace /> : <Register />} /> {/* Show email confirmation components */}
         <Route path="/confirm" element={<ConfirmEmail />} />
         <Route path="/confirmation-result" element={<ConfirmationResult />} />
+        <Route path="/landing" element={isLoggedIn ? <LandingPage /> : <Navigate to="/login" replace />} /> {/* Landing Page Route */}
       </Routes>
     </Router>
   );
