@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
@@ -9,13 +10,10 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
 
     # Session configurations
-    SESSION_TYPE = 'sqlalchemy'
     SESSION_PERMANENT = True
-    SESSION_SQLALCHEMY_TABLE = 'sessions'
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Strict'
-    REMEMBER_COOKIE_SAMESITE = "Strict"
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
 
     # Mail configurations
@@ -27,17 +25,9 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
 
-    # Security configurations
-    SECURITY_CONFIRMABLE = True
-    SECURITY_CONFIRM_EMAIL_WITHIN = "1 days"
-    SECURITY_CONFIRM_URL = '/confirm'
-    SECURITY_SEND_CONFIRMATION_TEMPLATE = 'security/email/confirmation_instructions.html'
-    SECURITY_EMAIL_SUBJECT_CONFIRM = "Please confirm your email"
-    SECURITY_CONFIRM_ERROR_VIEW = None
-    SECURITY_POST_CONFIRM_VIEW = None
-    SECURITY_AUTO_LOGIN_AFTER_CONFIRM = False
-    SECURITY_LOGIN_WITHOUT_CONFIRMATION = False
-    SECURITY_REQUIRES_CONFIRMATION_ERROR_VIEW = None
+    # CSRF configurations
+    WTF_CSRF_CHECK_DEFAULT = False
+    WTF_CSRF_TIME_LIMIT = None
 
     # Frontend configurations
     FRONTEND_BASE_URL = os.environ.get('FRONTEND_BASE_URL')

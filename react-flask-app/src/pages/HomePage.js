@@ -3,10 +3,9 @@ import { BrowserRouter as Router, Route, Routes, Link, Navigate } from 'react-ro
 import { useAuth } from '../hooks/useAuth';
 import Login from './Login';
 import Register from './Register';
-import ConfirmEmail from './ConfirmEmail';
-import ConfirmationResult from './ConfirmationResult';
-import '../assets/HomePage.css';
 import LandingPage from './LandingPage';
+import AssignRole from './AssignRole';
+import '../assets/HomePage.css';
 
 const HomePage = () => {
   const { isLoggedIn, username, handleLogout } = useAuth();
@@ -35,11 +34,10 @@ const HomePage = () => {
             </div>
           )}
         />
-        <Route path="/login" element={isLoggedIn ? <Navigate to="/" replace /> : <Login />} /> {/* If logged in, redirect to Landing Page else show Register */}
-        <Route path="/register" element={isLoggedIn ? <Navigate to="/" replace /> : <Register />} /> {/* Show email confirmation components */}
-        <Route path="/confirm" element={<ConfirmEmail />} />
-        <Route path="/confirmation-result" element={<ConfirmationResult />} />
-        <Route path="/landing" element={isLoggedIn ? <LandingPage /> : <Navigate to="/login" replace />} /> {/* Landing Page Route */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/assign-role" element={<AssignRole />} />
       </Routes>
     </Router>
   );

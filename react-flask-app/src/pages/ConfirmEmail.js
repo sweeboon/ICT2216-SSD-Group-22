@@ -6,16 +6,19 @@ const ConfirmEmail = () => {
   const query = new URLSearchParams(useLocation().search);
   const token = query.get('token');
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const confirmEmail = async () => {
       try {
-        const response = await axios.get(`/auth/confirm`, {
-          params: { token }
+        const response = await axios.get('/auth/confirm', {
+          params: { token },
         });
         setMessage(response.data.message);
+        setError('');
       } catch (error) {
-        setMessage('Invalid or expired confirmation link.');
+        setError('Invalid or expired confirmation link.');
+        setMessage('');
       }
     };
     confirmEmail();
@@ -23,7 +26,8 @@ const ConfirmEmail = () => {
 
   return (
     <div className="confirmation-container">
-      <h2>{message}</h2>
+      {message && <h2>{message}</h2>}
+      {error && <h2>{error}</h2>}
     </div>
   );
 };

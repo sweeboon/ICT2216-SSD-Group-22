@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../components/axiosConfig'; // Import the Axios configuration
 
 export const useAuth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -7,7 +7,7 @@ export const useAuth = () => {
 
   const handleLogin = async (email, password) => {
     try {
-      const response = await axios.post('/auth/login', { email, password }, { withCredentials: true });
+      const response = await axios.post('/auth/login', { email, password });
       setUsername(response.data.logged_in_as);
       setIsLoggedIn(true);
     } catch (error) {
@@ -17,13 +17,28 @@ export const useAuth = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post('/auth/logout', {}, { withCredentials: true });
+      await axios.post('/auth/logout');
       setIsLoggedIn(false);
       setUsername('');
     } catch (error) {
       console.error('Logout failed:', error);
     }
   };
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await axios.get('/auth/status');
+        setIsLoggedIn(response.data.loggedIn);
+        setUsername(response.data.username || '');
+      } catch (error) {
+        setIsLoggedIn(false);
+        setUsername('');
+      }
+    };
+
+    checkAuthStatus();
+  }, []); // Only run once on mount
 
   return {
     isLoggedIn,

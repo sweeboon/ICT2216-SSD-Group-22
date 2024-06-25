@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../components/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
 import '../assets/Auth.css';
 
@@ -13,7 +13,7 @@ const Register = () => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [passwordErrors, setPasswordErrors] = useState([]);
-  const { isLoggedIn, handleLogin } = useAuth();
+  const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
@@ -29,8 +29,7 @@ const Register = () => {
       setMessage(response.data.message);
       setError('');
       setPasswordErrors([]);
-      await handleLogin(email, password); // Automatically log in after registration
-      navigate('/');
+      navigate('/'); // Redirect to homepage after successful registration
     } catch (error) {
       if (error.response && error.response.data.errors) {
         setPasswordErrors(error.response.data.errors);
@@ -43,7 +42,7 @@ const Register = () => {
   };
 
   if (isLoggedIn) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/landing" replace />;
   }
 
   return (
