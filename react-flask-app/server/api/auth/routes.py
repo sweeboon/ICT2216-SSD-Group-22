@@ -1,10 +1,10 @@
-from flask import jsonify, request, url_for
+from flask import jsonify, request, current_app, redirect
 from flask_security import auth_required, current_user, login_user, logout_user, hash_password
 from api.auth import bp
 from api.models import User, Profile
 from api import db, security
-from datetime import datetime
-from flask_security.utils import send_mail, url_for_security
+from datetime import datetime, timedelta
+from flask_security.utils import send_mail, url_for_security, password_length_validator, password_complexity_validator, verify_and_update_password, check_and_get_token_status
 
 @bp.route('/register', methods=['POST'])
 def register():
@@ -13,6 +13,16 @@ def register():
     # Check if user already exists
     if security.datastore.find_user(email=data['email']):
         return jsonify({'message': 'User already exists'}), 400
+
+    # Validate password length
+    password_errors = password_length_validator(data['password'])
+    if password_errors:
+        return jsonify({'message': 'Password does not meet length requirements', 'errors': password_errors}), 400
+
+    # Validate password complexity
+    complexity_errors = password_complexity_validator(data['password'], is_register=True, email=data['email'], username=data['username'])
+    if complexity_errors:
+        return jsonify({'message': 'Password does not meet complexity requirements', 'errors': complexity_errors}), 400
 
     # Create a new user using user_datastore
     user = security.datastore.create_user(
@@ -34,23 +44,41 @@ def register():
     db.session.add(profile)
     db.session.commit()
 
-    # Send confirmation email
-    confirmation_link = url_for('auth.confirm_email', token=user.get_auth_token(), _external=True)
+    # Generate the confirmation token
+    token = user.get_auth_token()
+    print(f"Generated Token: {token}")
+
+    # Construct the confirmation link
+    frontend_base_url = current_app.config['FRONTEND_BASE_URL']
+    confirmation_link = f"{frontend_base_url}/confirm?token={token}"
+    print(f"Confirmation Link: {confirmation_link}")
+
+    # Send the confirmation email
     send_mail('Please confirm your email address', user.email, 'confirmation_instructions', user=user, confirmation_link=confirmation_link)
 
     return jsonify({'message': 'User and profile registered successfully. Please check your email to confirm your account.'}), 201
 
-@bp.route('/confirm/<token>', methods=['GET'])
-def confirm_email(token):
+@bp.route('/confirm', methods=['GET'])
+def confirm_email():
+    token = request.args.get('token')
+    print(f"Received Token: {token}")
     try:
-        user = security.confirm_user(token)
-        if user:
-            user.confirmed_at = datetime.now()
-            db.session.commit()
-    except:
+        expired, invalid, user = check_and_get_token_status(token, 'confirm', within=timedelta(days=1))
+        print(f"Token Status - Expired: {expired}, Invalid: {invalid}, User: {user}")
+    except Exception as e:
+        print(f"Token Validation Error: {e}")
         return jsonify({'message': 'The confirmation link is invalid or has expired.'}), 400
+    
+    if invalid or expired:
+        status = 'invalid' if invalid else 'expired'
+    else:
+        user.confirmed_at = datetime.now()
+        db.session.commit()
+        status = 'success'
 
-    return jsonify({'message': 'Your account has been confirmed.'}), 200
+    frontend_base_url = current_app.config['FRONTEND_BASE_URL']
+    return redirect(f"{frontend_base_url}/confirmation-result?status={status}")
+
 
 @bp.route('/login', methods=['POST'])
 def login():
@@ -61,28 +89,15 @@ def login():
         return jsonify({'message': 'Password is required'}), 400
 
     user = User.query.filter_by(email=data['email']).first()
-    if user is None or not user.verify_and_update_password(data['password']):
+    if user is None or not verify_and_update_password(data['password'], user):
         return jsonify({'message': 'Invalid email or password'}), 401
-
-    # Update login tracking
-    user.last_login_at = user.current_login_at
-    user.current_login_at = datetime.utcnow()
-    user.login_count = user.login_count + 1 if user.login_count is not None else 1
-    db.session.commit()
 
     # Log in the user
     login_user(user)
-
+    security.datastore.commit()
     return jsonify({'message': 'Login successful', 'logged_in_as': user.email}), 200
-
 
 @bp.route('/logout', methods=['POST'])
 def logout():
     logout_user()
     return jsonify({'message': 'Logout successful'}), 200
-
-
-@bp.route('/protected', methods=['GET'])
-@auth_required()
-def protected():
-    return jsonify(logged_in_as=current_user.email), 200

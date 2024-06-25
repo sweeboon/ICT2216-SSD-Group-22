@@ -5,20 +5,6 @@ export const useAuth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
 
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const response = await axios.get('/auth/protected', { withCredentials: true });
-        setUsername(response.data.logged_in_as);
-        setIsLoggedIn(true);
-      } catch (error) {
-        console.log('No active session');
-      }
-    };
-
-    checkSession();
-  }, []);
-
   const handleLogin = async (email, password) => {
     try {
       const response = await axios.post('/auth/login', { email, password }, { withCredentials: true });

@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Route, Routes, Link, Navigate } from 'react-ro
 import { useAuth } from '../hooks/useAuth';
 import Login from './Login';
 import Register from './Register';
+import ConfirmEmail from './ConfirmEmail';
+import ConfirmationResult from './ConfirmationResult';
 import '../assets/HomePage.css';
 
 const HomePage = () => {
@@ -34,6 +36,8 @@ const HomePage = () => {
         />
         <Route path="/login" element={isLoggedIn ? <Navigate to="/" replace /> : <Login />} />
         <Route path="/register" element={isLoggedIn ? <Navigate to="/" replace /> : <Register />} />
+        <Route path="/confirm" element={<ConfirmEmail />} />
+        <Route path="/confirmation-result" element={<ConfirmationResult />} />
       </Routes>
     </Router>
   );

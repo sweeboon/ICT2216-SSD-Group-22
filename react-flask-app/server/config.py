@@ -29,10 +29,15 @@ class Config:
 
     # Security configurations
     SECURITY_CONFIRMABLE = True
-    SECURITY_RECOVERABLE = True
-    SECURITY_REGISTERABLE = True
-    SECURITY_TRACKABLE = True
-    SECURITY_SEND_REGISTER_EMAIL = True
-    SECURITY_CONFIRM_URL = '/auth/confirm/{token}'
-    SECURITY_CONFIRM_SALT = 'confirm-salt'
-    SECURITY_CONFIRM_EXPIRES = timedelta(days=1)  # Set to 1 day for token expiration
+    SECURITY_CONFIRM_EMAIL_WITHIN = "1 days"
+    SECURITY_CONFIRM_URL = '/confirm'
+    SECURITY_SEND_CONFIRMATION_TEMPLATE = 'security/email/confirmation_instructions.html'
+    SECURITY_EMAIL_SUBJECT_CONFIRM = "Please confirm your email"
+    SECURITY_CONFIRM_ERROR_VIEW = None
+    SECURITY_POST_CONFIRM_VIEW = None
+    SECURITY_AUTO_LOGIN_AFTER_CONFIRM = False
+    SECURITY_LOGIN_WITHOUT_CONFIRMATION = False
+    SECURITY_REQUIRES_CONFIRMATION_ERROR_VIEW = None
+
+    # Frontend configurations
+    FRONTEND_BASE_URL = os.environ.get('FRONTEND_BASE_URL')

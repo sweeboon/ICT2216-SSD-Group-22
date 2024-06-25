@@ -12,6 +12,7 @@ const Register = () => {
   const [address, setAddress] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [passwordErrors, setPasswordErrors] = useState([]);
   const { isLoggedIn, handleLogin } = useAuth();
   const navigate = useNavigate();
 
@@ -27,14 +28,19 @@ const Register = () => {
       });
       setMessage(response.data.message);
       setError('');
+      setPasswordErrors([]);
       await handleLogin(email, password); // Automatically log in after registration
       navigate('/');
     } catch (error) {
-      setError(error.response.data.message || 'Error occurred during registration');
+      if (error.response && error.response.data.errors) {
+        setPasswordErrors(error.response.data.errors);
+      } else {
+        setError(error.response.data.message || 'Error occurred during registration');
+        setPasswordErrors([]);
+      }
       setMessage('');
     }
   };
-
 
   if (isLoggedIn) {
     return <Navigate to="/" replace />;
@@ -87,6 +93,13 @@ const Register = () => {
         <button type="submit">Register</button>
         {message && <p>{message}</p>}
         {error && <p>{error}</p>}
+        {passwordErrors.length > 0 && (
+          <ul>
+            {passwordErrors.map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
+        )}
       </form>
     </div>
   );

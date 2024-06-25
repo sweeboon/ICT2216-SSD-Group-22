@@ -12,17 +12,18 @@ roles_users = db.Table('roles_users',
     extend_existing = True
 )
 
-class Role(db.Model,RoleMixin):
-  id = db.Column(db.Integer(), primary_key=True)
-  name = db.Column(db.String(80), unique=True)
-  description = db.Column(db.String(255))
+class Role(db.Model, RoleMixin):
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.String(255))
 
 class User(db.Model, UserMixin):
     user_id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255))
     active = db.Column(db.Boolean())
-    created_at = db.Column(db.DateTime())
+    created_at = db.Column(db.DateTime(), default=datetime.utcnow)  # Automatically set to current datetime
+    is_confirmed = db.Column(db.Boolean(), default=False)
     confirmed_at = db.Column(db.DateTime())
     last_login_at = db.Column(db.DateTime())
     current_login_at = db.Column(db.DateTime())
@@ -33,12 +34,9 @@ class User(db.Model, UserMixin):
     profiles = db.relationship('Profile', backref='user', lazy=True)
     roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
 
-
 class Profile(db.Model):
     profile_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
     date_of_birth = db.Column(db.Date)
     address = db.Column(db.String(255))
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
-
-
