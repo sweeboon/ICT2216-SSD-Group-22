@@ -1,30 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React from 'react';
+import { useProduct } from '../hooks/useProduct';
 
 const ProductComponent = () => {
-  const [products, setProducts] = useState([]);
-  const [newProduct, setNewProduct] = useState({
-    category_id: '',
-    image_id: '',
-    product_description: '',
-    product_price: '',
-    stock: '',
-    image_path: ''
-  });
-  const [editProduct, setEditProduct] = useState(null);
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    try {
-      const response = await axios.get('/products');
-      setProducts(response.data);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-    }
-  };
+  const {
+    products,
+    newProduct,
+    setNewProduct,
+    editProduct,
+    setEditProduct,
+    handleAddProduct,
+    handleUpdateProduct,
+    handleDeleteProduct
+  } = useProduct();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,53 +29,19 @@ const ProductComponent = () => {
     }));
   };
 
-  const handleAddProduct = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      console.log("Adding product:", newProduct);
-      const response = await axios.post('/product', newProduct);
-      setProducts([...products, response.data.product]);
-      setNewProduct({
-        category_id: '',
-        image_id: '',
-        product_description: '',
-        product_price: '',
-        stock: '',
-        image_path: ''
-      });
-    } catch (error) {
-      console.error('Error adding product:', error);
-    }
-  };
-
-  const handleUpdateProduct = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.put(`/product/${editProduct.product_id}`, editProduct);
-      setProducts(products.map((product) => (product.product_id === editProduct.product_id ? response.data : product)));
-      setEditProduct(null);
-    } catch (error) {
-      console.error('Error updating product:', error);
-    }
-  };
-
-  const handleEdit = (product) => {
-    setEditProduct(product);
-  };
-
-  const handleDelete = async (product_id) => {
-    try {
-      await axios.delete(`/product/${product_id}`);
-      setProducts(products.filter((product) => product.product_id !== product_id));
-    } catch (error) {
-      console.error('Error deleting product:', error);
+    if (editProduct) {
+      handleUpdateProduct();
+    } else {
+      handleAddProduct();
     }
   };
 
   return (
     <div className="product-management">
       <h2>Manage Products</h2>
-      <form onSubmit={editProduct ? handleUpdateProduct : handleAddProduct}>
+      <form onSubmit={handleSubmit}>
         <input
           type="number"
           name="category_id"
@@ -141,8 +94,8 @@ const ProductComponent = () => {
             {product.product_description} - ${product.product_price}
             <p>{product.stock} in stock</p>
             <p>{product.image_path}</p>
-            <button onClick={() => handleEdit(product)}>Edit</button>
-            <button onClick={() => handleDelete(product.product_id)}>Delete</button>
+            <button onClick={() => setEditProduct(product)}>Edit</button>
+            <button onClick={() => handleDeleteProduct(product.product_id)}>Delete</button>
           </li>
         ))}
       </ul>

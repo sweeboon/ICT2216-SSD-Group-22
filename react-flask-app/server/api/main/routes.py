@@ -4,18 +4,18 @@ from api import db
 
 bp = Blueprint('main', __name__)
 
-# CRUD operations for Product
-
+# CRUD operations for the Product model
 @bp.route('/products', methods=['GET'])
 def get_products():
     products = Product.query.all()
     product_list = [{'product_id': p.product_id, 'category_id': p.category_id, 'image_id': p.image_id, 'product_description': p.product_description, 
                      'product_price': p.product_price, 'stock': p.stock, 'image_path': p.image_path} for p in products]
+    print(product_list)
     return jsonify(product_list), 200
 
 @bp.route('/product', methods=['POST'])
 def add_product():
-    data = request.json
+    data = request.get_json()
     new_product = Product(
         category_id=data['category_id'],
         image_id=data['image_id'],
