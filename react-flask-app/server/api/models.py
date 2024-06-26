@@ -43,3 +43,14 @@ class Profile(db.Model):
     date_of_birth = db.Column(db.Date)
     address = db.Column(db.String(255))
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
+
+
+class Product(db.Model):
+    __tablename__ = 'product'
+    product_id = db.Column(db.Integer, primary_key=True)
+    category_id = db.Column(db.Integer)
+    image_id = db.Column(db.Integer)
+    product_description = db.Column(db.String(255))
+    product_price = db.Column(db.Float)
+    stock = db.Column(db.Integer)
+    image_path = db.Column(db.String(255))
