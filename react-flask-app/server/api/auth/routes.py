@@ -79,8 +79,7 @@ def login():
         return jsonify({'message': 'Invalid email or password'}), 401
 
     # Update login timestamps and count
-    user.last_login_at = user.current_login_at
-    user.current_login_at = datetime.now()
+    user.last_login_at = datetime.now()
     user.login_count += 1
 
     # Save the user data

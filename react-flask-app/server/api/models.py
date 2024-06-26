@@ -22,7 +22,6 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(255))
     created_at = db.Column(db.DateTime(), default=datetime.now)
     last_login_at = db.Column(db.DateTime(), nullable=True)
-    current_login_at = db.Column(db.DateTime(), nullable=True)
     login_count = db.Column(db.Integer, default=0)
     confirmed = db.Column(db.Boolean, default=False)
     confirmed_on = db.Column(db.DateTime(), nullable=True)
