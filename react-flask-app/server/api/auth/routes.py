@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from flask_principal import Identity, AnonymousIdentity, identity_changed, RoleNeed, Permission
 from api.auth import bp
 from api.models import User, Profile, Role
-from api import db, csrf
+from api import db, csrf, mail
 from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
 from .tokens import generate_token, verify_token
@@ -16,22 +16,18 @@ admin_permission = Permission(RoleNeed('Admin'))
 def register():
     data = request.get_json()
 
-    # Check if user already exists
     if User.query.filter_by(email=data['email']).first():
         return jsonify({'message': 'User already exists'}), 400
 
-    # Create a new user
     user = User(
         email=data['email'],
         password=pbkdf2_sha256.hash(data['password']),
     )
 
-    # Assign default role
     user_role = Role.query.filter_by(name='User').first()
     if user_role:
         user.roles.append(user_role)
 
-    # Create a profile
     date_of_birth = datetime.strptime(data.get('date_of_birth'), '%Y-%m-%d').date() if data.get('date_of_birth') else None
     profile = Profile(
         name=data['username'],
@@ -40,19 +36,19 @@ def register():
         user=user
     )
 
-    # Save the user and profile to the database
     db.session.add(user)
     db.session.add(profile)
     db.session.commit()
 
-    token = generate_token([user.email, user.user_id])
-    confirm_url = f"{current_app.config['FRONTEND_BASE_URL']}/confirm/{token}"
+    token = generate_token(user.email)
+    confirm_url = f"{current_app.config['FRONTEND_BASE_URL']}/confirm?token={token}"
     send_email('Confirm Your Account', user.email, 'email/confirm', confirm_url=confirm_url)
+    print(confirm_url)
+    return jsonify({'message': 'User and profile registered successfully. Please check your email to confirm your account.'}), 201
 
-    return jsonify({'message': 'User and profile registered successfully.'}), 201
-
-@bp.route('/confirm/<token>', methods=['GET'])
-def confirm_email(token):
+@bp.route('/confirm', methods=['GET'])
+def confirm_email():
+    token = request.args.get('token')
     email = verify_token(token, 1800)
     if email is None:
         return jsonify({'message': 'The confirmation link is invalid or has expired.'}), 400
@@ -66,6 +62,7 @@ def confirm_email(token):
         db.session.add(user)
         db.session.commit()
         return jsonify({'message': 'You have confirmed your account. Thanks!'}), 200
+
 
 
 @bp.route('/login', methods=['POST'])
