@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
@@ -7,15 +8,13 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY")
     SECURITY_PASSWORD_SALT = os.environ.get("SECURITY_PASSWORD_SALT")
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-
+    SIGNER_SECRET_KEY = os.environ.get("SIGNER_SECRET_KEY")
+    
     # Session configurations
-    SESSION_TYPE = 'sqlalchemy'
     SESSION_PERMANENT = True
-    SESSION_SQLALCHEMY_TABLE = 'sessions'
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Strict'
-    REMEMBER_COOKIE_SAMESITE = "Strict"
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
 
     # Mail configurations
@@ -27,12 +26,9 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
 
-    # Security configurations
-    SECURITY_CONFIRMABLE = True
-    SECURITY_RECOVERABLE = True
-    SECURITY_REGISTERABLE = True
-    SECURITY_TRACKABLE = True
-    SECURITY_SEND_REGISTER_EMAIL = True
-    SECURITY_CONFIRM_URL = '/auth/confirm/{token}'
-    SECURITY_CONFIRM_SALT = 'confirm-salt'
-    SECURITY_CONFIRM_EXPIRES = timedelta(days=1)  # Set to 1 day for token expiration
+    # CSRF configurations
+    WTF_CSRF_CHECK_DEFAULT = False
+    WTF_CSRF_TIME_LIMIT = None
+
+    # Frontend configurations
+    FRONTEND_BASE_URL = os.environ.get('FRONTEND_BASE_URL')

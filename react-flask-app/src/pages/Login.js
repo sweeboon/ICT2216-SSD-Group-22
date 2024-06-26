@@ -14,14 +14,14 @@ const Login = () => {
     e.preventDefault();
     try {
       await handleLogin(email, password);
-      navigate('/');
+      navigate('/landing');
     } catch (error) {
       setError('Invalid email or password');
     }
   };
 
   if (isLoggedIn) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/landing" replace />;
   }
 
   return (

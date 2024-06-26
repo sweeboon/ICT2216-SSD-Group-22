@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../components/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
 import '../assets/Auth.css';
 
@@ -12,7 +12,8 @@ const Register = () => {
   const [address, setAddress] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const { isLoggedIn, handleLogin } = useAuth();
+  const [passwordErrors, setPasswordErrors] = useState([]);
+  const { isLoggedIn } = useAuth();
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
@@ -27,17 +28,21 @@ const Register = () => {
       });
       setMessage(response.data.message);
       setError('');
-      await handleLogin(email, password); // Automatically log in after registration
-      navigate('/');
+      setPasswordErrors([]);
+      navigate('/'); // Redirect to homepage after successful registration
     } catch (error) {
-      setError(error.response.data.message || 'Error occurred during registration');
+      if (error.response && error.response.data.errors) {
+        setPasswordErrors(error.response.data.errors);
+      } else {
+        setError(error.response.data.message || 'Error occurred during registration');
+        setPasswordErrors([]);
+      }
       setMessage('');
     }
   };
 
-
   if (isLoggedIn) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/landing" replace />;
   }
 
   return (
@@ -87,6 +92,13 @@ const Register = () => {
         <button type="submit">Register</button>
         {message && <p>{message}</p>}
         {error && <p>{error}</p>}
+        {passwordErrors.length > 0 && (
+          <ul>
+            {passwordErrors.map((error, index) => (
+              <li key={index}>{error}</li>
+            ))}
+          </ul>
+        )}
       </form>
     </div>
   );

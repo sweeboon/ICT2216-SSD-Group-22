@@ -1,12 +1,21 @@
 import React from 'react';
-import HomePage from './pages/HomePage';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
+import ProductComponent from './components/ProductComponent';
 
-function App() {
+const App = () => {
   return (
-    <div>
-      <HomePage />
-    </div>
+    <Router>
+      <nav>
+        <Link to="/">Home</Link>
+        <Link to="/products">Manage Products</Link>
+      </nav>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/products" element={<ProductComponent />} />
+      </Routes>
+    </Router>
   );
-}
+};
 
 export default App;
