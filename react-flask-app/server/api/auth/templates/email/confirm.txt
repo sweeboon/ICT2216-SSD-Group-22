@@ -1,0 +1,7 @@
+Hi,
+
+Thank you for registering. Please confirm your account by clicking on the link below:
+
+{{ confirm_url }}
+
+Thank you!

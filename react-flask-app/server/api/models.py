@@ -24,6 +24,8 @@ class User(UserMixin, db.Model):
     last_login_at = db.Column(db.DateTime(), nullable=True)
     current_login_at = db.Column(db.DateTime(), nullable=True)
     login_count = db.Column(db.Integer, default=0)
+    confirmed = db.Column(db.Boolean, default=False)
+    confirmed_on = db.Column(db.DateTime(), nullable=True)
     profiles = db.relationship('Profile', backref='user', lazy=True)
     roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
 

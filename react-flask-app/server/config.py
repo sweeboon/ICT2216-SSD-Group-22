@@ -8,7 +8,8 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY")
     SECURITY_PASSWORD_SALT = os.environ.get("SECURITY_PASSWORD_SALT")
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-
+    SIGNER_SECRET_KEY = os.environ.get("SIGNER_SECRET_KEY")
+    
     # Session configurations
     SESSION_PERMANENT = True
     SESSION_COOKIE_SECURE = True

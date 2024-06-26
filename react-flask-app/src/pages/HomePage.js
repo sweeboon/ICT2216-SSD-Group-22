@@ -5,6 +5,8 @@ import Login from './Login';
 import Register from './Register';
 import LandingPage from './LandingPage';
 import AssignRole from './AssignRole';
+import ConfirmEmail from './ConfirmEmail';
+import ConfirmationResult from './ConfirmationResult';
 import '../assets/HomePage.css';
 
 const HomePage = () => {
@@ -38,6 +40,8 @@ const HomePage = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/assign-role" element={<AssignRole />} />
+        <Route path="/confirm" element={<ConfirmEmail />} />
+        <Route path="/confirmation-result" element={<ConfirmationResult />} />
       </Routes>
     </Router>
   );

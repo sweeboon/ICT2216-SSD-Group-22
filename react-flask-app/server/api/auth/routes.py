@@ -6,6 +6,8 @@ from api.models import User, Profile, Role
 from api import db, csrf
 from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
+from .tokens import generate_token, verify_token
+from .email import send_email
 
 super_admin_permission = Permission(RoleNeed('SuperAdmin'))
 admin_permission = Permission(RoleNeed('Admin'))
@@ -43,7 +45,28 @@ def register():
     db.session.add(profile)
     db.session.commit()
 
+    token = generate_token([user.email, user.user_id])
+    confirm_url = f"{current_app.config['FRONTEND_BASE_URL']}/confirm/{token}"
+    send_email('Confirm Your Account', user.email, 'email/confirm', confirm_url=confirm_url)
+
     return jsonify({'message': 'User and profile registered successfully.'}), 201
+
+@bp.route('/confirm/<token>', methods=['GET'])
+def confirm_email(token):
+    email = verify_token(token, 1800)
+    if email is None:
+        return jsonify({'message': 'The confirmation link is invalid or has expired.'}), 400
+
+    user = User.query.filter_by(email=email).first_or_404()
+    if user.confirmed:
+        return jsonify({'message': 'Account already confirmed. Please login.'}), 200
+    else:
+        user.confirmed = True
+        user.confirmed_on = datetime.now()
+        db.session.add(user)
+        db.session.commit()
+        return jsonify({'message': 'You have confirmed your account. Thanks!'}), 200
+
 
 @bp.route('/login', methods=['POST'])
 @csrf.exempt
