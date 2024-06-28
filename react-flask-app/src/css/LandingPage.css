@@ -1,12 +1,13 @@
-
-
 .landing-page {
   font-family: 'Arial, sans-serif';
   color: #fff;
   text-align: center;
   position: relative;
   justify-content: space-between;
-  min-height: 100vh;
+  min-height: 95vh;
+  padding-top: 20px;
+  margin-left: 1.35%;
+  margin-right: 1.35%;
 }
 
 .landing-page::before {
@@ -63,8 +64,8 @@
   .landing-page-content {
     position: relative;
     background-color: rgba(82, 79, 79, 0.8); /* Adjust the alpha value (0.8) to control the transparency */
-    top: 100px;
-    padding: 20px 20px;
+    top: 90px;
+    padding: 10px 20px;
     border-radius: 10px;
     margin: 0 auto;
     max-width: 650px;
@@ -90,6 +91,7 @@
     border-radius: 5px;
     display: inline-block;
     font-family: Arial, sans-serif;
+    font-weight: bold;
   }
   
   .landing-page-content .btn:hover {
