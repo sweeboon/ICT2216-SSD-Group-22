@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import Navbar from './Navbar';
+import Navbar from './NavBar';
 import '../css/LandingPage.css';
 
 const LandingPage = () => {

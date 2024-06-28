@@ -9,6 +9,7 @@ import ConfirmEmail from './ConfirmEmail';
 import ConfirmationResult from './ConfirmationResult';
 import Profile from './Profile';
 import '../assets/HomePage.css';
+import Navbar from './NavBar';
 
 const HomePage = () => {
   const { isLoggedIn, username, handleLogout } = useAuth();
@@ -21,19 +22,22 @@ const HomePage = () => {
           element={isLoggedIn ? <Navigate to="/landing" replace /> : (
             <div className="home">
               <header className="home-header">
-                <h1>Welcome to Alcoholic Beverages Store</h1>
-                {isLoggedIn ? (
-                  <div>
-                    <h2>Welcome, {username}!</h2>
-                    <button onClick={handleLogout}>Logout</button>
-                  </div>
-                ) : (
-                  <nav>
-                    <Link to="/login">Login</Link>
-                    <Link to="/register">Register</Link>
-                  </nav>
-                )}
+                <Navbar />
+                <h1>Over18</h1>
+                <h2>Login/ Register now to start purchasing alcoholic beverages</h2>
               </header>
+              <main className='home-content'>
+              <Link to="/login" className="btn">
+            Login
+          </Link>
+          <span className="button-spacing"></span>
+          <Link to="/register" className="btn">
+            Register
+          </Link>
+              </main>
+              <footer className="landing-page-footer">
+        <p>&copy; 2024 Over18. All rights reserved.</p>
+      </footer>
             </div>
           )}
         />

@@ -3,7 +3,8 @@
     justify-content: space-between;
     align-items: center;
     background-color: #000000;
-    padding: 10px 20px;
+    padding: 0px 40px;
+    height: 100px;
   }
   
   .navbar-logo a {
@@ -35,11 +36,12 @@
     background-color: #ff6600;
     color: #fff;
     border: none;
-    padding: 5px 10px;
+    padding: 10px 20px;
     font-size: 1rem;
     cursor: pointer;
     border-radius: 5px;
     font-family: Arial, sans-serif;
+    font-weight: bold;
   }
   
   .navbar-links button:hover {
