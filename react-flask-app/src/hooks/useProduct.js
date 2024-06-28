@@ -24,7 +24,7 @@ export const useProduct = () => {
 
   const handleAddProduct = async () => {
     try {
-      const response = await axios.post('/main/product', newProduct);
+      const response = await axios.post('/main/products', newProduct);
       setProducts([...products, response.data]);
       setNewProduct({
         category_id: '',
@@ -42,7 +42,7 @@ export const useProduct = () => {
   const handleUpdateProduct = async () => {
     try {
       if (editProduct) {
-        const response = await axios.put(`/main/product/${editProduct.product_id}`, editProduct);
+        const response = await axios.put(`/main/products/${editProduct.product_id}`, editProduct);
         setProducts(products.map((product) => (product.product_id === editProduct.product_id ? response.data : product)));
         setEditProduct(null);
       }
@@ -53,7 +53,7 @@ export const useProduct = () => {
 
   const handleDeleteProduct = async (product_id) => {
     try {
-      await axios.delete(`/main/product/${product_id}`);
+      await axios.delete(`/main/products/${product_id}`);
       setProducts(products.filter((product) => product.product_id !== product_id));
     } catch (error) {
       console.error('Error deleting product:', error);

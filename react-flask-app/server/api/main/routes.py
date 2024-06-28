@@ -1,49 +1,74 @@
-from flask import Blueprint, jsonify, request
+from flask import request, jsonify, abort
 from api.models import Product
-from api import db
-
-bp = Blueprint('main', __name__)
+from api import db, csrf
+from api.main import bp
 
 # CRUD operations for the Product model
+
+# Read All Products
 @bp.route('/products', methods=['GET'])
+@csrf.exempt
 def get_products():
     products = Product.query.all()
     product_list = [{'product_id': p.product_id, 'category_id': p.category_id, 'image_id': p.image_id, 'product_description': p.product_description, 
                      'product_price': p.product_price, 'stock': p.stock, 'image_path': p.image_path} for p in products]
-    print(product_list)
     return jsonify(product_list), 200
 
-@bp.route('/product', methods=['POST'])
-def add_product():
-    data = request.get_json()
+# Create a New Product
+@bp.route('/products', methods=['POST'])
+@csrf.exempt
+def create_product():
+    if not request.json or not all(key in request.json for key in ['category_id', 'image_id', 'product_description', 'product_price', 'stock', 'image_path']):
+        abort(400)  # Bad request
+    
     new_product = Product(
-        category_id=data['category_id'],
-        image_id=data['image_id'],
-        product_description=data['product_description'],
-        product_price=data['product_price'],
-        stock=data['stock'],
-        image_path=data['image_path']
+        category_id=request.json['category_id'],
+        image_id=request.json['image_id'],
+        product_description=request.json['product_description'],
+        product_price=request.json['product_price'],
+        stock=request.json['stock'],
+        image_path=request.json['image_path']
     )
+    
     db.session.add(new_product)
     db.session.commit()
-    return jsonify({'message': 'New product added successfully.', 'product': new_product.product_id}), 201
+    
+    return jsonify({'product_id': new_product.product_id}), 201
 
-@bp.route('/product/<int:product_id>', methods=['PUT'])
-def update_product(product_id):
-    data = request.get_json()
+# Read a Single Product
+@bp.route('/products/<int:product_id>', methods=['GET'])
+@csrf.exempt
+def get_product(product_id):
     product = Product.query.get_or_404(product_id)
-    product.category_id = data['category_id']
-    product.image_id = data['image_id']
-    product.product_description = data['product_description']
-    product.product_price = data['product_price']
-    product.stock = data['stock']
-    product.image_path = data['image_path']
-    db.session.commit()
-    return jsonify({'message': 'Product updated successfully.'}), 200
+    return jsonify({'product_id': product.product_id, 'category_id': product.category_id, 'image_id': product.image_id, 'product_description': product.product_description, 
+                    'product_price': product.product_price, 'stock': product.stock, 'image_path': product.image_path}), 200
 
-@bp.route('/product/<int:product_id>', methods=['DELETE'])
+# Update a Product
+@bp.route('/products/<int:product_id>', methods=['PUT'])
+@csrf.exempt
+def update_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    
+    if not request.json:
+        abort(400)
+    
+    product.category_id = request.json.get('category_id', product.category_id)
+    product.image_id = request.json.get('image_id', product.image_id)
+    product.product_description = request.json.get('product_description', product.product_description)
+    product.product_price = request.json.get('product_price', product.product_price)
+    product.stock = request.json.get('stock', product.stock)
+    product.image_path = request.json.get('image_path', product.image_path)
+    
+    db.session.commit()
+    
+    return jsonify({'product_id': product.product_id}), 200
+
+# Delete a Product
+@bp.route('/products/<int:product_id>', methods=['DELETE'])
+@csrf.exempt
 def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
     db.session.delete(product)
     db.session.commit()
-    return jsonify({'message': 'Product deleted successfully.'}), 200
+    
+    return '', 204

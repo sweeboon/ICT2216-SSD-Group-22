@@ -47,8 +47,7 @@ class Profile(db.Model):
 
 
 class Product(db.Model):
-    __tablename__ = 'product'
-    product_id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     category_id = db.Column(db.Integer)
     image_id = db.Column(db.Integer)
     product_description = db.Column(db.String(255))
