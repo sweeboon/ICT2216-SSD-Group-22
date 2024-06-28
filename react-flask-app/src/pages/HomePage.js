@@ -9,7 +9,7 @@ import ConfirmEmail from './ConfirmEmail';
 import ConfirmationResult from './ConfirmationResult';
 import Profile from './Profile';
 import '../assets/HomePage.css';
-import Navbar from './NavBar';
+import Navbar from './Navbar';
 
 const HomePage = () => {
   const { isLoggedIn, username, handleLogout } = useAuth();
