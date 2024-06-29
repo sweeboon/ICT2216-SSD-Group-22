@@ -14,15 +14,10 @@ const Login = () => {
     e.preventDefault();
     try {
       await handleLogin(email, password);
-      navigate('/landing');
     } catch (error) {
       setError('Invalid email or password');
     }
   };
-
-  if (isLoggedIn) {
-    return <Navigate to="/landing" replace />;
-  }
 
   return (
     <div className="auth-container">

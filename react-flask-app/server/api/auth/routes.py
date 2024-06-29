@@ -1,4 +1,4 @@
-from flask import jsonify, request, current_app, session
+from flask import jsonify, request, current_app, session, make_response
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_principal import Identity, AnonymousIdentity, identity_changed, RoleNeed, Permission
 from api.auth import bp
@@ -8,9 +8,18 @@ from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
 from .tokens import generate_token, verify_token
 from .email import send_email
+import jwt
+from flask_wtf.csrf import generate_csrf
 
 super_admin_permission = Permission(RoleNeed('SuperAdmin'))
 admin_permission = Permission(RoleNeed('Admin'))
+
+@bp.route('/csrf-token', methods=['POST'])
+def get_csrf_token():
+    csrf_token = generate_csrf(secret_key=current_app.config['SECRET_KEY'])
+    response = make_response(jsonify({'csrf_token': csrf_token}))
+    response.set_cookie('XSRF-TOKEN', csrf_token)
+    return response
 
 @bp.route('/register', methods=['POST'])
 def register():
@@ -63,8 +72,6 @@ def confirm_email():
         db.session.commit()
         return jsonify({'message': 'You have confirmed your account. Thanks!'}), 200
 
-
-
 @bp.route('/login', methods=['POST'])
 @csrf.exempt
 def login():
@@ -85,13 +92,22 @@ def login():
     # Save the user data
     db.session.commit()
 
+    # Generate JWT token
+    token = jwt.encode({
+        'sub': user.email,
+        'iat': datetime.now(),
+        'exp': datetime.now() + timedelta(minutes=30)
+    }, current_app.config['SECRET_KEY'], algorithm="HS256")
+    print(token)
+
     # Log in the user
     login_user(user, remember=True, duration=timedelta(minutes=30))
 
     # Notify Flask-Principal of the login
     identity_changed.send(current_app._get_current_object(), identity=Identity(user.user_id))
 
-    return jsonify({'message': 'Login successful', 'logged_in_as': user.email}), 200
+    return jsonify({'message': 'Login successful', 'token': token}), 200
+
 
 @bp.route('/logout', methods=['POST'])
 @csrf.exempt
@@ -105,13 +121,20 @@ def logout():
         session.pop(key, None)
     identity_changed.send(current_app._get_current_object(), identity=AnonymousIdentity())
 
-    return jsonify({'message': 'Logout successful'}), 200
+    # Clear the cookies
+    response = jsonify({'message': 'Logout successful'})
+    response.delete_cookie('session')
+    response.delete_cookie('XSRF-TOKEN')
+    
+    return response, 200
+
 
 @bp.route('/status', methods=['GET'])
 @csrf.exempt
 def status():
     if current_user.is_authenticated:
-        return jsonify({'loggedIn': True, 'username': current_user.email, 'roles': current_user.get_roles()}), 200
+        profile = Profile.query.filter_by(user_id=current_user.user_id).first()
+        return jsonify({'loggedIn': True, 'username': profile.name}), 200
     else:
         return jsonify({'loggedIn': False}), 200
 

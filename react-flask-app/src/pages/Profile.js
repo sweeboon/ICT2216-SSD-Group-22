@@ -17,6 +17,7 @@ const Profile = () => {
         const response = await axios.get('/profile');
         setProfile(response.data);
       } catch (error) {
+        console.error('Error fetching profile:', error);
         setError('Failed to fetch profile');
       }
     };
@@ -40,7 +41,7 @@ const Profile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put('/profile/profile', {
+      const response = await axios.put('/profile', {
         ...profile,
         password: password ? password : undefined
       });
@@ -48,6 +49,7 @@ const Profile = () => {
       setError('');
       setPassword('');
     } catch (error) {
+      console.error('Error updating profile:', error);
       setError(error.response.data.error || 'Failed to update profile');
       setMessage('');
     }
@@ -84,7 +86,7 @@ const Profile = () => {
             name="password"
             value={password}
             onChange={handlePasswordChange}
-          />
+          />  
         </div>
         <button type="submit">Update Profile</button>
       </form>

@@ -1,13 +1,15 @@
-from flask import Flask, current_app
+from flask import Flask, current_app, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import Config
 from flask_cors import CORS
 from dotenv import load_dotenv
 from flask_mailman import Mail
-from flask_wtf import CSRFProtect 
+from flask_wtf import CSRFProtect
 from flask_login import LoginManager, current_user
-from flask_principal import Principal, Permission, PermissionDenied, RoleNeed, identity_loaded, UserNeed, Identity, AnonymousIdentity, IdentityContext
+from flask_principal import Principal, RoleNeed, UserNeed, identity_loaded, Identity, AnonymousIdentity, IdentityContext
+import jwt
+from datetime import datetime, timedelta
 
 load_dotenv()
 db = SQLAlchemy()
@@ -23,11 +25,11 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
     mail.init_app(app)
-    CORS(app)
+    CORS(app, supports_credentials=True)
     csrf.init_app(app)
     principal.init_app(app)
     login_manager.init_app(app)
-
+    login_manager.session_protection = "strong"
     from api.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
@@ -47,10 +49,27 @@ def create_app(config_class=Config):
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return User.query.filter_by(alternative_id=user_id).first()
+
+    @login_manager.request_loader
+    def load_user_from_request(request):
+        auth_headers = request.headers.get('Authorization', '').split()
+        print("load")
+        if len(auth_headers) != 2:
+            return None
+        try:
+            token = auth_headers[1]
+            data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
+            user = User.query.filter_by(email=data['sub']).first()
+            if user:
+                return user
+        except jwt.ExpiredSignatureError:
+            return None
+        except (jwt.InvalidTokenError, Exception):
+            return None
+        return None
 
     return app
-
 
 # Ensure models are imported so that they are registered with SQLAlchemy
 from api.models import User, Role, Profile  # Correct import path
