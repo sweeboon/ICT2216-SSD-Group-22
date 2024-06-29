@@ -19,6 +19,10 @@ const Login = () => {
     }
   };
 
+  if (isLoggedIn) {
+    return <Navigate to="/landing" replace />;
+  }
+
   return (
     <div className="auth-container">
       <h2>Login</h2>

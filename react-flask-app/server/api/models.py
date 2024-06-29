@@ -25,9 +25,11 @@ class User(UserMixin, db.Model):
     login_count = db.Column(db.Integer, default=0)
     confirmed = db.Column(db.Boolean, default=False)
     confirmed_on = db.Column(db.DateTime(), nullable=True)
+    otp = db.Column(db.String(6), nullable=True)  
+    otp_generated_at = db.Column(db.DateTime(), nullable=True)  
+    new_email = db.Column(db.String(255), nullable=True)  
     profiles = db.relationship('Profile', backref='user', lazy=True)
     roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
-
     def get_id(self):
         return self.user_id
 

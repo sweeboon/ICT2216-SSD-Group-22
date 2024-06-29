@@ -10,9 +10,14 @@ from .tokens import generate_token, verify_token
 from .email import send_email
 import jwt
 from flask_wtf.csrf import generate_csrf
+from api.auth.email import send_otp_email
+import logging
+import pyotp
+
 
 super_admin_permission = Permission(RoleNeed('SuperAdmin'))
 admin_permission = Permission(RoleNeed('Admin'))
+logger = logging.getLogger(__name__)
 
 @bp.route('/csrf-token', methods=['POST'])
 def get_csrf_token():
@@ -98,7 +103,6 @@ def login():
         'iat': datetime.now(),
         'exp': datetime.now() + timedelta(minutes=30)
     }, current_app.config['SECRET_KEY'], algorithm="HS256")
-    print(token)
 
     # Log in the user
     login_user(user, remember=True, duration=timedelta(minutes=30))
@@ -106,7 +110,7 @@ def login():
     # Notify Flask-Principal of the login
     identity_changed.send(current_app._get_current_object(), identity=Identity(user.user_id))
 
-    return jsonify({'message': 'Login successful', 'token': token}), 200
+    return jsonify({'message': 'Login successful', 'token': token, 'username': user.email}), 200
 
 
 @bp.route('/logout', methods=['POST'])
@@ -186,3 +190,61 @@ def get_roles():
     roles = Role.query.all()
     roles_data = [{'id': role.id, 'name': role.name} for role in roles]
     return jsonify(roles_data), 200
+
+@bp.route('/request-email-change', methods=['POST'])
+@login_required
+def request_email_change():
+    try:
+        data = request.get_json()
+        new_email = data.get('email')
+
+        if not new_email:
+            return jsonify({'error': 'Email is required'}), 400
+
+        existing_user = User.query.filter_by(email=new_email).first()
+        if existing_user:
+            return jsonify({'error': 'Email already in use'}), 400
+
+        # Generate OTP
+        totp = pyotp.TOTP(current_app.config['OTP_SECRET_KEY'], interval=300)
+        otp = totp.now()
+
+        # Store the OTP and timestamp in the user's session (or a more secure storage)
+        current_user.otp = otp
+        current_user.otp_generated_at = datetime.now()
+        current_user.new_email = new_email
+        db.session.commit()
+
+        # Send OTP email to the old email address
+        send_otp_email(current_user.email, otp)
+
+        return jsonify({'message': 'OTP sent to your current email address'}), 200
+    except Exception as e:
+        logger.error(f'Error requesting email change: {e}')
+        return jsonify({'error': 'Failed to request email change', 'details': str(e)}), 500
+
+@bp.route('/verify-email-change', methods=['POST'])
+@login_required
+def verify_email_change():
+    try:
+        data = request.get_json()
+        otp = data.get('otp')
+
+        if not otp:
+            return jsonify({'error': 'OTP is required'}), 400
+
+        # Check if the OTP is expired
+        otp_generated_at = current_user.otp_generated_at
+        if not otp_generated_at or (datetime.datetime.now() - otp_generated_at).total_seconds() > 300:
+            return jsonify({'error': 'OTP has expired'}), 400
+
+        # Verify OTP
+        totp = pyotp.TOTP(current_app.config['SECRET_KEY'], interval=300)
+        if not totp.verify(otp):
+            return jsonify({'error': 'Invalid OTP'}), 400
+
+        # Set a flag or return success so the email change can proceed
+        return jsonify({'message': 'OTP verified successfully'}), 200
+    except Exception as e:
+        logger.error(f'Error verifying email change: {e}')
+        return jsonify({'error': 'Failed to verify email change', 'details': str(e)}), 500

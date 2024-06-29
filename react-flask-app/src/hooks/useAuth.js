@@ -9,10 +9,15 @@ export const useAuth = () => {
   const handleLogin = async (email, password) => {
     try {
       const response = await axios.post('/auth/login', { email, password });
+      console.log('Login response:', response.data);
+
       const jwtToken = response.data.token;
+      const loggedUsername = response.data.logged_in_as;
+
       setToken(jwtToken);
       localStorage.setItem('token', jwtToken);
-      setUsername(response.data.username);
+      setUsername(loggedUsername);
+
       setIsLoggedIn(true);
     } catch (error) {
       console.error('Login failed:', error);
@@ -27,7 +32,7 @@ export const useAuth = () => {
       setUsername('');
       setToken('');
       localStorage.removeItem('token');
-      
+
       // Clear cookies
       document.cookie = 'XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       document.cookie = 'session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
@@ -52,12 +57,17 @@ export const useAuth = () => {
     checkAuthStatus();
   }, []);
 
+  useEffect(() => {
+    console.log('isLoggedIn state changed:', isLoggedIn);
+  }, [isLoggedIn]);
+
   return {
     isLoggedIn,
     username,
     token,
     handleLogin,
     handleLogout,
+    checkAuthStatus,
     setIsLoggedIn,
     setUsername,
     setToken

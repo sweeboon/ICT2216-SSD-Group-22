@@ -1,15 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from '../components/axiosConfig';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const Profile = () => {
-  const [profile, setProfile] = useState({ name: '', address: '', date_of_birth: '' });
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
+  const { isLoggedIn, username } = useAuth();
+  const [profile, setProfile] = useState({
+    name: '',
+    address: '',
+    date_of_birth: '',
+    email: ''
+  });
+  const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
-  const { isLoggedIn } = useAuth();
-  const navigate = useNavigate();
+  const [otpRequested, setOtpRequested] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -18,48 +21,58 @@ const Profile = () => {
         setProfile(response.data);
       } catch (error) {
         console.error('Error fetching profile:', error);
-        setError('Failed to fetch profile');
       }
     };
 
-    if (isLoggedIn) {
-      fetchProfile();
-    } else {
-      navigate('/login');
-    }
-  }, [isLoggedIn, navigate]);
+    fetchProfile();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setProfile(prevState => ({ ...prevState, [name]: value }));
+    setProfile((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
   };
 
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
+  const handleRequestOtp = async () => {
+    try {
+      const response = await axios.post('/auth/request-email-change', { email: profile.email });
+      setOtpRequested(true);
+      alert(response.data.message);
+    } catch (error) {
+      console.error('Error requesting OTP:', error);
+      setError('Failed to request OTP');
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    try {
+      const response = await axios.post('/profile/change-email', { otp });
+      alert(response.data.message);
+      setOtp('');
+      setOtpRequested(false);
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      setError('Failed to verify OTP');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put('/profile', {
-        ...profile,
-        password: password ? password : undefined
-      });
-      setMessage(response.data.message);
-      setError('');
-      setPassword('');
+      console.log('Updating profile with data:', profile);
+      const response = await axios.put('/profile', profile);
+      alert(response.data.message);
     } catch (error) {
       console.error('Error updating profile:', error);
-      setError(error.response.data.error || 'Failed to update profile');
-      setMessage('');
+      setError('Failed to update profile');
     }
   };
 
   return (
     <div className="profile-container">
       <h2>Profile</h2>
-      {message && <p className="success-message">{message}</p>}
-      {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div>
           <label>Name:</label>
@@ -80,15 +93,38 @@ const Profile = () => {
           />
         </div>
         <div>
-          <label>New Password:</label>
+          <label>Date of Birth:</label>
           <input
-            type="password"
-            name="password"
-            value={password}
-            onChange={handlePasswordChange}
-          />  
+            type="date"
+            name="date_of_birth"
+            value={profile.date_of_birth}
+            onChange={handleChange}
+          />
         </div>
+        <div>
+          <label>Email:</label>
+          <input
+            type="email"
+            name="email"
+            value={profile.email}
+            onChange={handleChange}
+          />
+        </div>
+        <button type="button" onClick={handleRequestOtp}>Request OTP for Email Change</button>
+        {otpRequested && (
+          <div>
+            <label>Enter OTP:</label>
+            <input
+              type="text"
+              name="otp"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+            />
+            <button type="button" onClick={handleVerifyOtp}>Verify OTP</button>
+          </div>
+        )}
         <button type="submit">Update Profile</button>
+        {error && <p>{error}</p>}
       </form>
     </div>
   );

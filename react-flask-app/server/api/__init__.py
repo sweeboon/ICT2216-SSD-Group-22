@@ -25,11 +25,11 @@ def create_app(config_class=Config):
     db.init_app(app)
     migrate.init_app(app, db)
     mail.init_app(app)
-    CORS(app, supports_credentials=True)
+    CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
     csrf.init_app(app)
     principal.init_app(app)
     login_manager.init_app(app)
-    login_manager.session_protection = "strong"
+
     from api.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
@@ -49,16 +49,16 @@ def create_app(config_class=Config):
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.filter_by(alternative_id=user_id).first()
+        return User.query.get(int(user_id))
 
     @login_manager.request_loader
     def load_user_from_request(request):
         auth_headers = request.headers.get('Authorization', '').split()
-        print("load")
         if len(auth_headers) != 2:
             return None
         try:
             token = auth_headers[1]
+            print(token)
             data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
             user = User.query.filter_by(email=data['sub']).first()
             if user:
@@ -68,6 +68,16 @@ def create_app(config_class=Config):
         except (jwt.InvalidTokenError, Exception):
             return None
         return None
+    
+    @app.before_request
+    def handle_options_request():
+        if request.method == 'OPTIONS':
+            response = app.make_default_options_response()
+            headers = None
+            if 'ACCESS_CONTROL_REQUEST_HEADERS' in request.headers:
+                headers = request.headers['ACCESS_CONTROL_REQUEST_HEADERS']
+            response.headers['Access-Control-Allow-Headers'] = headers or '*'
+            return response
 
     return app
 
