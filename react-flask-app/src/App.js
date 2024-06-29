@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { Route, Routes, Link } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import ProductComponent from './components/ProductComponent';
 import Profile from './pages/Profile';
@@ -12,7 +12,7 @@ const App = () => {
   const { isLoggedIn } = useAuth();
 
   return (
-    <Router>
+    <div>
       <nav>
         <Link to="/">Home</Link>
         <Link to="/products">Manage Products</Link>
@@ -26,7 +26,7 @@ const App = () => {
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>
-    </Router>
+    </div>
   );
 };
 
