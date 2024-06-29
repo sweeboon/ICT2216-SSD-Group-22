@@ -7,6 +7,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import HomePage from './pages/HomePage';
 import { useAuth } from './hooks/useAuth';
+import ConfirmEmail from './pages/ConfirmEmail';
+import ConfirmationResult from './pages/ConfirmationResult';
 
 const App = () => {
   const { isLoggedIn } = useAuth();
@@ -25,6 +27,8 @@ const App = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/confirm" element={<ConfirmEmail />} />
+        <Route path="/confirm-result" element={<ConfirmationResult />} />
       </Routes>
     </div>
   );

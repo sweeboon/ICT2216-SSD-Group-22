@@ -10,7 +10,7 @@ const ConfirmEmail = () => {
   useEffect(() => {
     const confirmEmail = async () => {
       try {
-        const response = await axios.get(`/auth/confirm`, {
+        const response = await axios.get('/auth/confirm', {
           params: { token }
         });
         setMessage(response.data.message);
