@@ -11,8 +11,11 @@ const Profile = () => {
     email: ''
   });
   const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [otpRequested, setOtpRequested] = useState(false);
+  const [otpRequired, setOtpRequired] = useState(false);
+  const [changeType, setChangeType] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -35,38 +38,54 @@ const Profile = () => {
     }));
   };
 
-  const handleRequestOtp = async () => {
+  const handlePasswordChange = (e) => {
+    setNewPassword(e.target.value);
+  };
+
+  const handleConfirmPasswordChange = (e) => {
+    setConfirmPassword(e.target.value);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
     try {
-      const response = await axios.post('/auth/request-email-change', { email: profile.email });
-      setOtpRequested(true);
-      alert(response.data.message);
+      const data = { ...profile };
+      if (newPassword) {
+        data.password = newPassword;
+        data.confirm_password = confirmPassword;
+      }
+      const response = await axios.put('/profile', data);
+      if (response.data.otp_required) {
+        setOtpRequired(true);
+        if (data.password) {
+          setChangeType('password');
+        } else {
+          setChangeType('email');
+        }
+      } else {
+        alert(response.data.message);
+      }
     } catch (error) {
-      console.error('Error requesting OTP:', error);
-      setError('Failed to request OTP');
+      console.error('Error updating profile:', error);
+      setError('Failed to update profile');
     }
   };
 
   const handleVerifyOtp = async () => {
     try {
-      const response = await axios.post('/profile/change-email', { otp });
+      const response = await axios.post('/auth/verify-otp', { otp, change_type: changeType, new_password: newPassword, confirm_password: confirmPassword });
       alert(response.data.message);
       setOtp('');
-      setOtpRequested(false);
+      setNewPassword('');
+      setConfirmPassword('');
+      setOtpRequired(false);
     } catch (error) {
       console.error('Error verifying OTP:', error);
       setError('Failed to verify OTP');
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      console.log('Updating profile with data:', profile);
-      const response = await axios.put('/profile', profile);
-      alert(response.data.message);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      setError('Failed to update profile');
     }
   };
 
@@ -110,8 +129,26 @@ const Profile = () => {
             onChange={handleChange}
           />
         </div>
-        <button type="button" onClick={handleRequestOtp}>Request OTP for Email Change</button>
-        {otpRequested && (
+        <div>
+          <label>New Password:</label>
+          <input
+            type="password"
+            name="newPassword"
+            value={newPassword}
+            onChange={handlePasswordChange}
+          />
+        </div>
+        <div>
+          <label>Confirm New Password:</label>
+          <input
+            type="password"
+            name="confirmPassword"
+            value={confirmPassword}
+            onChange={handleConfirmPasswordChange}
+          />
+        </div>
+        <button type="submit">Update Profile</button>
+        {otpRequired && (
           <div>
             <label>Enter OTP:</label>
             <input
@@ -123,7 +160,6 @@ const Profile = () => {
             <button type="button" onClick={handleVerifyOtp}>Verify OTP</button>
           </div>
         )}
-        <button type="submit">Update Profile</button>
         {error && <p>{error}</p>}
       </form>
     </div>
