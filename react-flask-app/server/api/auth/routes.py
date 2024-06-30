@@ -2,7 +2,7 @@ from flask import jsonify, request, current_app, session, make_response
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_principal import Identity, AnonymousIdentity, identity_changed, RoleNeed, Permission
 from api.auth import bp
-from api.models import User, Profile, Role
+from api.models import User, Role
 from api import db, csrf, mail
 from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
@@ -36,22 +36,16 @@ def register():
     user = User(
         email=data['email'],
         password=pbkdf2_sha256.hash(data['password']),
+        name=data['username'],  
+        date_of_birth=datetime.strptime(data.get('date_of_birth'), '%Y-%m-%d').date() if data.get('date_of_birth') else None,  # Add date_of_birth field
+        address=data.get('address') 
     )
 
     user_role = Role.query.filter_by(name='User').first()
     if user_role:
         user.roles.append(user_role)
 
-    date_of_birth = datetime.strptime(data.get('date_of_birth'), '%Y-%m-%d').date() if data.get('date_of_birth') else None
-    profile = Profile(
-        name=data['username'],
-        date_of_birth=date_of_birth,
-        address=data.get('address'),
-        user=user
-    )
-
     db.session.add(user)
-    db.session.add(profile)
     db.session.commit()
 
     token = generate_token(user.email)
@@ -81,10 +75,8 @@ def confirm_email():
 @csrf.exempt
 def login():
     data = request.get_json()
-    if 'email' not in data:
-        return jsonify({'message': 'Email is required'}), 400
-    if 'password' not in data:
-        return jsonify({'message': 'Password is required'}), 400
+    if 'email' not in data or 'password' not in data:
+        return jsonify({'message': 'Email and password are required'}), 400
 
     user = User.query.filter_by(email=data['email']).first()
     if user is None or not pbkdf2_sha256.verify(data['password'], user.password):
@@ -93,8 +85,6 @@ def login():
     # Update login timestamps and count
     user.last_login_at = datetime.now()
     user.login_count += 1
-
-    # Save the user data
     db.session.commit()
 
     # Generate JWT token
@@ -137,8 +127,7 @@ def logout():
 @csrf.exempt
 def status():
     if current_user.is_authenticated:
-        profile = Profile.query.filter_by(user_id=current_user.user_id).first()
-        return jsonify({'loggedIn': True, 'username': profile.name}), 200
+        return jsonify({'loggedIn': True, 'username': current_user.name}), 200
     else:
         return jsonify({'loggedIn': False}), 200
 

@@ -1,5 +1,5 @@
 from flask_login import UserMixin
-from flask_principal import RoleNeed, UserNeed
+from flask_principal import RoleNeed
 from api import db
 from sqlalchemy import Integer, String, Boolean, DateTime, Column, ForeignKey
 from sqlalchemy.orm import relationship
@@ -28,8 +28,11 @@ class User(UserMixin, db.Model):
     otp = db.Column(db.String(6), nullable=True)  
     otp_generated_at = db.Column(db.DateTime(), nullable=True)  
     new_email = db.Column(db.String(255), nullable=True)  
-    profiles = db.relationship('Profile', backref='user', lazy=True)
+    name = db.Column(db.String(255))
+    date_of_birth = db.Column(db.Date)
+    address = db.Column(db.String(255))
     roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
+
     def get_id(self):
         return self.user_id
 
@@ -38,15 +41,6 @@ class User(UserMixin, db.Model):
 
     def has_role(self, role_name):
         return role_name in self.get_roles()
-    
-
-class Profile(db.Model):
-    profile_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255))
-    date_of_birth = db.Column(db.Date)
-    address = db.Column(db.String(255))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
-
 
 class Product(db.Model):
     product_id = db.Column(db.Integer, primary_key=True, autoincrement=True)

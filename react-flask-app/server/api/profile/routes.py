@@ -1,12 +1,12 @@
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required
-from api.models import User, Profile
+from api.models import User, Role
 from api import db, csrf
 from passlib.hash import pbkdf2_sha256
 import logging
-from api.profile import bp
 from datetime import datetime 
 import pyotp
+from api.profile import bp
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -16,15 +16,12 @@ logger = logging.getLogger(__name__)
 @login_required
 def get_profile():
     try:
-        profile = Profile.query.filter_by(user_id=current_user.user_id).first()
-        if not profile:
-            return jsonify({'error': 'Profile not found'}), 404
-
+        user = current_user
         profile_data = {
-            'name': profile.name,
-            'address': profile.address,
-            'date_of_birth': profile.date_of_birth.strftime('%Y-%m-%d') if profile.date_of_birth else None,
-            'email': current_user.email
+            'name': user.name,
+            'address': user.address,
+            'date_of_birth': user.date_of_birth.strftime('%Y-%m-%d') if user.date_of_birth else None,
+            'email': user.email
         }
         return jsonify(profile_data), 200
     except Exception as e:
@@ -37,19 +34,16 @@ def get_profile():
 def update_profile():
     try:
         data = request.get_json()
-        profile = Profile.query.filter_by(user_id=current_user.user_id).first()
-
-        if not profile:
-            return jsonify({'error': 'Profile not found'}), 404
+        user = current_user
 
         if 'name' in data:
-            profile.name = data['name']
+            user.name = data['name']
         if 'address' in data:
-            profile.address = data['address']
+            user.address = data['address']
         if 'date_of_birth' in data:
-            profile.date_of_birth = datetime.strptime(data['date_of_birth'], '%Y-%m-%d')
+            user.date_of_birth = datetime.strptime(data['date_of_birth'], '%Y-%m-%d')
         if 'password' in data:
-            current_user.password = pbkdf2_sha256.hash(data['password'])
+            user.password = pbkdf2_sha256.hash(data['password'])
 
         db.session.commit()
         return jsonify({'message': 'Profile updated successfully'}), 200
