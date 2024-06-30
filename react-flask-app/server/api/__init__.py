@@ -86,4 +86,4 @@ def create_app(config_class=Config):
     return app
 
 # Ensure models are imported so that they are registered with SQLAlchemy
-from api.models import User, Role, Profile  # Correct import path
+from api.models import User, Role

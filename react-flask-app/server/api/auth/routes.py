@@ -180,60 +180,75 @@ def get_roles():
     roles_data = [{'id': role.id, 'name': role.name} for role in roles]
     return jsonify(roles_data), 200
 
-@bp.route('/request-email-change', methods=['POST'])
-@login_required
-def request_email_change():
+@bp.route('/generate-otp', methods=['POST'])
+@csrf.exempt
+def generate_otp():
     try:
         data = request.get_json()
-        new_email = data.get('email')
+        change_type = data.get('change_type')
+        if change_type not in ['email', 'password']:
+            return jsonify({'error': 'Invalid change type'}), 400
 
-        if not new_email:
-            return jsonify({'error': 'Email is required'}), 400
-
-        existing_user = User.query.filter_by(email=new_email).first()
-        if existing_user:
-            return jsonify({'error': 'Email already in use'}), 400
+        if change_type == 'email':
+            new_email = data.get('email')
+            if not new_email:
+                return jsonify({'error': 'Email is required'}), 400
+            existing_user = User.query.filter_by(email=new_email).first()
+            if existing_user:
+                return jsonify({'error': 'Email already in use'}), 400
+            current_user.new_email = new_email
 
         # Generate OTP
         totp = pyotp.TOTP(current_app.config['OTP_SECRET_KEY'], interval=300)
         otp = totp.now()
 
-        # Store the OTP and timestamp in the user's session (or a more secure storage)
+        # Store OTP and timestamp in the user's record
         current_user.otp = otp
         current_user.otp_generated_at = datetime.now()
-        current_user.new_email = new_email
         db.session.commit()
 
-        # Send OTP email to the old email address
+        # Send OTP email
         send_otp_email(current_user.email, otp)
 
-        return jsonify({'message': 'OTP sent to your current email address'}), 200
+        return jsonify({'message': 'OTP sent to your current email address', 'otp_required': True}), 200
     except Exception as e:
-        logger.error(f'Error requesting email change: {e}')
-        return jsonify({'error': 'Failed to request email change', 'details': str(e)}), 500
+        logger.error(f'Error generating OTP: {e}')
+        return jsonify({'error': 'Failed to generate OTP', 'details': str(e)}), 500
 
-@bp.route('/verify-email-change', methods=['POST'])
-@login_required
-def verify_email_change():
+@bp.route('/verify-otp', methods=['POST'])
+@csrf.exempt
+def verify_otp():
     try:
         data = request.get_json()
         otp = data.get('otp')
+        change_type = data.get('change_type')
 
-        if not otp:
-            return jsonify({'error': 'OTP is required'}), 400
+        if not otp or not change_type:
+            return jsonify({'error': 'OTP and change type are required'}), 400
 
-        # Check if the OTP is expired
-        otp_generated_at = current_user.otp_generated_at
-        if not otp_generated_at or (datetime.datetime.now() - otp_generated_at).total_seconds() > 300:
-            return jsonify({'error': 'OTP has expired'}), 400
+        if change_type not in ['email', 'password']:
+            return jsonify({'error': 'Invalid change type'}), 400
 
         # Verify OTP
-        totp = pyotp.TOTP(current_app.config['SECRET_KEY'], interval=300)
+        totp = pyotp.TOTP(current_app.config['OTP_SECRET_KEY'], interval=300)
         if not totp.verify(otp):
-            return jsonify({'error': 'Invalid OTP'}), 400
+            return jsonify({'error': 'Invalid or expired OTP'}), 400
 
-        # Set a flag or return success so the email change can proceed
-        return jsonify({'message': 'OTP verified successfully'}), 200
+        if change_type == 'email':
+            new_email = current_user.new_email
+            current_user.email = new_email
+            current_user.new_email = None
+        elif change_type == 'password':
+            new_password = data.get('new_password')
+            confirm_password = data.get('confirm_password')
+            if new_password != confirm_password:
+                return jsonify({'error': 'Passwords do not match'}), 400
+            current_user.password = pbkdf2_sha256.hash(new_password)
+
+        current_user.otp = None  # Clear OTP
+        db.session.commit()
+
+        return jsonify({'message': f'{change_type.capitalize()} changed successfully'}), 200
     except Exception as e:
-        logger.error(f'Error verifying email change: {e}')
-        return jsonify({'error': 'Failed to verify email change', 'details': str(e)}), 500
+        logger.error(f'Error verifying OTP: {e}')
+        return jsonify({'error': f'Failed to change {change_type}', 'details': str(e)}), 500

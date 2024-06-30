@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, url_for
 from flask_login import current_user, login_required
 from api.models import User, Role
 from api import db, csrf
@@ -7,6 +7,7 @@ import logging
 from datetime import datetime 
 import pyotp
 from api.profile import bp
+import requests
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
@@ -35,6 +36,7 @@ def update_profile():
     try:
         data = request.get_json()
         user = current_user
+        otp_required = False
 
         if 'name' in data:
             user.name = data['name']
@@ -42,38 +44,30 @@ def update_profile():
             user.address = data['address']
         if 'date_of_birth' in data:
             user.date_of_birth = datetime.strptime(data['date_of_birth'], '%Y-%m-%d')
+        if 'email' in data:
+            new_email = data['email']
+            if new_email != user.email:
+                otp_required = True
+                # Request OTP for email change
+                response = requests.post(url_for('auth.generate_otp', _external=True), json={'change_type': 'email', 'email': new_email})
+                if response.status_code != 200:
+                    return jsonify(response.json()), response.status_code
         if 'password' in data:
-            user.password = pbkdf2_sha256.hash(data['password'])
+            new_password = data['password']
+            confirm_password = data.get('confirm_password')
+            if new_password != confirm_password:
+                return jsonify({'error': 'Passwords do not match'}), 400
+            otp_required = True
+            # Request OTP for password change
+            response = requests.post(url_for('auth.generate_otp', _external=True), json={'change_type': 'password'})
+            if response.status_code != 200:
+                return jsonify(response.json()), response.status_code
 
-        db.session.commit()
-        return jsonify({'message': 'Profile updated successfully'}), 200
+        if otp_required:
+            return jsonify({'message': 'OTP sent to your current email address', 'otp_required': True}), 200
+        else:
+            db.session.commit()
+            return jsonify({'message': 'Profile updated successfully', 'otp_required': False}), 200
     except Exception as e:
         logger.error(f'Error updating profile: {e}')
         return jsonify({'error': 'Failed to update profile', 'details': str(e)}), 500
-
-@bp.route('/change-email', methods=['POST'])
-@login_required
-@csrf.exempt
-def change_email():
-    try:
-        data = request.get_json()
-        otp = data.get('otp')
-
-        if not otp:
-            return jsonify({'error': 'OTP is required'}), 400
-
-        # Verify OTP
-        totp = pyotp.TOTP(current_app.config['OTP_SECRET_KEY'], interval=300)
-        if not totp.verify(otp):
-            return jsonify({'error': 'Invalid or expired OTP'}), 400
-
-        new_email = current_user.new_email
-        current_user.email = new_email
-        current_user.new_email = None
-        current_user.otp = None
-        db.session.commit()
-
-        return jsonify({'message': 'Email updated successfully'}), 200
-    except Exception as e:
-        logger.error(f'Error changing email: {e}')
-        return jsonify({'error': 'Failed to change email', 'details': str(e)}), 500
