@@ -1,8 +1,7 @@
 from flask_login import UserMixin
-from flask_principal import RoleNeed
+from flask_principal import RoleNeed, UserNeed
+from flask_sqlalchemy import SQLAlchemy
 from api import db
-from sqlalchemy import Integer, String, Boolean, DateTime, Column, ForeignKey
-from sqlalchemy.orm import relationship
 from datetime import datetime
 
 roles_users = db.Table('roles_users',
@@ -28,11 +27,8 @@ class User(UserMixin, db.Model):
     otp = db.Column(db.String(6), nullable=True)  
     otp_generated_at = db.Column(db.DateTime(), nullable=True)  
     new_email = db.Column(db.String(255), nullable=True)  
-    name = db.Column(db.String(255))
-    date_of_birth = db.Column(db.Date)
-    address = db.Column(db.String(255))
+    profiles = db.relationship('Profile', backref='user', lazy=True)
     roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
-
     def get_id(self):
         return self.user_id
 
@@ -41,6 +37,15 @@ class User(UserMixin, db.Model):
 
     def has_role(self, role_name):
         return role_name in self.get_roles()
+    
+
+class Profile(db.Model):
+    profile_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    date_of_birth = db.Column(db.Date)
+    address = db.Column(db.String(255))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False)
+
 
 class Product(db.Model):
     product_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -50,3 +55,29 @@ class Product(db.Model):
     product_price = db.Column(db.Float)
     stock = db.Column(db.Integer)
     image_path = db.Column(db.String(255))
+
+class Cart(db.Model):
+    cart_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    product_id = db.Column(db.Integer)
+    account_id = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime(), default=datetime.now)
+    quantity = db.Column(db.Integer)
+    cart_item_price = db.Column(db.Float)
+
+class Payment(db.Model):
+    payment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    account_id = db.Column(db.Integer)
+    total_amount = db.Column(db.Float)
+    payment_method = db.Column(db.String(255))
+    payment_status = db.Column(db.String(255))
+    payment_date = db.Column(db.DateTime(), default=datetime.now)
+
+class Order(db.Model):
+    order_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    payment_id = db.Column(db.Integer)
+    account_id = db.Column(db.Integer)
+    order_status = db.Column(db.String(255))
+    order_price = db.Column(db.Float)
+    order_date = db.Column(db.DateTime(), default=datetime.now)
+    product_id = db.Column(db.Integer)
+    quantity = db.Column(db.Integer)

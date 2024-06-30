@@ -44,6 +44,7 @@ qrcode==7.4.2
 six==1.16.0
 SQLAlchemy==2.0.30
 SQLAlchemy-Utils==0.41.2
+supabase==2.5.1
 typing_extensions==4.12.2
 webauthn==2.1.0
 webencodings==0.5.1

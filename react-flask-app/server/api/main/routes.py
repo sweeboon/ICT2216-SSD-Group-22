@@ -1,4 +1,5 @@
-from flask import request, jsonify, abort
+import base64
+from flask import request, jsonify, abort, current_app
 from api.models import Product
 from api import db, csrf
 from api.main import bp
@@ -20,19 +21,31 @@ def get_products():
 def create_product():
     if not request.json or not all(key in request.json for key in ['category_id', 'image_id', 'product_description', 'product_price', 'stock', 'image_path']):
         abort(400)  # Bad request
+
+    supabase = current_app.supabase
     
+    image_data = request.json['image_path']  # Assuming image data is base64 encoded
+    image_name = f"{request.json['product_description'].replace(' ', '_')}.png"
+
+    response = supabase.storage.from_("your-bucket-name").upload(image_name, base64.b64decode(image_data))
+
+    if response['status'] != 'ok':
+        abort(500)  # Handle error
+
+    image_url = supabase.storage.from_("your-bucket-name").get_public_url(image_name)
+
     new_product = Product(
         category_id=request.json['category_id'],
         image_id=request.json['image_id'],
         product_description=request.json['product_description'],
         product_price=request.json['product_price'],
         stock=request.json['stock'],
-        image_path=request.json['image_path']
+        image_path=image_url  # Store the URL of the uploaded image
     )
-    
+
     db.session.add(new_product)
     db.session.commit()
-    
+
     return jsonify({'product_id': new_product.product_id}), 201
 
 # Read a Single Product

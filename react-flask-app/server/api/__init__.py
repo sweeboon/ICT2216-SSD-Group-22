@@ -10,6 +10,7 @@ from flask_login import LoginManager, current_user
 from flask_principal import Principal, RoleNeed, UserNeed, identity_loaded, Identity, AnonymousIdentity, IdentityContext
 import jwt
 from datetime import datetime, timedelta
+from supabase import create_client, Client
 
 load_dotenv()
 db = SQLAlchemy()
@@ -22,13 +23,16 @@ principal = Principal()
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    
     db.init_app(app)
     migrate.init_app(app, db)
     mail.init_app(app)
-    CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
     csrf.init_app(app)
     principal.init_app(app)
     login_manager.init_app(app)
+    CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
+
+    app.supabase = create_client(app.config["SUPABASE_URL"], app.config["SUPABASE_KEY"])
 
     from api.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -82,4 +86,4 @@ def create_app(config_class=Config):
     return app
 
 # Ensure models are imported so that they are registered with SQLAlchemy
-from api.models import User, Role
+from api.models import User, Role, Profile  # Correct import path

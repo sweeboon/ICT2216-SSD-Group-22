@@ -10,6 +10,9 @@ class Config:
     SECURITY_PASSWORD_SALT = os.environ.get("SECURITY_PASSWORD_SALT")
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     SIGNER_SECRET_KEY = os.environ.get("SIGNER_SECRET_KEY")
+    SUPABASE_URL = os.environ.get("SUPABASE_URL")
+    SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+    SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET")
     
     # Session configurations
     SESSION_PERMANENT = True

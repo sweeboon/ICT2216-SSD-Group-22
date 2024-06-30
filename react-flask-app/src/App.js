@@ -16,7 +16,7 @@ const App = () => {
   return (
     <div>
       <nav>
-        <Link to="/">Home</Link>
+        <Link to="/landing">Home</Link>
         <Link to="/products">Manage Products</Link>
         {isLoggedIn && <Link to="/profile">Profile</Link>}
       </nav>
