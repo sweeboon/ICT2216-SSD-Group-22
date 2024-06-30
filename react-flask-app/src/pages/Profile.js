@@ -8,7 +8,8 @@ const Profile = () => {
     name: '',
     address: '',
     date_of_birth: '',
-    email: ''
+    email: '',
+    original_email: ''
   });
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -16,12 +17,13 @@ const Profile = () => {
   const [error, setError] = useState('');
   const [otpRequired, setOtpRequired] = useState(false);
   const [changeType, setChangeType] = useState('');
+  const [otpVerified, setOtpVerified] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const response = await axios.get('/profile');
-        setProfile(response.data);
+        setProfile({ ...response.data, original_email: response.data.email });
       } catch (error) {
         console.error('Error fetching profile:', error);
       }
@@ -46,29 +48,51 @@ const Profile = () => {
     setConfirmPassword(e.target.value);
   };
 
+  const requestOtp = async (changeType, newEmail = null) => {
+    try {
+      const response = await axios.post('/profile/request-otp', { change_type: changeType, new_email: newEmail });
+      alert(response.data.message);
+      setOtpRequired(true);
+      setChangeType(changeType);
+    } catch (error) {
+      console.error('Error requesting OTP:', error);
+      setError('Failed to request OTP');
+    }
+  };
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
+
+    if (profile.email !== profile.original_email) {
+      requestOtp('email', profile.email);
+    } else if (newPassword !== '') {
+      requestOtp('password');
+    } else {
+      updateProfile();
+    }
+  };
+
+  const updateProfile = async () => {
     try {
       const data = { ...profile };
-      if (newPassword) {
+      delete data.original_email; // Remove original_email from the payload
+
+      if (profile.email === profile.original_email) {
+        delete data.email; // Remove email if it hasn't changed
+      }
+
+      if (otpVerified && changeType === 'password') {
         data.password = newPassword;
         data.confirm_password = confirmPassword;
       }
+
       const response = await axios.put('/profile', data);
-      if (response.data.otp_required) {
-        setOtpRequired(true);
-        if (data.password) {
-          setChangeType('password');
-        } else {
-          setChangeType('email');
-        }
-      } else {
-        alert(response.data.message);
-      }
+      alert(response.data.message);
+      setOtpVerified(false);
     } catch (error) {
       console.error('Error updating profile:', error);
       setError('Failed to update profile');
@@ -77,12 +101,14 @@ const Profile = () => {
 
   const handleVerifyOtp = async () => {
     try {
-      const response = await axios.post('/auth/verify-otp', { otp, change_type: changeType, new_password: newPassword, confirm_password: confirmPassword });
+      const response = await axios.post('/profile/verify-otp', { otp, change_type: changeType, new_password: newPassword, confirm_password: confirmPassword });
       alert(response.data.message);
       setOtp('');
-      setNewPassword('');
-      setConfirmPassword('');
       setOtpRequired(false);
+      setOtpVerified(true);
+      if (changeType === 'email' || changeType === 'password') {
+        updateProfile();
+      }
     } catch (error) {
       console.error('Error verifying OTP:', error);
       setError('Failed to verify OTP');
