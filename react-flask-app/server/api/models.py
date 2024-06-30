@@ -37,6 +37,7 @@ class User(UserMixin, db.Model):
     date_of_birth = db.Column(db.Date)
     address = db.Column(db.String(255))
     roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
+    twofa_enabled = db.Column(db.Boolean, default=False)
 
     def get_id(self):
         return self.user_id

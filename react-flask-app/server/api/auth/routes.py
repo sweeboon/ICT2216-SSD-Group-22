@@ -6,7 +6,7 @@ from api.models import User, Role
 from api import db, csrf, mail
 from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
-from .tokens import generate_token, verify_token
+from .utils import generate_token, verify_token
 from .email import send_email
 import jwt
 from flask_wtf.csrf import generate_csrf
@@ -179,76 +179,3 @@ def get_roles():
     roles = Role.query.all()
     roles_data = [{'id': role.id, 'name': role.name} for role in roles]
     return jsonify(roles_data), 200
-
-@bp.route('/generate-otp', methods=['POST'])
-@csrf.exempt
-def generate_otp():
-    try:
-        data = request.get_json()
-        change_type = data.get('change_type')
-        if change_type not in ['email', 'password']:
-            return jsonify({'error': 'Invalid change type'}), 400
-
-        if change_type == 'email':
-            new_email = data.get('email')
-            if not new_email:
-                return jsonify({'error': 'Email is required'}), 400
-            existing_user = User.query.filter_by(email=new_email).first()
-            if existing_user:
-                return jsonify({'error': 'Email already in use'}), 400
-            current_user.new_email = new_email
-
-        # Generate OTP
-        totp = pyotp.TOTP(current_app.config['OTP_SECRET_KEY'], interval=300)
-        otp = totp.now()
-
-        # Store OTP and timestamp in the user's record
-        current_user.otp = otp
-        current_user.otp_generated_at = datetime.now()
-        db.session.commit()
-
-        # Send OTP email
-        send_otp_email(current_user.email, otp)
-
-        return jsonify({'message': 'OTP sent to your current email address', 'otp_required': True}), 200
-    except Exception as e:
-        logger.error(f'Error generating OTP: {e}')
-        return jsonify({'error': 'Failed to generate OTP', 'details': str(e)}), 500
-
-@bp.route('/verify-otp', methods=['POST'])
-@csrf.exempt
-def verify_otp():
-    try:
-        data = request.get_json()
-        otp = data.get('otp')
-        change_type = data.get('change_type')
-
-        if not otp or not change_type:
-            return jsonify({'error': 'OTP and change type are required'}), 400
-
-        if change_type not in ['email', 'password']:
-            return jsonify({'error': 'Invalid change type'}), 400
-
-        # Verify OTP
-        totp = pyotp.TOTP(current_app.config['OTP_SECRET_KEY'], interval=300)
-        if not totp.verify(otp):
-            return jsonify({'error': 'Invalid or expired OTP'}), 400
-
-        if change_type == 'email':
-            new_email = current_user.new_email
-            current_user.email = new_email
-            current_user.new_email = None
-        elif change_type == 'password':
-            new_password = data.get('new_password')
-            confirm_password = data.get('confirm_password')
-            if new_password != confirm_password:
-                return jsonify({'error': 'Passwords do not match'}), 400
-            current_user.password = pbkdf2_sha256.hash(new_password)
-
-        current_user.otp = None  # Clear OTP
-        db.session.commit()
-
-        return jsonify({'message': f'{change_type.capitalize()} changed successfully'}), 200
-    except Exception as e:
-        logger.error(f'Error verifying OTP: {e}')
-        return jsonify({'error': f'Failed to change {change_type}', 'details': str(e)}), 500
