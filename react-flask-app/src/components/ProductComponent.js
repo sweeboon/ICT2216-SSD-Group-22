@@ -49,13 +49,6 @@ const ProductComponent = () => {
           value={editProduct ? editProduct.category_id : newProduct.category_id}
           onChange={editProduct ? handleEditChange : handleChange}
         />
-        <input
-          type="number"
-          name="image_id"
-          placeholder="Image ID"
-          value={editProduct ? editProduct.image_id : newProduct.image_id}
-          onChange={editProduct ? handleEditChange : handleChange}
-        />
         <textarea
           name="product_description"
           placeholder="Description"

@@ -51,7 +51,6 @@ class User(UserMixin, db.Model):
 class Product(db.Model):
     product_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     category_id = db.Column(db.Integer)
-    image_id = db.Column(db.Integer)
     product_description = db.Column(db.String(255))
     product_price = db.Column(db.Float)
     stock = db.Column(db.Integer)
@@ -59,11 +58,15 @@ class Product(db.Model):
 
 class Cart(db.Model):
     cart_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    product_id = db.Column(db.Integer)
-    account_id = db.Column(db.Integer)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.product_id'), nullable=False)
+    account_id = db.Column(db.String(255))
     created_at = db.Column(db.DateTime(), default=datetime.now)
     quantity = db.Column(db.Integer)
     cart_item_price = db.Column(db.Float)
+    session_id = db.Column(db.String(255))
+    
+    #Relationship
+    product = db.relationship("Product", backref="cart", lazy=True)
 
 class Payment(db.Model):
     payment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)

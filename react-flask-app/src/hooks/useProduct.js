@@ -5,7 +5,6 @@ export const useProduct = () => {
   const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({
     category_id: '',
-    image_id: '',
     product_description: '',
     product_price: '',
     stock: '',
