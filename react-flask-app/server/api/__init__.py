@@ -46,14 +46,14 @@ def create_app(config_class=Config):
     @identity_loaded.connect_via(app)
     def on_identity_loaded(sender, identity):
         identity.user = current_user
-        if hasattr(current_user, 'user_id'):
-            identity.provides.add(UserNeed(current_user.user_id))
+        if hasattr(current_user, 'account_id'):
+            identity.provides.add(UserNeed(current_user.account_id))
             for role in current_user.roles:
                 identity.provides.add(RoleNeed(role.name))
 
     @login_manager.user_loader
-    def load_user(user_id):
-        return User.query.get(int(user_id))
+    def load_user(account_id):
+        return Account.query.get(int(account_id))
 
     @login_manager.request_loader
     def load_user_from_request(request):
@@ -64,9 +64,9 @@ def create_app(config_class=Config):
             token = auth_headers[1]
             print(token)
             data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
-            user = User.query.filter_by(email=data['sub']).first()
-            if user:
-                return user
+            account = Account.query.filter_by(email=data['sub']).first()
+            if account:
+                return account
         except jwt.ExpiredSignatureError:
             return None
         except (jwt.InvalidTokenError, Exception):
@@ -86,4 +86,4 @@ def create_app(config_class=Config):
     return app
 
 # Ensure models are imported so that they are registered with SQLAlchemy
-from api.models import User, Role
+from api.models import Account, Role

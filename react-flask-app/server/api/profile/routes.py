@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required
-from api.models import User
+from api.models import Account
 from api import db, csrf
 import logging
 from datetime import datetime
@@ -30,8 +30,8 @@ def request_otp():
         if change_type == 'email':
             if not new_email:
                 return jsonify({'error': 'Email is required'}), 400
-            existing_user = User.query.filter_by(email=new_email).first()
-            if existing_user:
+            existing_account = Account.query.filter_by(email=new_email).first()
+            if existing_account:
                 return jsonify({'error': 'Email already in use'}), 400
             current_user.new_email = new_email
 
@@ -79,12 +79,12 @@ def verify_otp_route():
 @login_required
 def get_profile():
     try:
-        user = current_user
+        account = current_user
         profile_data = {
-            'name': user.name,
-            'address': user.address,
-            'date_of_birth': user.date_of_birth.strftime('%Y-%m-%d') if user.date_of_birth else None,
-            'email': user.email
+            'name': account.name,
+            'address': account.address,
+            'date_of_birth': account.date_of_birth.strftime('%Y-%m-%d') if account.date_of_birth else None,
+            'email': account.email
         }
         return jsonify(profile_data), 200
     except Exception as e:
@@ -97,17 +97,17 @@ def get_profile():
 def update_profile():
     try:
         data = request.get_json()
-        user = current_user
+        account = current_user
 
         if 'email' in data or 'password' in data:
             return jsonify({'error': 'OTP is required to change email or password'}), 400
 
         if 'name' in data:
-            user.name = data['name']
+            account.name = data['name']
         if 'address' in data:
-            user.address = data['address']
+            account.address = data['address']
         if 'date_of_birth' in data:
-            user.date_of_birth = datetime.strptime(data['date_of_birth'], '%Y-%m-%d')
+            account.date_of_birth = datetime.strptime(data['date_of_birth'], '%Y-%m-%d')
 
         db.session.commit()
         return jsonify({'message': 'Profile updated successfully'}), 200

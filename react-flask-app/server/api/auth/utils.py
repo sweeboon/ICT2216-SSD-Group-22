@@ -2,8 +2,7 @@ from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
 import pyotp
 from datetime import datetime
-from flask import current_app
-from api.models import User
+from api.models import Account
 from api.auth.email import send_otp_email
 from api import db
 import logging
@@ -20,19 +19,19 @@ def generate_otp():
         logger.error(f'Error generating OTP: {e}')
         raise
 
-def send_otp(user, otp):
+def send_otp(account, otp):
     try:
         # Send OTP email
         from api.auth.email import send_otp_email
-        send_otp_email(user.email, otp)
+        send_otp_email(account.email, otp)
     except Exception as e:
         logger.error(f'Error sending OTP email: {e}')
         raise
 
-def verify_otp(user, otp):
+def verify_otp(account, otp):
     try:
-        if user.is_anonymous:
-            raise ValueError('User not authenticated')
+        if account.is_anonymous:
+            raise ValueError('Account not authenticated')
 
         if not otp:
             raise ValueError('OTP is required')
@@ -42,9 +41,8 @@ def verify_otp(user, otp):
         if not totp.verify(otp):
             raise ValueError('Invalid or expired OTP')
 
-        user.otp = None
-        user.otp_generated_at = None
-        from api import db
+        account.otp = None
+        account.otp_generated_at = None
         db.session.commit()
 
         return {'message': 'OTP verified successfully'}
