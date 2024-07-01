@@ -6,6 +6,7 @@ const AssignRole = () => {
   const [users, setUsers] = useState([]);
   const [roles, setRoles] = useState([]);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [selectedUser, setSelectedUser] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const { username } = useAuth();
@@ -13,8 +14,8 @@ const AssignRole = () => {
   useEffect(() => {
     const fetchUsersAndRoles = async () => {
       try {
-        const usersResponse = await axios.get('/auth/users');
-        const rolesResponse = await axios.get('/auth/roles');
+        const usersResponse = await axios.get('/admin/users');
+        const rolesResponse = await axios.get('/admin/roles');
         setUsers(usersResponse.data);
         setRoles(rolesResponse.data);
       } catch (error) {
@@ -28,26 +29,40 @@ const AssignRole = () => {
 
   const handleAssignRole = async () => {
     try {
-      await axios.post('/auth/assign-role', { user_id: selectedUser, role_name: selectedRole });
+      await axios.post('/admin/assign-role', { account_id: selectedUser, role_name: selectedRole });
       setError('');
-      // Optionally update users state to reflect the role change immediately
-      setUsers(users.map(user => user.user_id === selectedUser ? { ...user, roles: [selectedRole] } : user));
+      setSuccess(`Role ${selectedRole} assigned to user successfully`);
+      setUsers(users.map(user => user.account_id === selectedUser ? { ...user, roles: [selectedRole] } : user));
     } catch (error) {
       console.error('Error assigning role:', error);
       setError('Error assigning role');
+      setSuccess('');
+    }
+  };
+
+  const handleUserChange = async (e) => {
+    const userId = e.target.value;
+    setSelectedUser(userId);
+    setSelectedRole('');
+    setSuccess('');
+
+    const selectedUser = users.find(user => user.account_id === userId);
+    if (selectedUser && selectedUser.roles.length > 0) {
+      setSelectedRole(selectedUser.roles[0]);
     }
   };
 
   return (
     <div>
       <h1>Assign Role to User</h1>
-      {error && <p>{error}</p>}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {success && <p style={{ color: 'green' }}>{success}</p>}
       <div>
         <label>User:</label>
-        <select onChange={e => setSelectedUser(e.target.value)} value={selectedUser}>
+        <select onChange={handleUserChange} value={selectedUser}>
           <option value="">Select a user</option>
           {users.filter(user => user.email !== username).map(user => (
-            <option key={user.user_id} value={user.user_id}>{user.email}</option>
+            <option key={user.account_id} value={user.account_id}>{user.email}</option>
           ))}
         </select>
       </div>

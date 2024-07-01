@@ -1,59 +1,58 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate, useLocation } from 'react-router-dom';
+import axios from '../components/axiosConfig';
 import SessionManager from '../components/SessionManager';
-import '../css/Cart.css'; // Assuming you have a CSS file for styling
 
 const Cart = () => {
-  const { userId, username } = useAuth();
+  const { isLoggedIn, username } = useAuth();
   const [cartItems, setCartItems] = useState([]);
   const [ssid, setSsid] = useState('');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const session_id = location.state?.session_id || ssid;
 
   useEffect(() => {
     const fetchCartItems = async () => {
       try {
         let response;
-        if (userId) {
-          response = await fetch(`/main/cart?account_id=${userId}`);
+        const token = localStorage.getItem('session_token');
+        if (isLoggedIn) {
+          if (session_id) {
+            await axios.post('/main/cart/transfer', { session_id }, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+          }
+          response = await axios.get('/main/cart', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
         } else {
-          response = await fetch(`/main/cart?session_id=${ssid}`);
+          response = await axios.get(`/main/cart?session_id=${session_id}`);
         }
-
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        console.log('Fetched cart items:', data); // Log the fetched data
-        setCartItems(data);
+        setCartItems(response.data);
       } catch (error) {
         console.error('Error fetching cart items:', error);
       }
     };
 
     fetchCartItems();
-  }, [userId, ssid]);
+  }, [session_id, isLoggedIn]);
 
   const handleRemoveFromCart = async (cartId) => {
     try {
-      const response = await fetch(`/main/cart/${cartId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
-      console.log('Removed from cart:', data);
-
-      // Update the cart items state after deletion
-      setCartItems(prevItems => prevItems.filter(item => item.cart_id !== cartId));
+      await axios.delete(`/main/cart/${cartId}`);
+      setCartItems((prevItems) => prevItems.filter((item) => item.cart_id !== cartId));
     } catch (error) {
       console.error('Error removing from cart:', error);
     }
+  };
+
+  const handleCheckout = async () => {
+    if (!isLoggedIn) {
+      navigate('/login', { state: { from: '/cart', session_id } });
+      return;
+    }
+    navigate('/payment');
   };
 
   return (
@@ -85,6 +84,9 @@ const Cart = () => {
             <p>Your cart is currently empty.</p>
           )}
         </section>
+        <button onClick={handleCheckout} className="btn">
+          Checkout
+        </button>
       </main>
       <footer className="cart-page-footer">
         <p>&copy; 2024 Over18. All rights reserved.</p>

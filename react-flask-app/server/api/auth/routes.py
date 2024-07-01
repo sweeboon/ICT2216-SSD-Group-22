@@ -2,7 +2,7 @@ from flask import jsonify, request, current_app, session, make_response
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_principal import Identity, AnonymousIdentity, identity_changed, RoleNeed, Permission
 from api.auth import bp
-from api.models import Account, Role
+from api.models import Account, Role, Sessions
 from api import db, csrf, mail
 from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
@@ -10,12 +10,10 @@ from .utils import generate_token, verify_token
 from .email import send_email
 import jwt
 from flask_wtf.csrf import generate_csrf
-from api.auth.email import send_otp_email
 import logging
 import pyotp
+import secrets
 
-super_admin_permission = Permission(RoleNeed('SuperAdmin'))
-admin_permission = Permission(RoleNeed('Admin'))
 logger = logging.getLogger(__name__)
 
 @bp.route('/csrf-token', methods=['POST'])
@@ -81,98 +79,125 @@ def login():
     if account is None or not pbkdf2_sha256.verify(data['password'], account.password):
         return jsonify({'message': 'Invalid email or password'}), 401
 
-    # Update login timestamps and count
     account.last_login_at = datetime.now()
     account.login_count += 1
     db.session.commit()
 
-    # Generate JWT token
     token = jwt.encode({
         'sub': account.email,
         'iat': datetime.now(),
         'exp': datetime.now() + timedelta(minutes=30)
     }, current_app.config['SECRET_KEY'], algorithm="HS256")
 
-    # Log in the account
     login_user(account, remember=True, duration=timedelta(minutes=30))
 
-    # Notify Flask-Principal of the login
     identity_changed.send(current_app._get_current_object(), identity=Identity(account.account_id))
 
-    return jsonify({'message': 'Login successful', 'token': token, 'username': account.email}), 200
+    roles = [role.name for role in account.roles]
 
-@bp.route('/logout', methods=['POST'])
-@csrf.exempt
-@login_required
-def logout():
-    # Log out the account
-    logout_user()
-
-    # Remove account identity
-    for key in ('identity.name', 'identity.auth_type'):
-        session.pop(key, None)
-    identity_changed.send(current_app._get_current_object(), identity=AnonymousIdentity())
-
-    # Clear the cookies
-    response = jsonify({'message': 'Logout successful'})
-    response.delete_cookie('session')
-    response.delete_cookie('XSRF-TOKEN')
-    
-    return response, 200
+    return jsonify({'message': 'Login successful', 'token': token, 'username': account.email, 'roles': roles}), 200
 
 @bp.route('/status', methods=['GET'])
 @csrf.exempt
 def status():
     if current_user.is_authenticated:
-        return jsonify({'loggedIn': True, 'username': current_user.name}), 200
+        roles = [role.name for role in current_user.roles]
+        return jsonify({'loggedIn': True, 'username': current_user.name, 'roles': roles}), 200
     else:
         return jsonify({'loggedIn': False}), 200
 
-# Endpoint to get all users except the current user
-@bp.route('/users', methods=['GET'])
+@bp.route('/logout', methods=['POST'])
+@csrf.exempt
 @login_required
-@super_admin_permission.require(http_exception=403)
-def get_users():
-    users = Account.query.filter(Account.account_id != current_user.account_id).all()
-    users_data = [{'account_id': user.account_id, 'email': user.email, 'roles': [role.name for role in user.roles]} for user in users]
-    return jsonify(users_data), 200
+def logout():
+    logout_user()
+    for key in ('identity.name', 'identity.auth_type'):
+        session.pop(key, None)
+    identity_changed.send(current_app._get_current_object(), identity=AnonymousIdentity())
+    response = jsonify({'message': 'Logout successful'})
+    response.delete_cookie('session')
+    response.delete_cookie('XSRF-TOKEN')
+    return response, 200
 
-@bp.route('/assign-role', methods=['POST'])
-@login_required
-@super_admin_permission.require(http_exception=403)
-def assign_role():
-    data = request.get_json()
-    account_id = data.get('account_id')
-    role_name = data.get('role_name')
+@bp.route('/sessions', methods=['POST'])
+def create_session():
+    try:
+        ssid = secrets.token_urlsafe(32)  # Generate a secure random token
+        payload = {
+            'ssid': ssid,
+            'exp': datetime.utcnow() + timedelta(days=1)  # Set token expiry
+        }
+        token = jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
+        new_session = Sessions(ssid=ssid, timestamp=datetime.utcnow(), token=token)
+        db.session.add(new_session)
+        db.session.commit()
+        return jsonify({'token': token, 'ssid': ssid}), 201
+    except Exception as e:
+        logging.error(f"Error creating session: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
-    if not account_id or not role_name:
-        return jsonify({'message': 'Account ID and Role Name are required'}), 400
+@bp.route('/sessions/<ssid>', methods=['PUT'])
+def update_session(ssid):
+    try:
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'error': 'Token is missing'}), 403
+        try:
+            data = jwt.decode(token.split()[1], current_app.config['SECRET_KEY'], algorithms=['HS256'])
+            session = Sessions.query.get_or_404(data['ssid'])
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token has expired'}), 403
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 403
 
-    account = Account.query.get(account_id)
-    if not account:
-        return jsonify({'message': 'Account not found'}), 404
+        payload = request.json
+        if 'timestamp' in payload:
+            session.timestamp = payload['timestamp']
+        if 'token' in payload:
+            session.token = payload['token']
+        if 'referer' in payload:
+            session.referer = payload['referer']
+        
+        db.session.commit()
+        return jsonify({'message': 'Session updated'}), 200
+    except Exception as e:
+        logging.error(f"Error updating session {ssid}: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
-    # Prevent current user from changing their own roles
-    if account.account_id == current_user.account_id:
-        return jsonify({'message': 'You cannot change your own roles'}), 403
+@bp.route('/sessions', methods=['GET'])
+def get_session():
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'error': 'Token is missing'}), 403
+    try:
+        data = jwt.decode(token.split()[1], current_app.config['SECRET_KEY'], algorithms=['HS256'])
+        session = Sessions.query.get(data['ssid'])
+        if session is None:
+            return jsonify({'error': 'Session not found'}), 404
+        session_data = {
+            'ssid': session.ssid,
+            'timestamp': session.timestamp,
+            'token': session.token,
+            'referer': session.referer
+        }
+        return jsonify(session_data), 200
+    except jwt.ExpiredSignatureError:
+        return jsonify({'error': 'Token has expired'}), 403
+    except jwt.InvalidTokenError:
+        return jsonify({'error': 'Invalid token'}), 403
+    except Exception as e:
+        logging.error(f"Error fetching session: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
-    role = Role.query.filter_by(name=role_name).first()
-    if not role:
-        return jsonify({'message': 'Role not found'}), 404
-
-    # Clear existing roles
-    account.roles = []
-
-    # Assign new role
-    account.roles.append(role)
-    db.session.commit()
-
-    return jsonify({'message': f'Role {role_name} assigned to account {account.email} successfully'}), 200
-
-@bp.route('/roles', methods=['GET'])
-@login_required
-@super_admin_permission.require(http_exception=403)
-def get_roles():
-    roles = Role.query.all()
-    roles_data = [{'id': role.id, 'name': role.name} for role in roles]
-    return jsonify(roles_data), 200
+@bp.route('/sessions/cleanup', methods=['POST'])
+def cleanup_sessions():
+    try:
+        now = datetime.utcnow()
+        expired_sessions = Sessions.query.filter(Sessions.timestamp < now - timedelta(days=1)).all()
+        for session in expired_sessions:
+            db.session.delete(session)
+        db.session.commit()
+        return jsonify({'message': 'Expired sessions cleaned up'}), 200
+    except Exception as e:
+        logging.error(f"Error cleaning up sessions: {str(e)}")
+        return jsonify({'error': str(e)}), 500

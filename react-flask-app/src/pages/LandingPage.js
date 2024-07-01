@@ -1,25 +1,23 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import Navbar from './Navbar';
 import '../css/LandingPage.css';
 import SessionManager from '../components/SessionManager';
+import axios from 'axios';
 
 const LandingPage = () => {
-  const { userId, username } = useAuth(); // Assuming useAuth returns userId as well
+  const { isLoggedIn, username } = useAuth();
   const [products, setProducts] = useState([]);
   const [ssid, setSsid] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('/main/products');
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data = await response.json();
-        setProducts(data);
+        const response = await axios.get('/main/products');
+        setProducts(response.data);
       } catch (error) {
-        console.error("Error fetching products:", error);
+        console.error('Error fetching products:', error);
       }
     };
 
@@ -27,40 +25,28 @@ const LandingPage = () => {
   }, []);
 
   const handleAddToCart = async (product) => {
-    const cartAccountId = userId ? userId : ssid;
-    const cartSessionId = userId ? null : ssid;
-    
     const cartItem = {
       product_id: product.product_id,
-      account_id: userId ? userId : null,
-      session_id: !userId ? ssid : null,
+      account_id: null,
+      session_id: ssid,
       quantity: 1,
-      cart_item_price: product.product_price, // Assuming price is per item
+      cart_item_price: product.product_price,
     };
 
     try {
-      const response = await fetch('/main/cart', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(cartItem),
-      });
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const data = await response.json();
-      console.log('Added to cart:', data);
+      await axios.post('/main/cart', cartItem);
+      console.log('Added to cart');
     } catch (error) {
-      console.error("Error adding to cart:", error);
+      console.error('Error adding to cart:', error);
     }
+  };
+
+  const handleCheckout = () => {
+    navigate('/cart', { state: { session_id: ssid } });
   };
 
   return (
     <div className="landing-page">
-      <Navbar />
       <SessionManager setSsid={setSsid} />
       <header className="landing-page-header">
         <h1>Over18</h1>
@@ -70,7 +56,7 @@ const LandingPage = () => {
         <section>
           <h3>Explore Our Selection of Alcoholic Beverages</h3>
           <p>Discover a wide range of beers, wines, and spirits from around the world.</p>
-          <a href="/shop" className="btn">Shop Now</a>
+          <a href="/" className="btn">Shop Now</a>
         </section>
         <section>
           <h3>Our Products</h3>
@@ -87,6 +73,9 @@ const LandingPage = () => {
             ))}
           </div>
         </section>
+        <button onClick={handleCheckout} className="btn">
+          Go to Cart
+        </button>
       </main>
       <footer className="landing-page-footer">
         <p>&copy; 2024 Over18. All rights reserved.</p>

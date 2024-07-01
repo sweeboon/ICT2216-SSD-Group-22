@@ -1,79 +1,65 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
+import axios from 'axios';
 
 const SessionManager = ({ setSsid }) => {
-    const saveSessionToLocalStorage = (ssid) => {
-        localStorage.setItem('ssid', ssid);
-    };
+  const saveSessionToLocalStorage = (token, ssid) => {
+    localStorage.setItem('session_token', token);
+    localStorage.setItem('session_ssid', ssid);
+  };
 
-    const getSessionFromLocalStorage = () => {
-        return localStorage.getItem('ssid');
-    };
+  const getSessionTokenFromLocalStorage = () => {
+    return localStorage.getItem('session_token');
+  };
 
-    useEffect(() => {
-        const checkSession = async (ssid) => {
-            try {
-                const response = await fetch(`/main/sessions/${ssid}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
+  const getSessionSsidFromLocalStorage = () => {
+    return localStorage.getItem('session_ssid');
+  };
 
-                if (response.ok) {
-                    // Session exists, use the existing session
-                    setSsid(ssid);
-                    console.log("Session exists and is valid:", ssid);
-                } else if (response.status === 404) {
-                    // Session does not exist, create a new one
-                    console.log("Session not found on server, creating new session");
-                    createSession();
-                } else {
-                    throw new Error('Failed to check session');
-                }
-            } catch (error) {
-                console.error('Error checking session:', error);
-                createSession(); // Fallback to creating a new session on error
-            }
-        };
-
-        const createSession = async () => {
-            try {
-                const response = await fetch('/main/sessions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to create session');
-                }
-
-                const data = await response.json();
-                saveSessionToLocalStorage(data.ssid);
-                setSsid(data.ssid);
-                console.log('New session created:', data);
-            } catch (error) {
-                console.error('Error creating session:', error);
-            }
-        };
-
-        const storedSsid = getSessionFromLocalStorage();
-        if (storedSsid) {
-            // Validate the stored session ID with the server
-            checkSession(storedSsid);
+  useEffect(() => {
+    const checkSession = async (token) => {
+      try {
+        const response = await axios.get('/auth/sessions', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSsid(response.data.ssid);
+        console.log('Session exists and is valid:', response.data.ssid);
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          createSession();
         } else {
-            // No session ID in local storage; create a new session
-            createSession();
+          console.error('Error checking session:', error);
+          createSession();
         }
-    }, [setSsid]);
+      }
+    };
 
-    return null;
+    const createSession = async () => {
+      try {
+        const response = await axios.post('/auth/sessions');
+        const { token, ssid } = response.data;
+        saveSessionToLocalStorage(token, ssid);
+        setSsid(ssid);
+        console.log('New session created:', ssid);
+      } catch (error) {
+        console.error('Error creating session:', error);
+      }
+    };
+
+    const storedToken = getSessionTokenFromLocalStorage();
+    const storedSsid = getSessionSsidFromLocalStorage();
+    if (storedToken && storedSsid) {
+      checkSession(storedToken);
+    } else {
+      createSession();
+    }
+  }, [setSsid]);
+
+  return null;
 };
 
 SessionManager.propTypes = {
-    setSsid: PropTypes.func.isRequired,
+  setSsid: PropTypes.func.isRequired,
 };
 
 export default SessionManager;

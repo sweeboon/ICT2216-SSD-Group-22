@@ -1,56 +1,79 @@
 import base64, logging, uuid
 from datetime import datetime
-from flask import request, jsonify, abort, current_app
-from api.models import Product, Cart, Sessions
+from flask import request, jsonify, abort, current_app, session
+from flask_login import login_required, current_user
+from flask_principal import RoleNeed, Permission
+from api.models import Product, Cart, Payment, Order, Sessions
 from api import db, csrf
 from api.main import bp
 
-@bp.route('/sessions', methods=['POST'])
-def create_session():
-    try:
-        ssid = str(uuid.uuid4())
-        new_session = Sessions(ssid=ssid, timestamp=datetime.utcnow())
-        db.session.add(new_session)
-        db.session.commit()
-        return jsonify({'ssid': ssid}), 201
-    except Exception as e:
-        logging.error(f"Error creating session: {str(e)}")
-        return jsonify({'error': str(e)}), 500
 
-@bp.route('/sessions/<ssid>', methods=['PUT'])
-def update_session(ssid):
-    logging.info(f"Received update request for session {ssid} with payload: {request.json}")
+# Check if the cart has items
+@bp.route('/cart/check', methods=['GET'])
+@login_required
+def check_cart():
+    account_id = current_user.account_id
+    cart_items = Cart.query.filter_by(account_id=account_id).all()
+    
+    if not cart_items:
+        return jsonify({'message': 'Your cart is empty. Add items to your cart before proceeding to checkout.'}), 400
+    
+    return jsonify({'message': 'You have items in your cart. You can proceed to checkout.'}), 200
+
+# Create Payment and Process Order
+@bp.route('/payment', methods=['POST'])
+@login_required
+@csrf.exempt
+def create_payment():
     try:
-        session = Sessions.query.get_or_404(ssid)
-        data = request.json
-        if 'timestamp' in data:
-            session.timestamp = data['timestamp']
-        if 'token' in data:
-            session.token = data['token']
-        if 'referer' in data:
-            session.referer = data['referer']
+        data = request.get_json()
+        payment_method = data.get('payment_method')
+        total_amount = data.get('total_amount')
         
+        if not payment_method or not total_amount:
+            return jsonify({'message': 'Payment method and total amount are required'}), 400
+
+        account_id = current_user.get_id()
+        cart_items = Cart.query.filter_by(account_id=account_id).all()
+        
+        if not cart_items:
+            return jsonify({'message': 'Your cart is empty. Add items to your cart before proceeding to checkout.'}), 400
+
+        # Create Payment
+        new_payment = Payment(
+            account_id=account_id,
+            total_amount=total_amount,
+            payment_method=payment_method,
+            payment_status='Pending',  # Set initial status to pending
+            payment_date=datetime.now()
+        )
+        db.session.add(new_payment)
         db.session.commit()
-        logging.info(f"Session {ssid} updated successfully")
-        return jsonify({'message': 'Session updated'}), 200
+
+        # Process Orders
+        for item in cart_items:
+            new_order = Order(
+                payment_id=new_payment.payment_id,
+                account_id=account_id,
+                product_id=item.product_id,
+                order_status='Pending',  # Set initial status to pending
+                order_price=item.cart_item_price,
+                order_date=datetime.now(),
+                quantity=item.quantity
+            )
+            db.session.add(new_order)
+            db.session.delete(item)  # Remove item from cart
+
+        db.session.commit()
+        new_payment.payment_status = 'Completed'  # Update payment status to completed
+        db.session.commit()
+
+        return jsonify({'message': 'Payment successful and order placed', 'payment_id': new_payment.payment_id}), 201
+
     except Exception as e:
-        logging.error(f"Error updating session {ssid}: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@bp.route('/sessions/<ssid>', methods=['GET'])
-def get_session(ssid):
-    session = Sessions.query.get(ssid)
-
-    if session is None:
-        return jsonify({'error': 'Session not found'}), 404
-
-    session_data = {
-        'ssid': session.ssid,
-        'timestamp': session.timestamp,
-        'token': session.token,
-        'referer': session.referer
-    }
-    return jsonify(session_data), 200
+        logging.error(f"Error processing payment: {str(e)}")
+        db.session.rollback()
+        return jsonify({'message': 'Failed to process payment', 'error': str(e)}), 500
 
 # Read All Products
 @bp.route('/products', methods=['GET'])
@@ -61,37 +84,6 @@ def get_products():
                      'product_price': p.product_price, 'stock': p.stock, 'image_path': p.image_path} for p in products]
     return jsonify(product_list), 200
 
-# Create a New Product
-@bp.route('/products', methods=['POST'])
-@csrf.exempt
-def create_product():
-    if not request.json or not all(key in request.json for key in ['category_id', 'product_description', 'product_price', 'stock', 'image_path']):
-        abort(400)  # Bad request
-
-    supabase = current_app.supabase
-    
-    image_data = request.json['image_path']  # Assuming image data is base64 encoded
-    image_name = f"{request.json['product_description'].replace(' ', '_')}.png"
-
-    response = supabase.storage.from_("your-bucket-name").upload(image_name, base64.b64decode(image_data))
-
-    if response['status'] != 'ok':
-        abort(500)  # Handle error
-
-    image_url = supabase.storage.from_("your-bucket-name").get_public_url(image_name)
-
-    new_product = Product(
-        category_id=request.json['category_id'],
-        product_description=request.json['product_description'],
-        product_price=request.json['product_price'],
-        stock=request.json['stock'],
-        image_path=image_url  # Store the URL of the uploaded image
-    )
-
-    db.session.add(new_product)
-    db.session.commit()
-
-    return jsonify({'product_id': new_product.product_id}), 201
 
 # Read a Single Product
 @bp.route('/products/<int:product_id>', methods=['GET'])
@@ -101,38 +93,10 @@ def get_product(product_id):
     return jsonify({'product_id': product.product_id, 'category_id': product.category_id, 'product_description': product.product_description, 
                     'product_price': product.product_price, 'stock': product.stock, 'image_path': product.image_path}), 200
 
-# Update a Product
-@bp.route('/products/<int:product_id>', methods=['PUT'])
-@csrf.exempt
-def update_product(product_id):
-    product = Product.query.get_or_404(product_id)
-    
-    if not request.json:
-        abort(400)
-    
-    product.category_id = request.json.get('category_id', product.category_id)
-    product.product_description = request.json.get('product_description', product.product_description)
-    product.product_price = request.json.get('product_price', product.product_price)
-    product.stock = request.json.get('stock', product.stock)
-    product.image_path = request.json.get('image_path', product.image_path)
-    
-    db.session.commit()
-    
-    return jsonify({'product_id': product.product_id}), 200
-
-# Delete a Product
-@bp.route('/products/<int:product_id>', methods=['DELETE'])
-@csrf.exempt
-def delete_product(product_id):
-    product = Product.query.get_or_404(product_id)
-    db.session.delete(product)
-    db.session.commit()
-    
-    return '', 204
 
 @bp.route('/cart', methods=['GET'])
 def get_cart_items():
-    account_id = request.args.get('account_id')
+    account_id = current_user.get_id() if current_user.is_authenticated else None
     session_id = request.args.get('session_id')
 
     if account_id:
@@ -150,7 +114,6 @@ def get_cart_items():
             'image_path': item.product.image_path,
             'account_id': item.account_id,
             'session_id': item.session_id,
-            'created_at': item.created_at,
             'quantity': item.quantity,
             'cart_item_price': item.cart_item_price,
         } for item in cart_items
@@ -158,18 +121,17 @@ def get_cart_items():
     return jsonify(cart_list), 200
 
 @bp.route('/cart', methods=['POST'])
+@csrf.exempt
 def add_to_cart():
     data = request.json
-    logging.info(f"Received payload: {data}")
+    if current_user.is_authenticated:
+        account_id = current_user.get_id()
+        session_id = None
+    else:
+        account_id = None
+        session_id = data.get('session_id')
 
-    account_id = data.get('account_id')
-    session_id = data.get('session_id')
-
-    cart_item = None
-    if account_id:
-        cart_item = Cart.query.filter_by(account_id=account_id, product_id=data['product_id']).first()
-    elif session_id:
-        cart_item = Cart.query.filter_by(session_id=session_id, product_id=data['product_id']).first()
+    cart_item = Cart.query.filter_by(account_id=account_id, session_id=session_id, product_id=data['product_id']).first()
 
     if cart_item:
         # If item exists, update the quantity
@@ -189,9 +151,51 @@ def add_to_cart():
     db.session.commit()
     return jsonify({'message': 'Item added to cart'}), 201
 
+@bp.route('/cart/transfer', methods=['POST'])
+@login_required
+def transfer_cart():
+    session_id = request.json.get('session_id')
+    if not session_id:
+        return jsonify({'error': 'Session ID is required'}), 400
+    
+    session_cart_items = Cart.query.filter_by(session_id=session_id).all()
+    for item in session_cart_items:
+        existing_item = Cart.query.filter_by(account_id=current_user.account_id, product_id=item.product_id).first()
+        if existing_item:
+            existing_item.quantity += item.quantity
+            existing_item.cart_item_price += item.cart_item_price
+        else:
+            item.account_id = current_user.account_id
+            item.session_id = None
+        db.session.commit()
+
+    return jsonify({'message': 'Cart items transferred to your account'}), 200
+
 @bp.route('/cart/<int:cart_id>', methods=['DELETE'])
+@csrf.exempt
 def remove_from_cart(cart_id):
     cart_item = Cart.query.get_or_404(cart_id)
     db.session.delete(cart_item)
     db.session.commit()
     return jsonify({'message': 'Item removed from cart'}), 200
+
+@bp.route('/orders', methods=['GET'])
+@login_required
+def get_orders():
+    account_id = current_user.account_id
+    orders = Order.query.filter_by(account_id=account_id).all()
+
+    orders_list = [
+        {
+            'order_id': order.order_id,
+            'payment_id': order.payment_id,
+            'product_id': order.product_id,
+            'order_status': order.order_status,
+            'order_price': order.order_price,
+            'order_date': order.order_date.strftime('%Y-%m-%d %H:%M:%S'),
+            'quantity': order.quantity,
+            'product_description': Product.query.get(order.product_id).product_description
+        } for order in orders
+    ]
+    
+    return jsonify(orders_list), 200

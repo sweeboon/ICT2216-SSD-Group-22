@@ -1,45 +1,45 @@
-import React, {useState} from 'react';
-import { Route, Routes, Link } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth';
+import React from 'react';
+import { Route, Routes, Navigate, useLocation } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import Cart from './pages/Cart';
+import PaymentPage from './pages/PaymentPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import HomePage from './pages/HomePage';
-import ConfirmEmail from './pages/ConfirmEmail';
-import ConfirmationResult from './pages/ConfirmationResult';
 import Profile from './pages/Profile';
-
-import ProductComponent from './components/ProductComponent';
-import SessionManager from './components/SessionManager';
 import LandingPage from './pages/LandingPage';
-import Cart from './pages/cart';
+import ConfirmEmail from './pages/ConfirmEmail';
+import ConfirmationResult from './pages/ConfirmEmail';
+import OrdersPage from './pages/OrdersPage';
+import ProductComponent from './components/ProductComponent';
+import AssignRole from './pages/AssignRole';  // Import AssignRole component
+import { useAuth } from './hooks/useAuth';
+import Navbar from './pages/Navbar';
+import ManageOrders from './pages/ManageOrders';
 
 const App = () => {
-  const { isLoggedIn,token } = useAuth();
-  const [ssid, setSsid] = useState(null);
-
-  const referer = document.referrer;
+  const { isLoggedIn, roles } = useAuth();
+  const location = useLocation();
+  const isAdmin = roles.includes('Admin');
 
   return (
     <div>
-      <p>Current Session ID: {ssid}</p>
-      <SessionManager setSsid={setSsid}/>
-      <nav>
-        <Link to="/landing">Home</Link>
-        <Link to="/products">Manage Products</Link>
-        <Link to="/cart">Cart</Link>
-        {isLoggedIn && <Link to="/profile">Profile</Link>}
-      </nav>
+      <Navbar />
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route 
+          path="/login" 
+          element={isLoggedIn ? <Navigate to={location.state?.from || '/'} replace /> : <Login />} 
+        />
         <Route path="/register" element={<Register />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile" element={isLoggedIn ? <Profile /> : <Navigate to="/login" state={{ from: '/profile' }} />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/payment" element={isLoggedIn ? <PaymentPage /> : <Navigate to="/login" state={{ from: '/payment' }} />} />
+        <Route path="/orders" element={isLoggedIn ? <OrdersPage /> : <Navigate to="/login" state={{ from: '/orders' }} />} />
+        <Route path="/products" element={isLoggedIn && isAdmin ? <ProductComponent /> : <Navigate to="/products" />} />
         <Route path="/confirm" element={<ConfirmEmail />} />
         <Route path="/confirm-result" element={<ConfirmationResult />} />
-
-        <Route path="/landing" element={<LandingPage />} />
-        <Route path="/products" element={<ProductComponent />} />
-        <Route path="/cart" element={<Cart />} />
+        <Route path="/assign-role" element={isLoggedIn && isAdmin ? <AssignRole /> : <Navigate to="/assign-role" />} />  
+        <Route path="/manage-orders" element={isLoggedIn && isAdmin ? <ManageOrders /> : <Navigate to="/manage-orders" />} />  
       </Routes>
     </div>
   );
