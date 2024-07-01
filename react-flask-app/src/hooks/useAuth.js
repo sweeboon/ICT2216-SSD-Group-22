@@ -22,6 +22,7 @@ export const useAuth = () => {
       setUsername(loggedUsername);
       setRoles(userRoles);
       setIsLoggedIn(true);
+      console.log('Login successful, isLoggedIn:', true);
       navigate(redirectPath);
     } catch (error) {
       console.error('Login failed:', error);
@@ -39,6 +40,7 @@ export const useAuth = () => {
       localStorage.removeItem('token');
       document.cookie = 'XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       document.cookie = 'session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      console.log('Logout successful, isLoggedIn:', false);
       navigate('/');
     } catch (error) {
       console.error('Logout failed:', error);
@@ -51,6 +53,7 @@ export const useAuth = () => {
       setIsLoggedIn(response.data.loggedIn);
       setUsername(response.data.username || '');
       setRoles(response.data.roles || []);
+      console.log('Auth status checked, isLoggedIn:', response.data.loggedIn);
     } catch (error) {
       console.error('Auth status check failed:', error);
       setIsLoggedIn(false);
