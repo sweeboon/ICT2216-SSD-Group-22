@@ -16,6 +16,11 @@ pipeline {
 
         stage('Setup Virtual Environment') {
             steps {
+                agent {
+                    docker {
+                        image 'nginx'
+                        args '-p 3000:3000'
+                }
                 script {
                     // Check for the virtual environment, create it if it doesn't exist
                     sh 'bash -c "python3 -m venv $VENV_PATH"'
@@ -26,9 +31,15 @@ pipeline {
         }
 
         stage('Install Python Dependencies') {
-            steps {
-                // Install any dependencies listed in requirements.txt
-                sh 'bash -c "source $VENV_PATH/bin/activate && pip install -r react-flask-app/server/requirements.txt"'
+            agent {
+                docker {
+                    image 'node:lts-buster-slim'
+                    args '-p 3000:3000'
+                }
+                steps {
+                    // Install any dependencies listed in requirements.txt
+                    sh 'bash -c "source $VENV_PATH/bin/activate && pip install -r react-flask-app/server/requirements.txt"'
+                }
             }
         }
 
