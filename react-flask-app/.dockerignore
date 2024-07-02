@@ -1,7 +1,28 @@
+# Node modules and logs
 node_modules
-build
+npm-debug.log
+yarn-error.log
+
+# Dependency directories
 dist
-*.log
-*.tmp
+build
+
+# Python virtual environments
+venv
+__pycache__
+*.pyc
+
+# System files
 .DS_Store
+Thumbs.db
+
+# Git and other VCS files
 .git
+.gitignore
+
+# Docker files
+Dockerfile*
+docker-compose.yml
+
+# Miscellaneous
+.env
