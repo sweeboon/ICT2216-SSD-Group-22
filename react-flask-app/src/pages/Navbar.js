@@ -1,11 +1,10 @@
 import React from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import '../css/Navbar.css';
 
 const Navbar = () => {
   const { isLoggedIn, roles, handleLogout } = useAuth();
-
   const isAdmin = roles.includes('Admin');
 
   return (
