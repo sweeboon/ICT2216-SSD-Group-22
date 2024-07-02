@@ -1,4 +1,4 @@
-pipeline {
+pipipeline {
     options {
         disableConcurrentBuilds()
     }
@@ -13,12 +13,17 @@ pipeline {
             }
         }
 
-        // Commented out due to current issues
-        // stage('OWASP Dependency Check') {
-        //     steps {
-        //         dependencyCheck additionalArguments: '''-o ./ --format HTML --format XML --disableYarnAudit --noupdate''', odcInstallation: 'DependencyCheck'
-        //     }
-        // }
+        stage('Verify Docker Daemon') {
+            steps {
+                script {
+                    try {
+                        sh 'docker info'
+                    } catch (Exception e) {
+                        error 'Docker daemon is not running or not accessible'
+                    }
+                }
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
@@ -43,8 +48,6 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
-            // Commented out due to current issues
-            // dependencyCheckPublisher pattern: 'dependency-check-report.xml'
         }
     }
 }
