@@ -8,7 +8,7 @@ WORKDIR /app
 COPY react-flask-app/src/package.json react-flask-app/src/yarn.lock ./
 RUN yarn install
 
-# Copy the rest of the application and build the React app
+# Copy the rest of the React application and build the React app
 COPY react-flask-app/src ./
 RUN yarn build
 
@@ -28,8 +28,8 @@ COPY react-flask-app/server ./
 # Copy the React build from the first stage
 COPY --from=build /app/build ./static
 
-# Copy the rest of the application
-COPY react-flask-app/src ./
+# Copy the rest of the application (assuming some parts may be in src or elsewhere)
+COPY react-flask-app ./
 
 # Expose the ports for Flask and React
 EXPOSE 3000 5000
