@@ -2,30 +2,33 @@ pipeline {
     agent any
 
     environment {
-        VENV_PATH = "${WORKSPACE}/venv"
-        REPO_URL = 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git'
+        VENV_PATH = "/var/lib/jenkins/workspace/ICT2216/venv"
+        WORKSPACE_DIR = "/var/lib/jenkins/workspace/ICT2216"
         DOCKER_IMAGE = 'nginx'
-        CONTAINER_NAME = 'nginx'
+        CONTAINER_NAME = 'nginx-container'
     }
 
     stages {
         stage('Clean Workspace') {
             steps {
-                cleanWs()
+                script {
+                    // Clean the workspace directory
+                    sh 'rm -rf /var/lib/jenkins/workspace/ICT2216/*'
+                }
             }
         }
 
         stage('Checkout') {
             steps {
-                git url: REPO_URL, branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
+                git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c', changelog: false, poll: false
             }
         }
 
         stage('Setup Virtual Environment') {
             steps {
                 script {
-                    // Create the virtual environment in the workspace directory
-                    sh 'bash -c "python3 -m venv ${VENV_PATH}"'
+                    // Create the virtual environment
+                    sh 'bash -c "python3 -m venv /var/lib/jenkins/workspace/ICT2216/venv"'
                 }
             }
         }
@@ -34,7 +37,7 @@ pipeline {
             steps {
                 script {
                     // Install any dependencies listed in requirements.txt
-                    sh 'bash -c "source ${VENV_PATH}/bin/activate && pip install -r ${WORKSPACE}/react-flask-app/server/requirements.txt"'
+                    sh 'bash -c "source /var/lib/jenkins/workspace/ICT2216/venv/bin/activate && pip install -r /var/lib/jenkins/workspace/ICT2216/react-flask-app/server/requirements.txt"'
                 }
             }
         }
@@ -43,7 +46,7 @@ pipeline {
             steps {
                 script {
                     // Install Node.js dependencies
-                    sh 'bash -c "cd ${WORKSPACE}/react-flask-app/src && yarn install"'
+                    sh 'bash -c "cd /var/lib/jenkins/workspace/ICT2216/react-flask-app/src && yarn install"'
                 }
             }
         }
@@ -52,7 +55,7 @@ pipeline {
             steps {
                 script {
                     // Build the Docker image
-                    sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f ${WORKSPACE}/react-flask-app/Dockerfile ${WORKSPACE}/react-flask-app"
+                    sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f /var/lib/jenkins/workspace/ICT2216/react-flask-app/Dockerfile /var/lib/jenkins/workspace/ICT2216/react-flask-app"
                 }
             }
         }
