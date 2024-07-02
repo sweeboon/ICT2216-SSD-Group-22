@@ -17,10 +17,14 @@ pipeline {
         stage('Checkout and Update Files') {
             steps {
                 script {
-                    // Forcefully delete the existing directory and update files from GitHub
+                    // If the directory exists, pull the latest changes. Otherwise, clone the repository.
                     sh '''
-                        sudo rm -rf ${WORKSPACE}/react-flask-app
-                        git clone https://github.com/sweeboon/ICT2216-SSD-Group-22.git ${WORKSPACE}/react-flask-app
+                        if [ -d "$WORKSPACE/react-flask-app/.git" ]; then
+                            cd $WORKSPACE/react-flask-app
+                            git pull origin main
+                        else
+                            git clone https://github.com/sweeboon/ICT2216-SSD-Group-22.git $WORKSPACE/react-flask-app
+                        fi
                     '''
                 }
             }
