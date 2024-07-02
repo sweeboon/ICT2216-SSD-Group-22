@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         VENV_PATH = "react-flask-app/server/venv"
-        WORKSPACE_DIR = "${env.WORKSPACE}"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
     }
@@ -13,7 +12,7 @@ pipeline {
             steps {
                 script {
                     // Clean the workspace directory
-                    sh 'rm -rf ${WORKSPACE_DIR}/*'
+                    sh 'rm -rf ${WORKSPACE}/*'
                 }
             }
         }
@@ -27,10 +26,8 @@ pipeline {
         stage('Setup Virtual Environment') {
             steps {
                 script {
-                    // Ensure the directory for virtual environment exists
-                    sh 'mkdir -p ${WORKSPACE_DIR}/${VENV_PATH}'
                     // Create the virtual environment
-                    sh 'bash -c "python3 -m venv ${WORKSPACE_DIR}/${VENV_PATH}"'
+                    sh 'bash -c "python3 -m venv ${WORKSPACE}/${VENV_PATH}"'
                 }
             }
         }
@@ -39,7 +36,7 @@ pipeline {
             steps {
                 script {
                     // Install any dependencies listed in requirements.txt
-                    sh 'bash -c "source ${WORKSPACE_DIR}/${VENV_PATH}/bin/activate && pip install -r ${WORKSPACE_DIR}/react-flask-app/server/requirements.txt"'
+                    sh 'bash -c "source ${WORKSPACE}/${VENV_PATH}/bin/activate && pip install -r ${WORKSPACE}/react-flask-app/server/requirements.txt"'
                 }
             }
         }
@@ -48,7 +45,7 @@ pipeline {
             steps {
                 script {
                     // Install Node.js dependencies
-                    sh 'bash -c "cd ${WORKSPACE_DIR}/react-flask-app/src && yarn install"'
+                    sh 'bash -c "cd ${WORKSPACE}/react-flask-app/src && yarn install"'
                 }
             }
         }
@@ -57,7 +54,7 @@ pipeline {
             steps {
                 script {
                     // Build the Docker image
-                    sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f ${WORKSPACE_DIR}/react-flask-app/Dockerfile ${WORKSPACE_DIR}/react-flask-app"
+                    sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f ${WORKSPACE}/react-flask-app/Dockerfile ${WORKSPACE}/react-flask-app"
                 }
             }
         }
