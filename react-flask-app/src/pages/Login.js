@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import '../assets/Auth.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
-  const { isLoggedIn, handleLogin } = useAuth();
+  const [success, setSuccess] = useState('');  // For success messages
+  const { isLoggedIn, handleLogin, isOtpRequested } = useAuth();  // Use new hooks
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -15,11 +17,14 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      await handleLogin(email, password);
-      navigate(from, { replace: true });
+      await handleLogin(email, password, otp);
+      setSuccess('OTP sent to your email.');
+      setError('');
     } catch (error) {
-      setError('Invalid email or password');
+      setError('Login failed. Please check your email, password, and OTP.');
+      setSuccess('');
     }
   };
 
@@ -37,6 +42,7 @@ const Login = () => {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
         </div>
         <div>
@@ -45,10 +51,26 @@ const Login = () => {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
+            disabled={isOtpRequested}  // Disable after OTP is requested
           />
         </div>
-        <button type="submit">Login</button>
-        {error && <p>{error}</p>}
+        {isOtpRequested && (
+          <div>
+            <label>OTP:</label>
+            <input
+              type="text"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              required
+            />
+          </div>
+        )}
+        <button type="submit">
+          {isOtpRequested ? 'Verify OTP and Login' : 'Request OTP'}
+        </button>
+        {error && <p className="error">{error}</p>}  
+        {success && <p className="success">{success}</p>} 
       </form>
     </div>
   );

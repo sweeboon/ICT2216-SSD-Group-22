@@ -8,11 +8,24 @@ export const useAuth = () => {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [roles, setRoles] = useState([]);
   const [redirectPath, setRedirectPath] = useState('/');
+  const [isOtpRequested, setIsOtpRequested] = useState(false);  // Track OTP request status
+
   const navigate = useNavigate();
 
-  const handleLogin = useCallback(async (email, password) => {
+  const initiateLogin = useCallback(async (email, password) => {
     try {
-      const response = await axios.post('/auth/login', { email, password });
+      const response = await axios.post('/auth/initiate_login', { email, password });
+      setIsOtpRequested(true);
+      return response.data;
+    } catch (error) {
+      setIsOtpRequested(false);
+      throw error;
+    }
+  }, []);
+
+  const verifyOtpAndLogin = useCallback(async (email, otp) => {
+    try {
+      const response = await axios.post('/auth/verify_otp_and_login', { email, otp });
       const jwtToken = response.data.token;
       const loggedUsername = response.data.username;
       const userRoles = response.data.roles;
@@ -25,10 +38,18 @@ export const useAuth = () => {
       console.log('Login successful, isLoggedIn:', true);
       navigate(redirectPath);
     } catch (error) {
-      console.error('Login failed:', error);
       setIsLoggedIn(false);
+      throw error;
     }
   }, [navigate, redirectPath]);
+
+  const handleLogin = useCallback(async (email, password, otp) => {
+    if (isOtpRequested) {
+      await verifyOtpAndLogin(email, otp);
+    } else {
+      await initiateLogin(email, password);
+    }
+  }, [initiateLogin, verifyOtpAndLogin, isOtpRequested]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -74,6 +95,7 @@ export const useAuth = () => {
     handleLogin,
     handleLogout,
     checkAuthStatus,
+    isOtpRequested,
     setIsLoggedIn,
     setUsername,
     setToken,

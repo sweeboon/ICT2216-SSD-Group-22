@@ -6,7 +6,7 @@ from api.models import Account, Role, Sessions
 from api import db, csrf, mail
 from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
-from .utils import generate_token, verify_token
+from .utils import generate_token, verify_token, generate_otp, send_otp, verify_otp
 from .email import send_email
 import jwt
 from flask_wtf.csrf import generate_csrf
@@ -14,7 +14,87 @@ import logging
 import pyotp
 import secrets
 
+
 logger = logging.getLogger(__name__)
+
+@bp.route('/initiate_login', methods=['POST'])
+@csrf.exempt
+def initiate_login():
+    data = request.get_json()
+    if 'email' not in data or 'password' not in data:
+        return jsonify({'message': 'Email and password are required'}), 400
+
+    account = Account.query.filter_by(email=data['email']).first()
+    if account is None or not pbkdf2_sha256.verify(data['password'], account.password):
+        return jsonify({'message': 'Invalid email or password'}), 401
+
+    otp = generate_otp()
+    account.otp = otp
+    account.otp_generated_at = datetime.now()
+    db.session.commit()
+
+    send_otp(account, otp)
+    return jsonify({'message': 'OTP sent to email.'}), 200
+
+@bp.route('/verify_otp_and_login', methods=['POST'])
+@csrf.exempt
+def verify_otp_and_login():
+    data = request.get_json()
+    if 'email' not in data or 'otp' not in data:
+        return jsonify({'message': 'Email and OTP are required'}), 400
+
+    account = Account.query.filter_by(email=data['email']).first()
+    if account is None:
+        return jsonify({'message': 'Invalid email address'}), 401
+
+    if verify_otp(account, data['otp']):
+        token = jwt.encode({
+            'sub': account.email,
+            'iat': datetime.now(),
+            'exp': datetime.now() + timedelta(minutes=30)
+        }, current_app.config['SECRET_KEY'], algorithm="HS256")
+
+        login_user(account, remember=True, duration=timedelta(minutes=30))
+        identity_changed.send(current_app._get_current_object(), identity=Identity(account.account_id))
+        roles = [role.name for role in account.roles]
+
+        return jsonify({'message': 'Login successful', 'token': token, 'username': account.email, 'roles': roles}), 200
+    else:
+        return jsonify({'message': 'Invalid or expired OTP'}), 400
+
+@bp.route('/request_otp', methods=['POST'])
+@csrf.exempt
+def request_otp():
+    data = request.get_json()
+    email = data.get('email')
+
+    account = Account.query.filter_by(email=email).first()
+    if not account:
+        return jsonify({'error': 'Invalid email address'}), 404
+
+    otp = generate_otp()
+    account.otp = otp
+    account.otp_generated_at = datetime.now()
+    db.session.commit()
+
+    send_otp(account, otp)
+    return jsonify({'message': 'OTP sent to email.'}), 200
+
+@bp.route('/verify_otp', methods=['POST'])
+@csrf.exempt
+def verify_otp_route():
+    data = request.get_json()
+    email = data.get('email')
+    otp = data.get('otp')
+
+    account = Account.query.filter_by(email=email).first()
+    if not account:
+        return jsonify({'error': 'Invalid email address'}), 404
+
+    if verify_otp(account, otp):
+        return jsonify({'message': 'OTP verified successfully.'}), 200
+    else:
+        return jsonify({'error': 'Invalid or expired OTP.'}), 400
 
 @bp.route('/csrf-token', methods=['POST'])
 def get_csrf_token():
