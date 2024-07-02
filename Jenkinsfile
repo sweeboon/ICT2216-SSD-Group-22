@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        VENV_PATH = 'venv'
+        VENV_PATH = '/var/lib/jenkins/workspace/ICT2216/venv'
         DOCKER_IMAGE = 'nginx'
-        CONTAINER_NAME = 'nginx'
+        CONTAINER_NAME = 'nginx-container'
     }
 
     stages {
@@ -17,8 +17,8 @@ pipeline {
         stage('Setup Virtual Environment') {
             steps {
                 script {
-                    // Check for the virtual environment, create it if it doesn't exist
-                    sh 'python3 -m venv $VENV_PATH'
+                    // Create the virtual environment if it doesn't exist
+                    sh "python3 -m venv ${VENV_PATH}"
                 }
             }
         }
@@ -26,7 +26,7 @@ pipeline {
         stage('Install Python Dependencies') {
             steps {
                 // Install any dependencies listed in requirements.txt
-                sh 'bash -c "source $VENV_PATH/bin/activate && pip install -r /var/lib/jenkins/workspace/ICT2216/react-flask-app/server/requirements.txt"'
+                sh "bash -c 'source ${VENV_PATH}/bin/activate && pip install -r /var/lib/jenkins/workspace/ICT2216/react-flask-app/server/requirements.txt'"
             }
         }
 
