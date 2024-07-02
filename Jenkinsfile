@@ -27,7 +27,9 @@ pipeline {
         stage('Verify Checkout') {
             steps {
                 script {
-                    // Verify that the requirements.txt file exists
+                    // Verify the contents of the workspace
+                    sh 'ls -l /var/lib/jenkins/workspace/ICT2216'
+                    sh 'ls -l /var/lib/jenkins/workspace/ICT2216/react-flask-app'
                     sh 'ls -l /var/lib/jenkins/workspace/ICT2216/react-flask-app/server'
                 }
             }
