@@ -5,7 +5,7 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
-        HOME_DIR = "/home/yourusername"
+        HOME_DIR = "/home/student24"
     }
 
     stages {
