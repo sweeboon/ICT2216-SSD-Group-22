@@ -24,6 +24,15 @@ pipeline {
             }
         }
 
+        stage('Verify .env File') {
+            steps {
+                script {
+                    // Verify if .env file exists
+                    sh 'if [ -f ${HOME_DIR}/.env ]; then echo ".env file exists"; else echo ".env file does not exist"; exit 1; fi'
+                }
+            }
+        }
+
         stage('Copy .env File') {
             steps {
                 script {
