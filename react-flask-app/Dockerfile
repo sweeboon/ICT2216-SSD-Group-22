@@ -1,28 +1,38 @@
-# Use an official Node.js runtime as a parent image for building the app
+# Stage 1: Build React app
 FROM node:14 as build
 
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and yarn.lock and install frontend dependencies
+# Copy package.json and yarn.lock and install dependencies
 COPY react-flask-app/src/package.json react-flask-app/src/yarn.lock ./
 RUN yarn install
 
-# Copy the rest of the application and build the app
-COPY . .
-RUN yarn build --cwd react-flask-app/src
+# Copy the rest of the application and build the React app
+COPY react-flask-app/src ./
+RUN yarn build
 
-# Use the existing Nginx image to serve the built application
-FROM nginx:alpine
+# Stage 2: Setup Flask app and run both Flask and React
+FROM python:3.9
 
-# Copy the build output to the Nginx html directory
-COPY --from=build /app/react-flask-app/src/build /usr/share/nginx/html
+# Set the working directory
+WORKDIR /app
 
-# Copy Nginx configuration file
-COPY react-flask-app/src/nginx.conf /etc/nginx/nginx.conf
+# Copy the Flask app requirements and install them
+COPY react-flask-app/server/requirements.txt ./
+RUN pip install -r requirements.txt
 
-# Expose port 80
-EXPOSE 80
+# Copy the rest of the Flask app
+COPY react-flask-app/server ./
 
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Copy the React build from the first stage
+COPY --from=build /app/build ./static
+
+# Copy the rest of the application
+COPY react-flask-app/src ./
+
+# Expose the ports for Flask and React
+EXPOSE 3000 5000
+
+# Start both the React and Flask app using yarn
+CMD ["yarn", "start"]
