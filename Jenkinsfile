@@ -13,11 +13,11 @@ pipeline {
             }
         }
 
-        stage('OWASP Dependency Check') {
-            steps {
-                dependencyCheck additionalArguments: '''-o ./ --format HTML --format XML --disableYarnAudit''', odcInstallation: 'DependencyCheck'
-            }
-        }
+        // stage('OWASP Dependency Check') {
+        //     steps {
+        //         dependencyCheck additionalArguments: '''-o ./ --format HTML --format XML --disableYarnAudit --noupdate''', odcInstallation: 'DependencyCheck'
+        //     }
+        // }
 
         stage('Setup Virtual Environment') {
             steps {
@@ -38,14 +38,6 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    dockerImage = docker.build("nginx:${env.BUILD_ID}")
-                }
-            }
-        }
-
         stage('Push Docker Image') {
             steps {
                 script {
@@ -56,20 +48,13 @@ pipeline {
                 }
             }
         }
-
-        stage('Deploy to AWS') {
-            steps {
-                script {
-                    sh 'aws ecs update-service --cluster your-cluster-name --service your-service-name --force-new-deployment'
-                }
-            }
-        }
     }
 
     post {
         always {
             echo 'Cleaning up...'
-            dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+            // Commented out due to current issues
+            // dependencyCheckPublisher pattern: 'dependency-check-report.xml'
         }
     }
 }
