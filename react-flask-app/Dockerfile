@@ -1,31 +1,28 @@
-# Use an official Python runtime as a parent image
-FROM python:3.9-slim
+# Use an official Node.js runtime as a parent image for building the app
+FROM node:14 as build
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+# Copy package.json and yarn.lock and install frontend dependencies
+COPY react-flask-app/src/package.json react-flask-app/src/yarn.lock ./
+RUN yarn install
 
-# Set environment variables
-ENV VIRTUAL_ENV=/app/venv
-RUN python -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+# Copy the rest of the application and build the app
+COPY . .
+RUN yarn build --cwd react-flask-app/src
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r server/requirements.txt
+# Use the existing Nginx image to serve the built application
+FROM nginx:alpine
 
-# Install Node.js and Yarn
-RUN apt-get update && apt-get install -y curl gnupg
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
-RUN apt-get install -y nodejs
-RUN npm install --global yarn
+# Copy the build output to the Nginx html directory
+COPY --from=build /app/react-flask-app/src/build /usr/share/nginx/html
 
-# Install frontend dependencies
-RUN cd src && yarn install
+# Copy Nginx configuration file
+COPY react-flask-app/src/nginx.conf /etc/nginx/nginx.conf
 
-# Expose port
-EXPOSE 5000
+# Expose port 80
+EXPOSE 80
 
-# Run the application
-CMD ["bash", "-c", ". venv/bin/activate && flask db upgrade && yarn start"]
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
