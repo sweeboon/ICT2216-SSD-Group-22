@@ -5,11 +5,11 @@ FROM node:14 as build
 WORKDIR /app
 
 # Copy package.json and yarn.lock and install dependencies
-COPY react-flask-app/src/package.json react-flask-app/src/yarn.lock ./
+COPY react-flask-app/package.json react-flask-app/yarn.lock ./
 RUN yarn install
 
 # Copy the rest of the React application and build the React app
-COPY react-flask-app/src ./
+COPY react-flask-app/ ./
 RUN yarn build
 
 # Stage 2: Setup Flask app and run both Flask and React
@@ -23,13 +23,13 @@ COPY react-flask-app/server/requirements.txt ./
 RUN pip install -r requirements.txt
 
 # Copy the rest of the Flask app
-COPY react-flask-app/server ./
+COPY react-flask-app/server /app/server
 
 # Copy the React build from the first stage
 COPY --from=build /app/build ./static
 
-# Copy the rest of the application (assuming some parts may be in src or elsewhere)
-COPY react-flask-app ./
+# Copy the rest of the application
+COPY react-flask-app/ ./
 
 # Expose the ports for Flask and React
 EXPOSE 3000 5000
