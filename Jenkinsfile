@@ -26,14 +26,14 @@ pipeline {
         stage('Install Python Dependencies') {
             steps {
                 // Install any dependencies listed in requirements.txt
-                sh 'bash -c "source $VENV_PATH/bin/activate && pip install -r react-flask-app/server/requirements.txt"'
+                sh 'bash -c "source $VENV_PATH/bin/activate && pip install -r /var/lib/jenkins/workspace/ICT2216/react-flask-app/server/requirements.txt"'
             }
         }
 
         stage('Install Node.js Dependencies') {
             steps {
                 // Install Node.js dependencies
-                sh 'bash -c "cd react-flask-app/src && yarn install"'
+                sh 'bash -c "cd /var/lib/jenkins/workspace/ICT2216/react-flask-app/src && yarn install"'
             }
         }
 
@@ -41,7 +41,7 @@ pipeline {
             steps {
                 script {
                     // Build the Docker image
-                    sh "docker build -t ${DOCKER_IMAGE} -f react-flask-app/Dockerfile ."
+                    sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f /var/lib/jenkins/workspace/ICT2216/react-flask-app/Dockerfile /var/lib/jenkins/workspace/ICT2216/react-flask-app"
                 }
             }
         }
@@ -52,7 +52,7 @@ pipeline {
                     sh """
                         docker stop ${CONTAINER_NAME} || true
                         docker rm ${CONTAINER_NAME} || true
-                        docker run -d -p 80:80 --name ${CONTAINER_NAME} ${DOCKER_IMAGE}
+                        docker run -d -p 80:80 --name ${CONTAINER_NAME} ${DOCKER_IMAGE}:${env.BUILD_ID}
                     """
                 }
             }
