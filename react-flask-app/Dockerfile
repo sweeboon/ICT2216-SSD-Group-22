@@ -13,9 +13,9 @@ COPY . ./
 RUN yarn build
 
 # Stage 2: Setup Flask app and run both Flask and React
-FROM python:3.9
+FROM python:3.9-slim
 
-# Install yarn globally and clean up
+# Install dependencies
 RUN apt-get update && apt-get install -y curl && \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
     echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
@@ -27,8 +27,9 @@ WORKDIR /app
 
 # Copy the Flask app requirements and install them
 COPY server/requirements.txt ./
-RUN python -m venv /app/venv
-RUN /app/venv/bin/pip install --no-cache-dir -r requirements.txt
+RUN python -m venv /app/venv && \
+    /app/venv/bin/pip install --no-cache-dir -r requirements.txt && \
+    rm -rf /root/.cache/pip
 
 # Install concurrently to run multiple commands
 RUN yarn global add concurrently
