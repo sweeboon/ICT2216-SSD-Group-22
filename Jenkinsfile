@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         VENV_PATH = 'venv'
+        DOCKER_HOST = 'unix:///var/run/docker.sock'
     }
-
     stages {
         stage('Checkout') {
             steps {
@@ -12,7 +12,8 @@ pipeline {
             }
         }
 
-        stage('Setup Virtual Environment') {
+        
+         stage('Setup Virtual Environment') {
             steps {
                 script {
                     // Check for the virtual environment, create it if it doesn't exist
@@ -38,7 +39,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t nginx:${env.BUILD_ID} ."
+                    // Navigate to the directory containing the Dockerfile and build the Docker image
+                    sh "docker build -t nginx:${env.BUILD_ID} -f react-flask-app/Dockerfile ."
                 }
             }
         }
