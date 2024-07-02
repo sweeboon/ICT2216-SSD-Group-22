@@ -19,11 +19,19 @@ pipeline {
 
         stage('Checkout') {
             steps {
+                git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
+            }
+        }
+
+        stage('Verify Checkout') {
+            steps {
                 script {
-                    git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
-                    // Debugging step to print the current workspace and list its contents
+                    // Print the current workspace directory
                     sh 'echo "Current workspace: ${WORKSPACE}"'
+                    // List the contents of the workspace directory
                     sh 'ls -l ${WORKSPACE}'
+                    // List the contents of the react-flask-app directory
+                    sh 'ls -l ${WORKSPACE}/react-flask-app'
                 }
             }
         }
@@ -58,6 +66,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    // Verify Docker is accessible
+                    sh 'docker --version'
+                    sh 'docker ps'
                     // Build the Docker image
                     sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f ${WORKSPACE}/react-flask-app/Dockerfile ${WORKSPACE}/react-flask-app"
                 }
