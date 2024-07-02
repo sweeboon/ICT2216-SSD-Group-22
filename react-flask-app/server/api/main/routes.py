@@ -9,50 +9,6 @@ from api import db, csrf
 from api.main import bp
 
 
-# Password validation function
-def validate_password(password):
-    min_length = 8
-    has_number = re.compile(r'[0-9]')
-    has_special_char = re.compile(r'[@#$%^&+=]')
-
-    if len(password) < min_length:
-        return False, "Password must be at least 8 characters long."
-    if not has_number.search(password):
-        return False, "Password must contain at least one number."
-    if not has_special_char.search(password):
-        return False, "Password must contain at least one special character."
-    return True, ""
-
-# Register new user
-@bp.route('/auth/register', methods=['POST'])
-@csrf.exempt
-def register():
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
-    username = data.get('username')
-    date_of_birth = data.get('date_of_birth')
-    address = data.get('address')
-
-    if not email or not password or not username:
-        return jsonify({'error': 'Missing required fields'}), 400
-
-    valid, message = validate_password(password)
-    if not valid:
-        return jsonify({'error': message}), 400
-
-    hashed_password = generate_password_hash(password)
-    new_account = Account(
-        email=email,
-        password=hashed_password,
-        name=username,
-        date_of_birth=date_of_birth,
-        address=address
-    )
-    db.session.add(new_account)
-    db.session.commit()
-
-    return jsonify({'message': 'User registered successfully'}), 201
 
 
 # Check if the cart has items

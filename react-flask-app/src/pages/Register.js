@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
 import '../assets/Auth.css';
 import axios from '../components/axiosConfig';
 
@@ -124,4 +122,3 @@ const Register = () => {
 };
 
 export default Register;
-
