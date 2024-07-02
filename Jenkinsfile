@@ -5,7 +5,7 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
-        ENV_FILE_PATH = "/home/student24/.env" // Path to the .env file on the AWS instance
+        ENV_FILE_PATH = "/home/ubuntu/.env" // Path to the .env file on the AWS instance
     }
 
     stages {
@@ -28,8 +28,8 @@ pipeline {
             steps {
                 script {
                     // Debug the location and permissions of the .env file using bash
-                    sh 'bash -c "ls -la /home/student24"'
-                    sh 'bash -c "stat /home/student24/.env || echo \'.env file does not exist\'"'
+                    sh 'bash -c "ls -la /home/ubuntu"'
+                    sh 'bash -c "stat /home/ubuntu/.env || echo \'.env file does not exist\'"'
                 }
             }
         }
@@ -62,7 +62,7 @@ pipeline {
                     // List the contents of the workspace directory
                     sh 'ls -l ${WORKSPACE}'
                     // List the contents of the react-flask-app directory
-                    sh 'ls -l ${WORKSPACE}/react-flask-app'
+                    sh 'ls -la ${WORKSPACE}/react-flask-app'
                 }
             }
         }
