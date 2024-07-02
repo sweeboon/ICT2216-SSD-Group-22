@@ -1,43 +1,31 @@
-# Stage 1: Build React app
-FROM node:14 AS build
+# Use an official Python runtime as a parent image
+FROM python:3.9-slim
 
-WORKDIR /app
-COPY package.json yarn.lock ./
-RUN yarn install
-COPY . .
-RUN yarn build
-
-# Stage 2: Set up backend with virtual environment and copy built frontend
-FROM python:3.8-slim
-
+# Set the working directory in the container
 WORKDIR /app
 
-# Install Node.js for yarn build
-RUN apt-get update && \
-    apt-get install -y curl && \
-    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
-    apt-get install -y nodejs && \
-    npm install -g yarn
+# Copy the current directory contents into the container at /app
+COPY . /app
 
-# Create virtual environment
-RUN python -m venv venv
-ENV PATH="/app/venv/bin:$PATH"
+# Set environment variables
+ENV VIRTUAL_ENV=/app/venv
+RUN python -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Install backend dependencies
-COPY server/requirements.txt ./
-RUN /bin/bash -c "source venv/bin/activate && pip install -r requirements.txt"
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r react-flask-app/server/requirements.txt
 
-# Copy backend code
-COPY server/ ./
+# Install Node.js and Yarn
+RUN apt-get update && apt-get install -y curl gnupg
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install --global yarn
 
-# Run Flask migrations
-RUN /bin/bash -c "source venv/bin/activate && flask db migrate"
+# Install frontend dependencies
+RUN cd react-flask-app/src && yarn install
 
-# Copy built frontend from the previous stage
-COPY --from=build /app/build ./frontend/build
-
-# Expose the port the backend runs on
+# Expose port
 EXPOSE 5000
 
-# Command to run the application
-CMD ["/bin/bash", "-c", "source venv/bin/activate && yarn start"]
+# Run the application
+CMD ["bash", "-c", "source venv/bin/activate && flask db upgrade && yarn start"]
