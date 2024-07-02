@@ -3,17 +3,18 @@ pipeline {
 
     environment {
         VENV_PATH = 'venv'
-        DOCKER_HOST = 'unix:///var/run/docker.sock'
+        DOCKER_IMAGE = 'nginx'
+        CONTAINER_NAME = 'nginx-container'
     }
+
     stages {
         stage('Checkout') {
             steps {
-                   git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
+                git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
             }
         }
 
-        
-         stage('Setup Virtual Environment') {
+        stage('Setup Virtual Environment') {
             steps {
                 script {
                     // Check for the virtual environment, create it if it doesn't exist
@@ -39,8 +40,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Navigate to the directory containing the Dockerfile and build the Docker image
-                    sh "docker build -t nginx:${env.BUILD_ID} -f react-flask-app/Dockerfile ."
+                    // Build the Docker image
+                    sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f react-flask-app/Dockerfile ."
                 }
             }
         }
@@ -49,15 +50,15 @@ pipeline {
             steps {
                 script {
                     sh """
-                        docker stop nginx || true
-                        docker rm nginx || true
-                        docker run -d -p 80:80 --name nginx nginx:${env.BUILD_ID}
+                        docker stop ${CONTAINER_NAME} || true
+                        docker rm ${CONTAINER_NAME} || true
+                        docker run -d -p 80:80 --name ${CONTAINER_NAME} ${DOCKER_IMAGE}:${env.BUILD_ID}
                     """
                 }
             }
         }
     }
-    
+
     post {
         always {
             cleanWs()
