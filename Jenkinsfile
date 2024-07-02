@@ -5,6 +5,7 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
+        HOME_DIR = "/home/yourusername"
     }
 
     stages {
@@ -20,6 +21,15 @@ pipeline {
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
+            }
+        }
+
+        stage('Copy .env File') {
+            steps {
+                script {
+                    // Copy the .env file from the home directory to the workspace
+                    sh 'cp ${HOME_DIR}/.env ${WORKSPACE}/react-flask-app/.env'
+                }
             }
         }
 

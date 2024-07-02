@@ -46,8 +46,8 @@ COPY --from=build /app/build /app/static
 # Copy the rest of the application
 COPY . /app
 
-# Copy the .env file from home directory to the container
-COPY /home/student24/.env /app/.env
+# Copy the .env file from the project directory to the container
+COPY .env /app/.env
 
 # Expose the ports for Flask and React
 EXPOSE 3000
