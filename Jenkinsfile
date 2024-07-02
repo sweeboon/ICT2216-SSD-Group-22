@@ -14,9 +14,15 @@ pipeline {
             }
         }
 
-        stage('Checkout') {
+        stage('Checkout and Update Files') {
             steps {
-                git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
+                script {
+                    // Forcefully delete the existing directory and update files from GitHub
+                    sh '''
+                        sudo rm -rf ${WORKSPACE}/react-flask-app
+                        git clone https://github.com/sweeboon/ICT2216-SSD-Group-22.git ${WORKSPACE}/react-flask-app
+                    '''
+                }
             }
         }
 
