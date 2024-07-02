@@ -1,7 +1,6 @@
 # Stage 1: Build React app
-FROM node:16 as build
+FROM node:16 AS build
 
-# Set the working directory
 WORKDIR /app
 
 # Copy package.json and yarn.lock and install dependencies
@@ -15,16 +14,17 @@ RUN yarn build
 # Stage 2: Setup Flask app and run both Flask and React
 FROM python:3.9-slim
 
-# Install dependencies
+# Install Node.js and Yarn
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
+    && apt-get install -y nodejs \
     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
     && apt-get update && apt-get install -y --no-install-recommends yarn \
     && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory
 WORKDIR /app
 
 # Copy the Flask app requirements and install them
