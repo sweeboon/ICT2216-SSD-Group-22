@@ -30,13 +30,13 @@ pipeline {
                     image 'nginx'
                     args '-u root'
                 }
-            
+            }
             steps {
                 script {
+                    // Install Python if not available (typically not part of nginx image)
+                    sh 'apt-get update && apt-get install -y python3 python3-venv'
                     // Check for the virtual environment, create it if it doesn't exist
-                    sh 'bash -c "python3 -m venv $VENV_PATH"'
-                    // Activate the virtual environment
-                    sh 'bash -c "source $VENV_PATH/bin/activate"'
+                    sh 'python3 -m venv $VENV_PATH'
                 }
             }
         }
@@ -47,11 +47,13 @@ pipeline {
                     image 'nginx'
                     args '-u root'
                 }
-            
+            }
             steps {
-                steps {
-                // Install any dependencies listed in requirements.txt
-                sh 'bash -c "source $VENV_PATH/bin/activate && pip install -r react-flask-app/server/requirements.txt"'
+                script {
+                    // Install pip if not available
+                    sh 'apt-get update && apt-get install -y python3-pip'
+                    // Activate the virtual environment and install dependencies
+                    sh 'source $VENV_PATH/bin/activate && pip install -r react-flask-app/server/requirements.txt'
                 }
             }
         }
@@ -62,10 +64,15 @@ pipeline {
                     image 'nginx'
                     args '-u root'
                 }
-            
-                steps {
+            }
+            steps {
+                script {
+                    // Install Node.js and npm if not available (typically not part of nginx image)
+                    sh 'apt-get update && apt-get install -y curl'
+                    sh 'curl -sL https://deb.nodesource.com/setup_14.x | bash -'
+                    sh 'apt-get install -y nodejs'
                     // Install Node.js dependencies
-                    sh 'bash -c "cd react-flask-app/src && npm install"'
+                    sh 'cd react-flask-app/src && npm install'
                 }
             }
         }
@@ -86,7 +93,7 @@ pipeline {
                 }
             }
         }
-    
+    }
 
     post {
         always {
