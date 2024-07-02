@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        VENV_PATH = "/var/lib/jenkins/workspace/ICT2216/venv"
+        VENV_PATH = "/tmp/venv"
         WORKSPACE_DIR = "/var/lib/jenkins/workspace/ICT2216"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx-container'
@@ -20,15 +20,15 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c', changelog: false, poll: false
+                git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
             }
         }
 
         stage('Setup Virtual Environment') {
             steps {
                 script {
-                    // Create the virtual environment
-                    sh 'bash -c "python3 -m venv /var/lib/jenkins/workspace/ICT2216/venv"'
+                    // Create the virtual environment in the /tmp directory
+                    sh 'bash -c "python3 -m venv /tmp/venv"'
                 }
             }
         }
@@ -37,7 +37,7 @@ pipeline {
             steps {
                 script {
                     // Install any dependencies listed in requirements.txt
-                    sh 'bash -c "source /var/lib/jenkins/workspace/ICT2216/venv/bin/activate && pip install -r /var/lib/jenkins/workspace/ICT2216/react-flask-app/server/requirements.txt"'
+                    sh 'bash -c "source /tmp/venv/bin/activate && pip install -r /var/lib/jenkins/workspace/ICT2216/react-flask-app/server/requirements.txt"'
                 }
             }
         }
