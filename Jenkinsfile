@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        VENV_PATH = "${WORKSPACE}/venv"
+        VENV_PATH = "/var/lib/jenkins/workspace/ICT2216/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx-container'
     }
@@ -24,7 +24,7 @@ pipeline {
             steps {
                 script {
                     // Create the virtual environment if it doesn't exist
-                    sh 'bash -c "python3 -m venv $VENV_PATH"'
+                    sh 'bash -c "python3 -m venv /var/lib/jenkins/workspace/ICT2216/venv"'
                 }
             }
         }
@@ -33,7 +33,7 @@ pipeline {
             steps {
                 script {
                     // Install any dependencies listed in requirements.txt
-                    sh 'bash -c "source $VENV_PATH/bin/activate && pip install -r $WORKSPACE/react-flask-app/server/requirements.txt"'
+                    sh 'bash -c "source /var/lib/jenkins/workspace/ICT2216/venv/bin/activate && pip install -r /var/lib/jenkins/workspace/ICT2216/react-flask-app/server/requirements.txt"'
                 }
             }
         }
@@ -42,7 +42,7 @@ pipeline {
             steps {
                 script {
                     // Install Node.js dependencies
-                    sh 'bash -c "cd $WORKSPACE/react-flask-app/src && yarn install"'
+                    sh 'bash -c "cd /var/lib/jenkins/workspace/ICT2216/react-flask-app/src && yarn install"'
                 }
             }
         }
@@ -51,7 +51,7 @@ pipeline {
             steps {
                 script {
                     // Build the Docker image
-                    sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f $WORKSPACE/react-flask-app/Dockerfile $WORKSPACE/react-flask-app"
+                    sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f /var/lib/jenkins/workspace/ICT2216/react-flask-app/Dockerfile /var/lib/jenkins/workspace/ICT2216/react-flask-app"
                 }
             }
         }
