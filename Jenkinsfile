@@ -14,19 +14,9 @@ pipeline {
             }
         }
 
-        stage('Checkout and Update Files') {
+        stage('Checkout') {
             steps {
-                script {
-                    // If the directory exists, pull the latest changes. Otherwise, clone the repository.
-                    sh '''
-                        if [ -d "$WORKSPACE/react-flask-app/.git" ]; then
-                            cd $WORKSPACE/react-flask-app
-                            git pull origin main
-                        else
-                            git clone https://github.com/sweeboon/ICT2216-SSD-Group-22.git $WORKSPACE/react-flask-app
-                        fi
-                    '''
-                }
+                git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
             }
         }
 
