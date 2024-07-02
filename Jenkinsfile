@@ -24,6 +24,15 @@ pipeline {
             }
         }
 
+        stage('Verify Checkout') {
+            steps {
+                script {
+                    // Verify that the requirements.txt file exists
+                    sh 'ls -l /var/lib/jenkins/workspace/ICT2216/react-flask-app/server'
+                }
+            }
+        }
+
         stage('Setup Virtual Environment') {
             steps {
                 script {
