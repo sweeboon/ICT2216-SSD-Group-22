@@ -4,7 +4,7 @@ pipeline {
     environment {
         VENV_PATH = 'venv'
         DOCKER_IMAGE = 'nginx'
-        CONTAINER_NAME = 'nginx-container'
+        CONTAINER_NAME = 'nginx'
     }
 
     stages {
@@ -41,7 +41,7 @@ pipeline {
             steps {
                 script {
                     // Build the Docker image
-                    sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f react-flask-app/Dockerfile ."
+                    sh "docker build -t ${DOCKER_IMAGE} -f react-flask-app/Dockerfile ."
                 }
             }
         }
@@ -52,7 +52,7 @@ pipeline {
                     sh """
                         docker stop ${CONTAINER_NAME} || true
                         docker rm ${CONTAINER_NAME} || true
-                        docker run -d -p 80:80 --name ${CONTAINER_NAME} ${DOCKER_IMAGE}:${env.BUILD_ID}
+                        docker run -d -p 80:80 --name ${CONTAINER_NAME} ${DOCKER_IMAGE}
                     """
                 }
             }
