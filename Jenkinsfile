@@ -24,6 +24,15 @@ pipeline {
             }
         }
 
+        stage('Debug Home Directory') {
+            steps {
+                script {
+                    // List contents of the home directory to verify the .env file
+                    sh 'ls -la ${HOME_DIR}'
+                }
+            }
+        }
+
         stage('Verify .env File') {
             steps {
                 script {
