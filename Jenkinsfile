@@ -13,28 +13,18 @@ pipeline {
             }
         }
 
+        // Commented out due to current issues
         // stage('OWASP Dependency Check') {
         //     steps {
         //         dependencyCheck additionalArguments: '''-o ./ --format HTML --format XML --disableYarnAudit --noupdate''', odcInstallation: 'DependencyCheck'
         //     }
         // }
 
-        stage('Setup Virtual Environment') {
+        stage('Build Docker Image') {
             steps {
-                sh 'python3 -m venv react-flask-app/server/venv'
-                sh 'source react-flask-app/server/venv/bin/activate'
-            }
-        }
-
-        stage('Install Python Dependencies') {
-            steps {
-                sh 'source react-flask-app/server/venv/bin/activate && pip install -r react-flask-app/server/requirements.txt'
-            }
-        }
-
-        stage('Install Node.js Dependencies') {
-            steps {
-                sh 'cd react-flask-app/src && npm install && yarn install'
+                script {
+                    dockerImage = docker.build("nginx:${env.BUILD_ID}")
+                }
             }
         }
 

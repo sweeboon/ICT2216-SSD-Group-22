@@ -28,4 +28,4 @@ RUN cd react-flask-app/src && yarn install
 EXPOSE 5000
 
 # Run the application
-CMD ["bash", "-c", "source venv/bin/activate && flask db upgrade && yarn start"]
+CMD ["bash", "-c", ". venv/bin/activate && flask db upgrade && yarn start"]
