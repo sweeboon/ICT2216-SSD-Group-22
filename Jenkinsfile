@@ -3,14 +3,18 @@ pipeline {
 
     environment {
         VENV_PATH = "/var/lib/jenkins/workspace/ICT2216/venv"
+        WORKSPACE_DIR = "/var/lib/jenkins/workspace/ICT2216"
         DOCKER_IMAGE = 'nginx'
-        CONTAINER_NAME = 'nginx-container'
+        CONTAINER_NAME = 'nginx'
     }
 
     stages {
         stage('Clean Workspace') {
             steps {
-                cleanWs()
+                script {
+                    // Clean the workspace directory
+                    sh 'rm -rf /var/lib/jenkins/workspace/ICT2216/*'
+                }
             }
         }
 
@@ -23,7 +27,7 @@ pipeline {
         stage('Setup Virtual Environment') {
             steps {
                 script {
-                    // Create the virtual environment if it doesn't exist
+                    // Create the virtual environment
                     sh 'bash -c "python3 -m venv /var/lib/jenkins/workspace/ICT2216/venv"'
                 }
             }
