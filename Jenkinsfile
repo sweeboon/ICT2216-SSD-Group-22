@@ -38,6 +38,8 @@ pipeline {
                 script {
                     // Copy the .env file from the home directory to the workspace
                     sh 'cp ${HOME_DIR}/.env ${WORKSPACE}/react-flask-app/.env'
+                    // Verify the .env file is copied
+                    sh 'if [ -f ${WORKSPACE}/react-flask-app/.env ]; then echo ".env file successfully copied"; else echo "Failed to copy .env file"; exit 1; fi'
                 }
             }
         }
