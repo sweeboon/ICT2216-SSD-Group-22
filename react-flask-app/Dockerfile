@@ -13,7 +13,7 @@ RUN python -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r react-flask-app/server/requirements.txt
+RUN pip install --no-cache-dir -r server/requirements.txt
 
 # Install Node.js and Yarn
 RUN apt-get update && apt-get install -y curl gnupg
@@ -22,7 +22,7 @@ RUN apt-get install -y nodejs
 RUN npm install --global yarn
 
 # Install frontend dependencies
-RUN cd react-flask-app/src && yarn install
+RUN cd src && yarn install
 
 # Expose port
 EXPOSE 5000
