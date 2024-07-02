@@ -15,20 +15,21 @@ RUN yarn build
 # Stage 2: Setup Flask app and run both Flask and React
 FROM python:3.9
 
-# Install yarn globally
+# Install yarn globally and clean up
 RUN apt-get update && apt-get install -y curl && \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
     echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
-    apt-get update && apt-get install -y yarn
+    apt-get update && apt-get install -y yarn && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
 WORKDIR /app
 
 # Copy the Flask app requirements and install them
 COPY server/requirements.txt ./
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the Flask app
+# Copy the Flask app
 COPY server /app/server
 
 # Copy the React build from the first stage
@@ -38,7 +39,8 @@ COPY --from=build /app/build /app/static
 COPY . /app
 
 # Expose the ports for Flask and React
-EXPOSE 3000 5000
+EXPOSE 3000
+EXPOSE 5000
 
 # Start both the React and Flask app using yarn
 CMD ["yarn", "start"]
