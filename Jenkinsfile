@@ -5,7 +5,7 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
-        HOME_DIR = "/home/student24"
+        ENV_FILE_PATH = "/var/jenkins_home/.env"
     }
 
     stages {
@@ -24,23 +24,11 @@ pipeline {
             }
         }
 
-        stage('Debug Home Directory') {
-            steps {
-                script {
-                    // List contents of the root directory to verify visibility of /home/student24
-                    sh 'ls -la /'
-                    // List contents of the home directory to verify the .env file
-                    sh 'ls -la /home'
-                    sh 'ls -la /home/student24'
-                }
-            }
-        }
-
         stage('Verify .env File') {
             steps {
                 script {
                     // Verify if .env file exists
-                    sh 'if [ -f /home/student24/.env ]; then echo ".env file exists"; else echo ".env file does not exist"; exit 1; fi'
+                    sh 'if [ -f ${ENV_FILE_PATH} ]; then echo ".env file exists"; else echo ".env file does not exist"; exit 1; fi'
                 }
             }
         }
@@ -48,8 +36,8 @@ pipeline {
         stage('Copy .env File') {
             steps {
                 script {
-                    // Copy the .env file from the home directory to the workspace
-                    sh 'cp /home/student24/.env ${WORKSPACE}/react-flask-app/.env'
+                    // Copy the .env file from the specified path to the workspace
+                    sh 'cp ${ENV_FILE_PATH} ${WORKSPACE}/react-flask-app/.env'
                     // Verify the .env file is copied
                     sh 'if [ -f ${WORKSPACE}/react-flask-app/.env ]; then echo ".env file successfully copied"; else echo "Failed to copy .env file"; exit 1; fi'
                 }
