@@ -24,6 +24,16 @@ pipeline {
             }
         }
 
+        stage('Debug .env File Location') {
+            steps {
+                script {
+                    // Debug the location and permissions of the .env file
+                    sh 'sudo ls -la /home/student24'
+                    sh 'sudo stat /home/student24/.env || echo ".env file does not exist"'
+                }
+            }
+        }
+
         stage('Verify .env File') {
             steps {
                 script {
@@ -37,7 +47,7 @@ pipeline {
             steps {
                 script {
                     // Copy the .env file from the specified path to the workspace
-                    sh 'cp ${ENV_FILE_PATH} ${WORKSPACE}/react-flask-app/.env'
+                    sh 'sudo cp ${ENV_FILE_PATH} ${WORKSPACE}/react-flask-app/.env'
                     // Verify the .env file is copied
                     sh 'if [ -f ${WORKSPACE}/react-flask-app/.env ]; then echo ".env file successfully copied"; else echo "Failed to copy .env file"; exit 1; fi'
                 }
