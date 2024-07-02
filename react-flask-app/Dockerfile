@@ -15,6 +15,12 @@ RUN yarn build
 # Stage 2: Setup Flask app and run both Flask and React
 FROM python:3.9
 
+# Install yarn globally
+RUN apt-get update && apt-get install -y curl && \
+    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
+    echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
+    apt-get update && apt-get install -y yarn
+
 # Set the working directory
 WORKDIR /app
 
