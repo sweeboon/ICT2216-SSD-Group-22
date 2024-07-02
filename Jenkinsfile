@@ -5,7 +5,7 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
-        ENV_FILE_PATH = "/home/ubuntu/.env" // Path to the .env file on the AWS instance
+        ENV_FILE_PATH = "/home/student24/nginx/.env" // Path to the .env file in /home/student24/nginx
     }
 
     stages {
@@ -21,16 +21,6 @@ pipeline {
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
-            }
-        }
-
-        stage('Debug .env File Location') {
-            steps {
-                script {
-                    // Debug the location and permissions of the .env file using bash
-                    sh 'bash -c "ls -la /home/ubuntu"'
-                    sh 'bash -c "stat /home/ubuntu/.env || echo \'.env file does not exist\'"'
-                }
             }
         }
 
