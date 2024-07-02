@@ -27,8 +27,11 @@ pipeline {
         stage('Debug Home Directory') {
             steps {
                 script {
+                    // List contents of the root directory to verify visibility of /home/student24
+                    sh 'ls -la /'
                     // List contents of the home directory to verify the .env file
-                    sh 'ls -la ${HOME_DIR}'
+                    sh 'ls -la /home'
+                    sh 'ls -la /home/student24'
                 }
             }
         }
@@ -37,7 +40,7 @@ pipeline {
             steps {
                 script {
                     // Verify if .env file exists
-                    sh 'if [ -f ${HOME_DIR}/.env ]; then echo ".env file exists"; else echo ".env file does not exist"; exit 1; fi'
+                    sh 'if [ -f /home/student24/.env ]; then echo ".env file exists"; else echo ".env file does not exist"; exit 1; fi'
                 }
             }
         }
@@ -46,7 +49,7 @@ pipeline {
             steps {
                 script {
                     // Copy the .env file from the home directory to the workspace
-                    sh 'cp ${HOME_DIR}/.env ${WORKSPACE}/react-flask-app/.env'
+                    sh 'cp /home/student24/.env ${WORKSPACE}/react-flask-app/.env'
                     // Verify the .env file is copied
                     sh 'if [ -f ${WORKSPACE}/react-flask-app/.env ]; then echo ".env file successfully copied"; else echo "Failed to copy .env file"; exit 1; fi'
                 }
