@@ -5,7 +5,6 @@ import '../assets/Auth.css';
 import axios from '../components/axiosConfig';
 
 const Register = () => {
-  // State variables for form inputs and error handling
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -14,27 +13,60 @@ const Register = () => {
   const [error, setError] = useState('');
   const [registered, setRegistered] = useState(false);
 
+  // Function to validate password
+  const validatePassword = (password) => {
+    const minLength = 8;
+    const hasNumber = /\d/;
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/;
+
+    if (password.length < minLength) {
+      return 'Password must be at least 8 characters long.';
+    }
+    if (!hasNumber.test(password)) {
+      return 'Password must contain at least one number.';
+    }
+    if (!hasSpecialChar.test(password)) {
+      return 'Password must contain at least one special character.';
+    }
+    return null;
+  };
+
   // Function to handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!email || !password || !username || !dateOfBirth || !address) {
+      setError('All fields are required.');
+      return;
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
     try {
       // Send POST request to backend with user data
       const response = await axios.post('/auth/register', {
         email,
         password,
         username,
-        date_of_birth: dateOfBirth,  // Ensure keys match your backend expectations
+        date_of_birth: dateOfBirth,
         address,
       });
       console.log('Registration response:', response.data);
-      setRegistered(true);  // Set registered state to true upon successful registration
+      setRegistered(true);
     } catch (error) {
       console.error('Registration failed:', error);
-      setError('Registration failed. Please try again.');  // Handle registration failure
+      setError('Registration failed. Please try again.');
     }
   };
 
-  // JSX for the registration form
+  if (registered) {
+    return <div className="auth-container"><h2>Registration Successful!</h2></div>;
+  }
+
   return (
     <div className="auth-container">
       <h2>Register</h2>
@@ -72,6 +104,7 @@ const Register = () => {
             type="date"
             value={dateOfBirth}
             onChange={(e) => setDateOfBirth(e.target.value)}
+            required
           />
         </div>
         <div>
@@ -80,6 +113,7 @@ const Register = () => {
             type="text"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
+            required
           />
         </div>
         <button type="submit">Register</button>

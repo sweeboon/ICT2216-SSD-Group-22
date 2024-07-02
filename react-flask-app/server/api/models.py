@@ -3,6 +3,7 @@ from flask_principal import RoleNeed, UserNeed
 from flask_sqlalchemy import SQLAlchemy
 from api import db
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 roles_accounts = db.Table('roles_accounts',
     db.Column('account_id', db.Integer, db.ForeignKey('account.account_id'), primary_key=True),
@@ -41,6 +42,12 @@ class Account(UserMixin, db.Model):
     carts = db.relationship('Cart', backref='account', lazy=True)
     payments = db.relationship('Payment', backref='account', lazy=True)
     orders = db.relationship('Order', backref='account', lazy=True)
+
+    def set_password(self, password):
+        self.password = generate_password_hash(password)
+
+    def check_password(self, passwords):
+        return check_password_hash(self.password, passwords)
 
     def get_id(self):
         return self.account_id
