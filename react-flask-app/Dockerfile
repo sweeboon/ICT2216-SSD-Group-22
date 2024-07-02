@@ -27,7 +27,8 @@ WORKDIR /app
 
 # Copy the Flask app requirements and install them
 COPY server/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m venv /app/venv
+RUN /app/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Install concurrently to run multiple commands
 RUN yarn global add concurrently
@@ -46,4 +47,4 @@ EXPOSE 3000
 EXPOSE 5000
 
 # Start both the React and Flask app using concurrently
-CMD ["concurrently", "\"react-scripts start\"", "\"yarn start-api\""]
+CMD ["sh", "-c", "source /app/venv/bin/activate && yarn start"]
