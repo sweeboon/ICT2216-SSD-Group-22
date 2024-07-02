@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
     && apt-get update && apt-get install -y --no-install-recommends yarn \
+    && apt-get install -y bash \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -49,5 +50,5 @@ COPY . /app
 EXPOSE 3000
 EXPOSE 5000
 
-# Start both the React and Flask app using concurrently
-CMD ["sh", "-c", "source /app/venv/bin/activate && yarn start"]
+# Use bash to source the virtual environment and start the app
+CMD ["bash", "-c", "source /app/venv/bin/activate && yarn start"]
