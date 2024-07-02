@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        VENV_PATH = "/tmp/venv"
+        VENV_PATH = "/var/lib/jenkins/workspace/ICT2216/venv"
         WORKSPACE_DIR = "/var/lib/jenkins/workspace/ICT2216"
         DOCKER_IMAGE = 'nginx'
-        CONTAINER_NAME = 'nginx-container'
+        CONTAINER_NAME = 'nginx'
     }
 
     stages {
@@ -24,22 +24,11 @@ pipeline {
             }
         }
 
-        stage('Verify Checkout') {
-            steps {
-                script {
-                    // Verify the contents of the workspace
-                    sh 'ls -l /var/lib/jenkins/workspace/ICT2216'
-                    sh 'ls -l /var/lib/jenkins/workspace/ICT2216/react-flask-app'
-                    sh 'ls -l /var/lib/jenkins/workspace/ICT2216/react-flask-app/server'
-                }
-            }
-        }
-
         stage('Setup Virtual Environment') {
             steps {
                 script {
-                    // Create the virtual environment in the /tmp directory
-                    sh 'bash -c "python3 -m venv /tmp/venv"'
+                    // Create the virtual environment
+                    sh 'bash -c "python3 -m venv /var/lib/jenkins/workspace/ICT2216/venv"'
                 }
             }
         }
@@ -48,7 +37,7 @@ pipeline {
             steps {
                 script {
                     // Install any dependencies listed in requirements.txt
-                    sh 'bash -c "source /tmp/venv/bin/activate && pip install -r /var/lib/jenkins/workspace/ICT2216/react-flask-app/server/requirements.txt"'
+                    sh 'bash -c "source /var/lib/jenkins/workspace/ICT2216/venv/bin/activate && pip install -r /var/lib/jenkins/workspace/ICT2216/react-flask-app/server/requirements.txt"'
                 }
             }
         }
