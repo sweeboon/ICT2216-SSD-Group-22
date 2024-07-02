@@ -29,6 +29,9 @@ WORKDIR /app
 COPY server/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Install concurrently to run multiple commands
+RUN yarn global add concurrently
+
 # Copy the Flask app
 COPY server /app/server
 
@@ -42,5 +45,5 @@ COPY . /app
 EXPOSE 3000
 EXPOSE 5000
 
-# Start both the React and Flask app using yarn
-CMD ["yarn", "start"]
+# Start both the React and Flask app using concurrently
+CMD ["concurrently", "\"react-scripts start\"", "\"yarn start-api\""]
