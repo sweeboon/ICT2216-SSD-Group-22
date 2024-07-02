@@ -51,4 +51,4 @@ EXPOSE 3000
 EXPOSE 5000
 
 # Use bash to source the virtual environment and start the app
-CMD ["bash", "-c", "source /app/venv/bin/activate && yarn start"]
+CMD ["bash", "-c", "source /app/venv/bin/activate && cd /app && concurrently \"yarn start\" \"yarn start-api\""]
