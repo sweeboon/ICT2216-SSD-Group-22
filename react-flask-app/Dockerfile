@@ -46,9 +46,12 @@ COPY --from=build /app/build /app/static
 # Copy the rest of the application
 COPY . /app
 
+# Copy the .env file from home directory to the container
+COPY /home/student24/.env /app/.env
+
 # Expose the ports for Flask and React
 EXPOSE 3000
 EXPOSE 5000
 
-# Use bash to source the virtual environment and start the app
-CMD ["bash", "-c", "source /app/venv/bin/activate && cd /app && concurrently \"yarn start\" \"yarn start-api\""]
+# Use bash to source the virtual environment, export env variables, and start the app
+CMD ["bash", "-c", "source /app/venv/bin/activate && export $(cat /app/.env | xargs) && cd /app && concurrently \"yarn start\" \"yarn start-api\""]
