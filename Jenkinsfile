@@ -5,7 +5,7 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
-        ENV_FILE_PATH = "/home/student24/nginx/.env" // Path to the .env file in /home/student24/nginx
+        ENV_FILE_PATH = "/var/jenkins_home/.env" // Path to the .env file in /var/jenkins_home
     }
 
     stages {
