@@ -5,19 +5,9 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
-        ENV_FILE_PATH = '/home/student24/env.txt'  // Adjust this path as necessary
     }
 
     stages {
-        stage('Clean Workspace') {
-            steps {
-                script {
-                    // Clean the workspace directory
-                    sh 'rm -rf ${WORKSPACE}/*'
-                }
-            }
-        }
-
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
@@ -37,22 +27,15 @@ pipeline {
             }
         }
 
-        stage('Copy .env File') {
-            steps {
-                script {
-                    // Copy the .env file from the external location to the Jenkins workspace
-                    sh 'cp ${ENV_FILE_PATH} ${WORKSPACE}/react-flask-app/.env.txt'
-                    // Verify the .env file is copied
-                    sh 'ls -la ${WORKSPACE}/react-flask-app'
-                }
-            }
-        }
-
         stage('Setup Virtual Environment') {
             steps {
                 script {
-                    // Create the virtual environment
-                    sh 'bash -c "python3 -m venv ${WORKSPACE}/${VENV_PATH}"'
+                    // Create the virtual environment if it doesn't exist
+                    sh '''
+                        if [ ! -d "${WORKSPACE}/${VENV_PATH}" ]; then
+                            python3 -m venv ${WORKSPACE}/${VENV_PATH}
+                        fi
+                    '''
                 }
             }
         }
@@ -102,6 +85,7 @@ pipeline {
 
     post {
         always {
+            // Optionally clean the workspace after the build
             cleanWs()
         }
     }
