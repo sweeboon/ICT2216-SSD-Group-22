@@ -26,8 +26,8 @@ RUN python3 -m venv /usr/src/app/server/venv && \
 # Install Node.js dependencies
 RUN cd /usr/src/app/src && yarn install
 
-# Build the React app
-RUN cd /usr/src/app/src && yarn build
+# Build the React app with legacy OpenSSL provider
+RUN cd /usr/src/app/src && NODE_OPTIONS=--openssl-legacy-provider yarn build
 
 # Expose the ports
 EXPOSE 80 443 5000 3000
