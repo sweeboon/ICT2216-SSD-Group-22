@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM node:18 as build
+FROM node:16 as build
 
 # Set the working directory
 WORKDIR /usr/src/app
