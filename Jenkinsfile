@@ -5,7 +5,6 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
-        MOUNTED_DIR = '/usr/src/app'
     }
 
     stages {
@@ -57,7 +56,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: '9e9add6b-9983-4371-81af-33e9987d85a0', variable: 'SECRET_ENV_FILE')]) {
-                        sh 'cp ${SECRET_ENV_FILE} ${WORKSPACE}/react-flask-app/server/.env'
+                        sh 'cp $SECRET_ENV_FILE ${WORKSPACE}/react-flask-app/server/.env'
                     }
                 }
             }
@@ -66,7 +65,7 @@ pipeline {
         stage('Ensure Docker Container is Running') {
             steps {
                 script {
-                    sh '''
+                    sh """
                         if [ ! "$(docker ps -q -f name=${CONTAINER_NAME})" ]; then
                             if [ "$(docker ps -aq -f status=exited -f name=${CONTAINER_NAME})" ]; then
                                 docker start ${CONTAINER_NAME}
@@ -82,7 +81,7 @@ pipeline {
                                     ${DOCKER_IMAGE}
                             fi
                         fi
-                    '''
+                    """
                 }
             }
         }
@@ -90,7 +89,6 @@ pipeline {
         stage('Update Code in Mounted Volume') {
             steps {
                 script {
-                    sh 'bash -c "if ! command -v rsync &> /dev/null; then apt-get update && apt-get install -y rsync; fi"'
                     sh 'rsync -av --delete ${WORKSPACE}/react-flask-app/ ${MOUNTED_DIR}/'
                 }
             }
@@ -99,14 +97,7 @@ pipeline {
 
     post {
         always {
-            script {
-                try {
-                    cleanWs()
-                } catch (e) {
-                    echo "cleanWs not available, running custom cleanup."
-                    sh 'rm -rf ${WORKSPACE}/*'
-                }
-            }
+            cleanWs()
         }
     }
 }
