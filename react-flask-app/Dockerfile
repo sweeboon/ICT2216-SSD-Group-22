@@ -13,15 +13,18 @@ RUN yarn install
 # Copy the rest of the application code
 COPY . .
 
-# Setup Python environment
+# Setup Python environment with Python 3.8
 RUN apt-get update && \
-    apt-get install -y python3 python3-venv python3-pip build-essential libssl-dev libffi-dev python3-dev
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get install -y python3.8 python3.8-venv python3.8-dev python3-pip build-essential libssl-dev libffi-dev
 
 # Verify the files are in the expected locations
 RUN ls -l /usr/src/app/server/
 
-# Create and activate a virtual environment
-RUN python3 -m venv /usr/src/app/server/venv
+# Create and activate a virtual environment with Python 3.8
+RUN python3.8 -m venv /usr/src/app/server/venv
 RUN /usr/src/app/server/venv/bin/pip install --upgrade pip
 RUN /usr/src/app/server/venv/bin/pip install --no-cache-dir -r /usr/src/app/server/requirements.txt
 
