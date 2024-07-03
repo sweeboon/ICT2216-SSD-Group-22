@@ -33,5 +33,5 @@ EXPOSE 443
 
 # Command to start Nginx and the application
 CMD ["bash", "-c", "source /usr/src/app/react-flask-app/server/venv/bin/activate && \
-    cd /usr/src/app/react-flask-app/server && flask db migrate && yarn start & \
+    cd /usr/src/app/react-flask-app/server && flask db migrate && flask db upgrade && yarn start & \
     nginx -g 'daemon off;'"]
