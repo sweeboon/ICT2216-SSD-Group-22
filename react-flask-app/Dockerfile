@@ -41,14 +41,15 @@ WORKDIR /usr/src/app
 
 # Install Python dependencies within a virtual environment
 RUN python3 -m venv /usr/src/app/server/venv && \
-    /usr/src/app/server/venv/bin/python -m ensurepip && \
-    /usr/src/app/server/venv/bin/pip install --upgrade pip && \
-    PATH="/usr/src/app/server/venv/bin:$PATH" pip install -r /usr/src/app/server/requirements.txt --break-system-packages
+    /bin/bash -c "source /usr/src/app/server/venv/bin/activate && \
+    python -m ensurepip && \
+    pip install --upgrade pip && \
+    pip install -r /usr/src/app/server/requirements.txt --break-system-packages"
 
 # Expose the ports
-EXPOSE 80 443
+EXPOSE 80 443 5000 3000
 
-# Command to start Nginx and the application
-CMD ["bash", "-c", "source /usr/src/app/react-flask-app/server/venv/bin/activate && \
-    cd /usr/src/app/react-flask-app/server && flask db migrate && yarn start & \
-    nginx -g 'daemon off;'"]
+# Start the application
+CMD /bin/bash -c "nginx && \
+    cd /usr/src/app/server && source venv/bin/activate && flask run --host=0.0.0.0 --port=5000 & \
+    cd /usr/src/app/src && yarn start --port 3000"
