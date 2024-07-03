@@ -5,24 +5,24 @@ FROM node:16
 WORKDIR /usr/src/app
 
 # Copy the package.json and yarn.lock files
-COPY react-flask-app/package*.json react-flask-app/yarn.lock ./
+COPY package*.json yarn.lock ./
 
 # Install Node.js dependencies
 RUN yarn install
 
 # Copy the rest of the application code
-COPY react-flask-app/ .
+COPY . .
 
 # Setup Python environment
 RUN apt-get update && \
     apt-get install -y python3 python3-venv python3-pip
 
 # Verify the files are in the expected locations
-RUN ls -l /usr/src/app/react-flask-app/server/
+RUN ls -l /usr/src/app/server/
 
 # Create and activate a virtual environment
-RUN python3 -m venv /usr/src/app/react-flask-app/server/venv
-RUN /usr/src/app/react-flask-app/server/venv/bin/pip install -r /usr/src/app/react-flask-app/server/requirements.txt
+RUN python3 -m venv /usr/src/app/server/venv
+RUN /usr/src/app/server/venv/bin/pip install -r /usr/src/app/server/requirements.txt
 
 # Expose ports
 EXPOSE 3000 5000
