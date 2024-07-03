@@ -3,9 +3,8 @@ pipeline {
 
     environment {
         VENV_PATH = "react-flask-app/server/venv"
-        DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
-        MOUNTED_DIR = '/usr/src/app'
+        MOUNTED_DIR = '/usr/src/app/react-flask-app'
     }
 
     stages {
@@ -74,12 +73,10 @@ pipeline {
                                 docker run -d --name ${CONTAINER_NAME} --network jenkins-blueocean \
                                     -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam221ct_fullchain.pem \
                                     -v /home/student24/privkey.pem:/etc/ssl/private/forteam221ct_privkey.pem \
-                                    -v /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem \
-                                    -v /home/student24/privkey.pem:/etc/ssl/private/privkey.pem \
                                     -v /home/student24/nginx/nginx.conf:/etc/nginx/nginx.conf \
                                     -v ${WORKSPACE}/react-flask-app:/usr/src/app/react-flask-app \
                                     -p 80:80 -p 443:443 \
-                                    ${DOCKER_IMAGE}
+                                    nginx
                             fi
                         fi
                     """
@@ -93,9 +90,9 @@ pipeline {
                     // Ensure the target directory exists
                     sh 'docker exec ${CONTAINER_NAME} mkdir -p ${MOUNTED_DIR}'
                     // Copy the entire react-flask-app directory to the container
-                    sh 'docker cp ${WORKSPACE}/react-flask-app ${CONTAINER_NAME}:${MOUNTED_DIR}'
+                    sh 'docker cp ${WORKSPACE}/react-flask-app/. ${CONTAINER_NAME}:${MOUNTED_DIR}'
                     // Copy the .env file to the server directory in the container
-                    sh 'docker cp ${WORKSPACE}/react-flask-app/server/.env ${CONTAINER_NAME}:${MOUNTED_DIR}/react-flask-app/server/.env'
+                    sh 'docker cp ${WORKSPACE}/react-flask-app/server/.env ${CONTAINER_NAME}:${MOUNTED_DIR}/server/.env'
                 }
             }
         }
