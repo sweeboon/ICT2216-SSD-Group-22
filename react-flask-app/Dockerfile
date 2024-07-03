@@ -13,12 +13,16 @@ RUN yarn install
 # Copy the rest of the application code
 COPY . .
 
-# Setup Python environment with Python 3.8
+# Install dependencies and Python 3.8 on Debian Buster
 RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository ppa:deadsnakes/ppa && \
-    apt-get update && \
-    apt-get install -y python3.8 python3.8-venv python3.8-dev python3-pip build-essential libssl-dev libffi-dev
+    apt-get install -y \
+    python3.8 \
+    python3.8-venv \
+    python3.8-dev \
+    python3-pip \
+    build-essential \
+    libssl-dev \
+    libffi-dev
 
 # Verify the files are in the expected locations
 RUN ls -l /usr/src/app/server/
