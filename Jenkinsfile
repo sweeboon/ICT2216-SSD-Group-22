@@ -18,11 +18,8 @@ pipeline {
         stage('Verify Checkout') {
             steps {
                 script {
-                    // Print the current workspace directory
                     sh 'echo "Current workspace: ${WORKSPACE}"'
-                    // List the contents of the workspace directory
                     sh 'ls -l ${WORKSPACE}'
-                    // List the contents of the react-flask-app directory
                     sh 'ls -l ${WORKSPACE}/react-flask-app'
                 }
             }
@@ -31,7 +28,6 @@ pipeline {
         stage('Setup Virtual Environment') {
             steps {
                 script {
-                    // Create the virtual environment if it doesn't exist
                     sh '''
                         if [ ! -d "${WORKSPACE}/${VENV_PATH}" ]; then
                             python3 -m venv ${WORKSPACE}/${VENV_PATH}
@@ -44,7 +40,6 @@ pipeline {
         stage('Install Python Dependencies') {
             steps {
                 script {
-                    // Install any dependencies listed in requirements.txt
                     sh 'bash -c "source ${WORKSPACE}/${VENV_PATH}/bin/activate && pip install -r ${WORKSPACE}/react-flask-app/server/requirements.txt"'
                 }
             }
@@ -53,7 +48,6 @@ pipeline {
         stage('Install Node.js Dependencies') {
             steps {
                 script {
-                    // Install Node.js dependencies
                     sh 'bash -c "cd ${WORKSPACE}/react-flask-app/src && yarn install"'
                 }
             }
@@ -62,7 +56,6 @@ pipeline {
         stage('Ensure Docker Container is Running') {
             steps {
                 script {
-                    // Ensure Docker container is running
                     sh """
                         if [ ! "$(docker ps -q -f name=${CONTAINER_NAME})" ]; then
                             if [ "$(docker ps -aq -f status=exited -f name=${CONTAINER_NAME})" ]; then
@@ -87,7 +80,6 @@ pipeline {
         stage('Update Code in Mounted Volume') {
             steps {
                 script {
-                    // Copy the updated code to the mounted volume in the running Docker container
                     sh 'rsync -av --delete ${WORKSPACE}/react-flask-app/ ${MOUNTED_DIR}/'
                 }
             }
@@ -96,7 +88,6 @@ pipeline {
 
     post {
         always {
-            // Optionally clean the workspace after the build
             cleanWs()
         }
     }
