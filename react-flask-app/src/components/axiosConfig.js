@@ -9,13 +9,13 @@ axiosInstance.defaults.withCredentials = true;
 
 axiosInstance.interceptors.request.use(
   config => {
-    const token = document.cookie.split('; ').find(row => row.startsWith('XSRF-TOKEN='));
-    if (token) {
-      config.headers['X-XSRF-TOKEN'] = token.split('=')[1];
+    const csrfToken = document.cookie.split('; ').find(row => row.startsWith('XSRF-TOKEN='));
+    if (csrfToken) {
+      config.headers['X-XSRF-TOKEN'] = csrfToken.split('=')[1];
     }
-    const jwtToken = localStorage.getItem('token');
+    const jwtToken = document.cookie.split('; ').find(row => row.startsWith('token='));
     if (jwtToken) {
-      config.headers['Authorization'] = `Bearer ${jwtToken}`;
+      config.headers['Authorization'] = `Bearer ${jwtToken.split('=')[1]}`;
     }
     return config;
   },

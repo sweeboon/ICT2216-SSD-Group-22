@@ -40,16 +40,11 @@ class Account(UserMixin, db.Model):
     date_of_birth = db.Column(db.Date)
     address = db.Column(db.String(255))
     roles = db.relationship('Role', secondary=roles_accounts, backref=db.backref('accounts', lazy=True))
-    twofa_enabled = db.Column(db.Boolean, default=False)
     carts = db.relationship('Cart', backref='account', lazy=True)
     payments = db.relationship('Payment', backref='account', lazy=True)
     orders = db.relationship('Order', backref='account', lazy=True)
-
-    def set_password(self, password):
-        self.password = generate_password_hash(password)
-
-    def check_password(self, passwords):
-        return check_password_hash(self.password, passwords)
+    confirmation_email_sent_at = db.Column(db.DateTime(), nullable=True)  
+    confirmation_token = db.Column(db.String(255), nullable=True)
 
     def get_id(self):
         return self.account_id
@@ -59,6 +54,7 @@ class Account(UserMixin, db.Model):
 
     def has_role(self, role_name):
         return role_name in self.get_roles()
+
 
 class Product(db.Model):
     product_id = db.Column(db.Integer, primary_key=True, autoincrement=True)

@@ -20,6 +20,38 @@ logger = logging.getLogger(__name__)
 MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_TIME = timedelta(minutes=15)
 
+@bp.route('/resend_confirmation_email', methods=['POST'])
+@csrf.exempt
+def resend_confirmation_email():
+    data = request.get_json()
+    if 'email' not in data:
+        return jsonify({'message': 'Email is required'}), 400
+
+    account = Account.query.filter_by(email=data['email']).first()
+    if account is None:
+        return jsonify({'message': 'Invalid email address'}), 401
+
+    if account.confirmed:
+        return jsonify({'message': 'Account already confirmed. Please login.'}), 200
+
+    now = datetime.now()
+    if account.confirmation_email_sent_at and now < account.confirmation_email_sent_at + timedelta(minutes=1):
+        return jsonify({'message': 'Confirmation email already sent. Please wait a minute before requesting a new one.'}), 400
+
+    token = generate_token(account.email)
+    print(token)
+    print(account.email)
+    confirm_url = f"{current_app.config['FRONTEND_BASE_URL']}/confirm?token={token}"
+    send_email('Confirm Your Account', account.email, 'email/confirm', confirm_url=confirm_url)
+    print(confirm_url)
+
+    account.confirmation_token = token  
+    account.confirmation_email_sent_at = now  
+    db.session.commit()
+
+    return jsonify({'message': 'Confirmation email sent. Please check your email.'}), 200
+
+
 @bp.route('/initiate_login', methods=['POST'])
 @csrf.exempt
 def initiate_login():
@@ -30,6 +62,12 @@ def initiate_login():
     account = Account.query.filter_by(email=data['email']).first()
     if account is None:
         return jsonify({'message': 'Invalid email or password'}), 401
+
+    if not account.confirmed:
+        return jsonify({
+            'message': 'Account not confirmed. Do you want to resend the confirmation email?',
+            'resend_confirmation': True
+        }), 403
 
     if account.lockout_time:
         if datetime.now() >= account.lockout_time:
@@ -49,9 +87,13 @@ def initiate_login():
     account.failed_attempts = 0  # Reset failed attempts on successful password validation
     db.session.commit()
 
+    now = datetime.now()
+    if account.otp_generated_at and now < account.otp_generated_at + timedelta(minutes=1):
+        return jsonify({'message': 'OTP already sent. Please wait a minute before requesting a new OTP.'}), 400
+
     otp = generate_otp()
     account.otp = otp
-    account.otp_generated_at = datetime.now()
+    account.otp_generated_at = now
     db.session.commit()
 
     send_otp(account, otp)
@@ -73,10 +115,12 @@ def verify_otp_and_login():
 
     try:
         if verify_otp(account, data['otp']):
-            account.failed_attempts = 0  # Reset failed attempts on successful OTP validation
-            account.lockout_time = None  # Clear lockout time
+            account.failed_attempts = 0
+            account.lockout_time = None
             account.last_login_at = datetime.now()
             account.login_count += 1
+            account.otp = None  
+            account.otp_generated_at = None  
             db.session.commit()
 
             token = jwt.encode({
@@ -89,7 +133,9 @@ def verify_otp_and_login():
             identity_changed.send(current_app._get_current_object(), identity=Identity(account.account_id))
             roles = [role.name for role in account.roles]
 
-            return jsonify({'message': 'Login successful', 'token': token, 'username': account.email, 'roles': roles}), 200
+            response = make_response(jsonify({'message': 'Login successful', 'username': account.email, 'roles': roles}))
+            response.set_cookie('token', token, httponly=True, secure=True, samesite='Strict')
+            return response, 200
         else:
             account.failed_attempts += 1
             if account.failed_attempts >= MAX_FAILED_ATTEMPTS:
@@ -102,6 +148,8 @@ def verify_otp_and_login():
             account.lockout_time = datetime.now() + LOCKOUT_TIME
         db.session.commit()
         return jsonify({'message': str(e)}), 400
+
+
 
 @bp.route('/request_otp', methods=['POST'])
 @csrf.exempt
@@ -156,38 +204,48 @@ def register():
         password=pbkdf2_sha256.hash(data['password']),
         name=data['username'],  
         date_of_birth=datetime.strptime(data.get('date_of_birth'), '%Y-%m-%d').date() if data.get('date_of_birth') else None,
-        address=data.get('address') 
+        address=data.get('address')
     )
 
     user_role = Role.query.filter_by(name='User').first()
     if user_role:
         account.roles.append(user_role)
 
-    db.session.add(account)
-    db.session.commit()
-
+    now = datetime.now()
     token = generate_token(account.email)
     confirm_url = f"{current_app.config['FRONTEND_BASE_URL']}/confirm?token={token}"
     send_email('Confirm Your Account', account.email, 'email/confirm', confirm_url=confirm_url)
     print(confirm_url)
-    return jsonify({'message': 'Account and profile registered successfully. Please check your email to confirm your account.'}), 201
+
+    account.confirmation_token = token  
+    account.confirmation_email_sent_at = now  
+    db.session.add(account)
+    db.session.commit()
+
+    return jsonify({'message': 'Account registered successfully. Please check your email to confirm your account.'}), 201
 
 @bp.route('/confirm', methods=['GET'])
 def confirm_email():
     token = request.args.get('token')
-    email = verify_token(token, 1800)
-    if email is None:
+    email = verify_token(token)
+    if email is False:
         return jsonify({'message': 'The confirmation link is invalid or has expired.'}), 400
 
     account = Account.query.filter_by(email=email).first_or_404()
+    if account.confirmation_token != token:
+        return jsonify({'message': 'The confirmation link is invalid or has expired.'}), 400
+
     if account.confirmed:
         return jsonify({'message': 'Account already confirmed. Please login.'}), 200
     else:
         account.confirmed = True
         account.confirmed_on = datetime.now()
+        account.confirmation_token = None 
+        account.confirmation_email_sent_at = None
         db.session.add(account)
         db.session.commit()
         return jsonify({'message': 'You have confirmed your account. Thanks!'}), 200
+    
 #old login method without otp etc for SFR02
 """
 @bp.route('/login', methods=['POST'])
@@ -322,4 +380,31 @@ def cleanup_sessions():
         return jsonify({'message': 'Expired sessions cleaned up'}), 200
     except Exception as e:
         logging.error(f"Error cleaning up sessions: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/refresh', methods=['POST'])
+@csrf.exempt
+@login_required
+def refresh_token():
+    try:
+        token = request.cookies.get('token')
+        if not token:
+            return jsonify({'message': 'Token is missing'}), 403
+
+        data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
+        new_token = jwt.encode({
+            'sub': data['sub'],
+            'iat': datetime.now(),
+            'exp': datetime.now() + timedelta(minutes=30)
+        }, current_app.config['SECRET_KEY'], algorithm="HS256")
+
+        response = jsonify({'message': 'Token refreshed'})
+        response.set_cookie('token', new_token, httponly=True, secure=True, samesite='Strict')
+        return response
+    except jwt.ExpiredSignatureError:
+        return jsonify({'message': 'Token has expired'}), 403
+    except jwt.InvalidTokenError:
+        return jsonify({'message': 'Invalid token'}), 403
+    except Exception as e:
+        logging.error(f"Error refreshing token: {str(e)}")
         return jsonify({'error': str(e)}), 500

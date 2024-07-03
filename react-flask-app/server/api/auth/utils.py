@@ -62,5 +62,5 @@ def verify_token(token, max_age=3600):
     try:
         data = serializer.loads(token, salt=current_app.config['SECURITY_PASSWORD_SALT'], max_age=max_age)
     except Exception as e:
-        return None
+        return False
     return data
