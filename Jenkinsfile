@@ -113,22 +113,7 @@ pipeline {
             }
         }
 
-        stage('Start Services') {
-            steps {
-                script {
-                    sh '''
-                        docker exec $CONTAINER_NAME /bin/bash -c '
-                        service nginx start &&
-                        cd /usr/src/app/react-flask-app/server &&
-                        source venv/bin/activate &&
-                        flask run --host=0.0.0.0 --port=5000 &
-                        cd /usr/src/app/react-flask-app/src &&
-                        yarn start --port 3000
-                        '
-                    '''
-                }
-            }
-        }
+        
     }
 
     post {
