@@ -30,10 +30,8 @@ COPY . .
 # Expose ports
 EXPOSE 80
 EXPOSE 443
-EXPOSE 3000
-EXPOSE 5000
 
 # Command to start Nginx and the application
 CMD ["bash", "-c", "source /usr/src/app/react-flask-app/server/venv/bin/activate && \
-    cd /usr/src/app/react-flask-app/server && flask db migrate && flask db upgrade && yarn start & \
+    cd /usr/src/app/react-flask-app/server && flask db migrate && yarn start & \
     nginx -g 'daemon off;'"]
