@@ -5,7 +5,6 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
-        ENV_FILE_PATH = '/var/jenkins_home/.env'
     }
 
     stages {
@@ -28,7 +27,7 @@ pipeline {
             steps {
                 script {
                     // Check if the .env file exists
-                    sh 'if [ -f ${ENV_FILE_PATH} ]; then echo ".env file exists"; else echo ".env file does not exist"; exit 1; fi'
+                    sh 'if [ -f /var/jenkins_home/.env ]; then echo ".env file exists"; else echo ".env file does not exist"; exit 1; fi'
                 }
             }
         }
@@ -63,11 +62,17 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    // Read the .env file and pass the variables as build arguments
+                    def envVars = readFile('/var/jenkins_home/.env').split('\n').collect { line -> 
+                        return "--build-arg ${line.replace('=', '="')}\"" 
+                    }.join(' ')
+                    
                     // Verify Docker is accessible
                     sh 'docker --version'
                     sh 'docker ps'
+                    
                     // Build the Docker image
-                    sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f ${WORKSPACE}/react-flask-app/Dockerfile ${WORKSPACE}/react-flask-app"
+                    sh "docker build ${envVars} -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f ${WORKSPACE}/react-flask-app/Dockerfile ${WORKSPACE}/react-flask-app"
                 }
             }
         }
@@ -78,7 +83,7 @@ pipeline {
                     sh """
                         docker stop ${CONTAINER_NAME} || true
                         docker rm ${CONTAINER_NAME} || true
-                        docker run -d -p 80:80 --env-file=${ENV_FILE_PATH} --name ${CONTAINER_NAME} ${DOCKER_IMAGE}:${env.BUILD_ID}
+                        docker run -d -p 80:80 --name ${CONTAINER_NAME} ${DOCKER_IMAGE}:${env.BUILD_ID}
                     """
                 }
             }
