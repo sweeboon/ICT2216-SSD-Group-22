@@ -15,14 +15,15 @@ COPY . .
 
 # Setup Python environment
 RUN apt-get update && \
-    apt-get install -y python3 python3-venv python3-pip
+    apt-get install -y python3 python3-venv python3-pip build-essential libssl-dev libffi-dev python3-dev
 
 # Verify the files are in the expected locations
 RUN ls -l /usr/src/app/server/
 
 # Create and activate a virtual environment
 RUN python3 -m venv /usr/src/app/server/venv
-RUN /usr/src/app/server/venv/bin/pip install -r /usr/src/app/server/requirements.txt
+RUN /usr/src/app/server/venv/bin/pip install --upgrade pip
+RUN /usr/src/app/server/venv/bin/pip install --no-cache-dir -r /usr/src/app/server/requirements.txt
 
 # Expose ports
 EXPOSE 3000 5000
