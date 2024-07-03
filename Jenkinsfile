@@ -106,6 +106,19 @@ pipeline {
             }
         }
 
+        stage('Verify Mounted Files') {
+            steps {
+                script {
+                    sh '''
+                        docker exec $CONTAINER_NAME ls -l /etc/ssl/certs
+                        docker exec $CONTAINER_NAME ls -l /etc/ssl/private
+                        docker exec $CONTAINER_NAME ls -l /etc/nginx
+                        docker exec $CONTAINER_NAME ls -l $MOUNTED_DIR
+                    '''
+                }
+            }
+        }
+
         
     }
 
