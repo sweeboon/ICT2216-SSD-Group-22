@@ -63,42 +63,26 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    sh '''
-                        DOCKER_IMAGE=${DOCKER_IMAGE}
-                        BUILD_ID=${env.BUILD_ID}
-                        WORKSPACE=${WORKSPACE}
-                        docker build -t $DOCKER_IMAGE:$BUILD_ID -f $WORKSPACE/react-flask-app/Dockerfile $WORKSPACE/react-flask-app
-                    '''
-                }
-            }
-        }
-
         stage('Ensure Docker Container is Running') {
             steps {
                 script {
-                    sh '''
-                        CONTAINER_NAME=${CONTAINER_NAME}
-                        WORKSPACE=${WORKSPACE}
-                        MOUNTED_DIR=${MOUNTED_DIR}
-                        if [ ! "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
-                            if [ "$(docker ps -aq -f status=exited -f name=$CONTAINER_NAME)" ]; then
-                                docker start $CONTAINER_NAME
+                    sh """
+                        if [ ! "\$(docker ps -q -f name=${CONTAINER_NAME})" ]; then
+                            if [ "\$(docker ps -aq -f status=exited -f name=${CONTAINER_NAME})" ]; then
+                                docker start ${CONTAINER_NAME}
                             else
-                                docker run -d --name $CONTAINER_NAME --network jenkins-blueocean \
+                                docker run -d --name ${CONTAINER_NAME} --network jenkins-blueocean \
                                     -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam221ct_fullchain.pem \
                                     -v /home/student24/privkey.pem:/etc/ssl/private/forteam221ct_privkey.pem \
                                     -v /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem \
                                     -v /home/student24/privkey.pem:/etc/ssl/private/privkey.pem \
                                     -v /home/student24/nginx/nginx.conf:/etc/nginx/nginx.conf \
-                                    -v $WORKSPACE/react-flask-app:/usr/src/app \
+                                    -v ${WORKSPACE}/react-flask-app:/usr/src/app \
                                     -p 80:80 -p 443:443 \
-                                    ${DOCKER_IMAGE}:${env.BUILD_ID}
+                                    ${DOCKER_IMAGE}
                             fi
                         fi
-                    '''
+                    """
                 }
             }
         }
@@ -106,14 +90,12 @@ pipeline {
         stage('Update Code in Mounted Volume') {
             steps {
                 script {
-                    sh '''
-                        CONTAINER_NAME=${CONTAINER_NAME}
-                        MOUNTED_DIR=${MOUNTED_DIR}
-                        WORKSPACE=${WORKSPACE}
-                        docker exec $CONTAINER_NAME mkdir -p $MOUNTED_DIR
-                        docker cp $WORKSPACE/react-flask-app/. $CONTAINER_NAME:$MOUNTED_DIR/
-                        docker cp $WORKSPACE/react-flask-app/server/.env $CONTAINER_NAME:$MOUNTED_DIR/react-flask-app/server/.env
-                    '''
+                    // Ensure the target directory exists
+                    sh 'docker exec ${CONTAINER_NAME} mkdir -p ${MOUNTED_DIR}'
+                    // Copy the entire react-flask-app directory to the container
+                    sh 'docker cp ${WORKSPACE}/react-flask-app ${CONTAINER_NAME}:${MOUNTED_DIR}'
+                    // Copy the .env file to the server directory in the container
+                    sh 'docker cp ${WORKSPACE}/react-flask-app/server/.env ${CONTAINER_NAME}:${MOUNTED_DIR}/react-flask-app/server/.env'
                 }
             }
         }
@@ -121,15 +103,16 @@ pipeline {
         stage('Start Services') {
             steps {
                 script {
-                    sh '''
-                        CONTAINER_NAME=${CONTAINER_NAME}
-                        docker exec $CONTAINER_NAME /bin/bash -c '
+                    sh """
+                        docker exec ${CONTAINER_NAME} /bin/bash -c '
                         service nginx start &&
-                        cd /usr/src/app/react-flask-app/server &&
-                        source venv/bin/activate 
+                        cd /usr/src/app/server &&
+                        source venv/bin/activate &&
+                        flask run --host=0.0.0.0 --port=5000 &
+                        cd /usr/src/app/src &&
                         yarn start
                         '
-                    '''
+                    """
                 }
             }
         }
