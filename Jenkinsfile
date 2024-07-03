@@ -14,7 +14,7 @@ pipeline {
         }
         stage('Copy Nginx Config') {
             steps {
-                sh 'cp /home/student24/nginx.conf $WORKSPACE/react-flask-app/nginx.conf'
+                sh 'cp /home/student24/nginx/nginx.conf $WORKSPACE/react-flask-app/nginx.conf'
             }
         }
         stage('Verify Checkout') {
