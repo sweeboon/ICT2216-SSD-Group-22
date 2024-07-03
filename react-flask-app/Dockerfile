@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM node:16 as build
+FROM node:18 as build
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -8,8 +8,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
-RUN npm install -g concurrently
+RUN npm install && npm install -g concurrently
 
 # Copy the rest of the application code
 COPY . .
@@ -23,7 +22,7 @@ FROM nginx:latest
 # Install necessary dependencies
 RUN apt-get update && \
     apt-get install -y curl gnupg python3 python3-venv python3-pip wget && \
-    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
+    curl -sL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs npm && \
     curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null && \
     echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list && \

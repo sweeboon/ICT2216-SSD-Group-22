@@ -83,19 +83,15 @@ pipeline {
                     sh '''
                         if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
                             docker stop $CONTAINER_NAME
+                            docker rm $CONTAINER_NAME
                         fi
-                        if [ "$(docker ps -aq -f name=$CONTAINER_NAME)" ]; then
-                            docker container update --restart=no $CONTAINER_NAME
-                            docker start $CONTAINER_NAME
-                        else
-                            docker run -d --name $CONTAINER_NAME --network jenkins-blueocean \
-                                -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam22ict_fullchain.pem \
-                                -v /home/student24/privkey.pem:/etc/ssl/private/forteam22ict_privkey.pem \
-                                -v /home/student24/nginx/nginx.conf:/etc/nginx/nginx.conf \
-                                -v $WORKSPACE/react-flask-app:/usr/src/app/react-flask-app \
-                                -p 80:80 -p 443:443 \
-                                $DOCKER_IMAGE:$BUILD_ID
-                        fi
+                        docker run -d --name $CONTAINER_NAME --network jenkins-blueocean \
+                            -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam22ict_fullchain.pem \
+                            -v /home/student24/privkey.pem:/etc/ssl/private/forteam22ict_privkey.pem \
+                            -v /home/student24/nginx/nginx.conf:/etc/nginx/nginx.conf \
+                            -v $WORKSPACE/react-flask-app:/usr/src/app/react-flask-app \
+                            -p 80:80 -p 443:443 -p 5000:5000 -p 3000:3000 \
+                            $DOCKER_IMAGE:$BUILD_ID
                     '''
                 }
             }
