@@ -11,7 +11,6 @@ services:
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
       - /home/student24/privkey.pem:/etc/ssl/private/privkey.pem:ro
-      - /home/student24/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - /home/student24/nginx/vhost.d:/etc/nginx/vhost.d
       - /home/student24/nginx/html:/usr/share/nginx/html
     environment:
