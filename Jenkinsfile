@@ -5,7 +5,7 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
-        ENV_FILE_PATH = "/var/jenkins_home/.env" // Path to the .env file in /var/jenkins_home
+        ENV_FILE_PATH = '/var/jenkins_home/.env'
     }
 
     stages {
@@ -27,32 +27,8 @@ pipeline {
         stage('Verify .env File') {
             steps {
                 script {
-                    // Verify if .env file exists using bash
-                    sh 'bash -c "if [ -f ${ENV_FILE_PATH} ]; then echo \'.env file exists\'; else echo \'.env file does not exist\'; exit 1; fi"'
-                }
-            }
-        }
-
-        stage('Copy .env File') {
-            steps {
-                script {
-                    // Copy the .env file from the specified path to the workspace using bash
-                    sh 'bash -c "cp ${ENV_FILE_PATH} ${WORKSPACE}/react-flask-app/.env"'
-                    // Verify the .env file is copied
-                    sh 'bash -c "if [ -f ${WORKSPACE}/react-flask-app/.env ]; then echo \'.env file successfully copied\'; else echo \'Failed to copy .env file\'; exit 1; fi"'
-                }
-            }
-        }
-
-        stage('Verify Checkout') {
-            steps {
-                script {
-                    // Print the current workspace directory
-                    sh 'echo "Current workspace: ${WORKSPACE}"'
-                    // List the contents of the workspace directory
-                    sh 'ls -l ${WORKSPACE}'
-                    // List the contents of the react-flask-app directory
-                    sh 'ls -la ${WORKSPACE}/react-flask-app'
+                    // Check if the .env file exists
+                    sh 'if [ -f ${ENV_FILE_PATH} ]; then echo ".env file exists"; else echo ".env file does not exist"; exit 1; fi'
                 }
             }
         }
@@ -102,7 +78,7 @@ pipeline {
                     sh """
                         docker stop ${CONTAINER_NAME} || true
                         docker rm ${CONTAINER_NAME} || true
-                        docker run -d -p 80:80 --name ${CONTAINER_NAME} ${DOCKER_IMAGE}:${env.BUILD_ID}
+                        docker run -d -p 80:80 --env-file=${ENV_FILE_PATH} --name ${CONTAINER_NAME} ${DOCKER_IMAGE}:${env.BUILD_ID}
                     """
                 }
             }
