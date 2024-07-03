@@ -4,14 +4,17 @@ FROM node:16
 # Set the working directory
 WORKDIR /var/jenkins_home/workspace
 
-# Copy the package.json and yarn.lock files
+# Copy package.json and yarn.lock first to leverage Docker cache
 COPY package*.json yarn.lock ./
 
 # Install Node.js dependencies
 RUN yarn install
 
-# Copy the application code
+# Copy the rest of the application code
 COPY . .
+
+# Verify the files are in the expected locations
+RUN ls -l /var/jenkins_home/workspace/react-flask-app/server/
 
 # Setup Python environment
 RUN apt-get update && \
