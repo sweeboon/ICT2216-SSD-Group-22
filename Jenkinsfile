@@ -5,6 +5,7 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
+        MOUNTED_DIR = '/usr/src/app'
     }
 
     stages {
@@ -58,38 +59,36 @@ pipeline {
             }
         }
 
-        stage('Copy .env File') {
+        stage('Ensure Docker Container is Running') {
             steps {
                 script {
-                    // Use the secret file
-                    withCredentials([file(credentialsId: '9e9add6b-9983-4371-81af-33e9987d85a0', variable: 'SECRET_ENV_FILE')]) {
-                        // Copy the secret file to the react-flask-app/server directory
-                        sh 'cp $SECRET_ENV_FILE ${WORKSPACE}/react-flask-app/server/.env'
-                    }
-                }
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    // Verify Docker is accessible
-                    sh 'docker --version'
-                    sh 'docker ps'
-                    // Build the Docker image
-                    sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f ${WORKSPACE}/react-flask-app/Dockerfile ${WORKSPACE}/react-flask-app"
-                }
-            }
-        }
-
-        stage('Deploy Docker Image') {
-            steps {
-                script {
+                    // Ensure Docker container is running
                     sh """
-                        docker stop ${CONTAINER_NAME} || true
-                        docker rm ${CONTAINER_NAME} || true
-                        docker run -d -p 80:80 --name ${CONTAINER_NAME} ${DOCKER_IMAGE}:${env.BUILD_ID}
+                        if [ ! "$(docker ps -q -f name=${CONTAINER_NAME})" ]; then
+                            if [ "$(docker ps -aq -f status=exited -f name=${CONTAINER_NAME})" ]; then
+                                docker start ${CONTAINER_NAME}
+                            else
+                                docker run -d --name ${CONTAINER_NAME} --network my_network \
+                                    -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam221ct_fullchain.pem \
+                                    -v /home/student24/privkey.pem:/etc/ssl/private/forteam221ct_privkey.pem \
+                                    -v /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem \
+                                    -v /home/student24/privkey.pem:/etc/ssl/private/privkey.pem \
+                                    -v /home/student24/nginx/nginx.conf:/etc/nginx/nginx.conf \
+                                    -v ${WORKSPACE}/react-flask-app:/usr/src/app \
+                                    -p 80:80 -p 443:443 \
+                                    ${DOCKER_IMAGE}
+                            fi
+                        fi
                     """
+                }
+            }
+        }
+
+        stage('Update Code in Mounted Volume') {
+            steps {
+                script {
+                    // Copy the updated code to the mounted volume in the running Docker container
+                    sh 'rsync -av --delete ${WORKSPACE}/react-flask-app/ ${MOUNTED_DIR}/'
                 }
             }
         }
