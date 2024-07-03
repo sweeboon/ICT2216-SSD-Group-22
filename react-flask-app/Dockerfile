@@ -3,7 +3,10 @@ FROM nginx:latest
 
 # Install necessary dependencies
 RUN apt-get update && \
-    apt-get install -y python3 python3-venv python3-pip yarn
+    apt-get install -y curl gnupg python3 python3-venv python3-pip && \
+    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install --global yarn
 
 # Copy your application code
 COPY . /usr/src/app
