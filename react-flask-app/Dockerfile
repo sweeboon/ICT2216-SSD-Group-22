@@ -22,9 +22,6 @@ RUN python3 -m venv server/venv && \
 # Install Node.js dependencies
 RUN cd src && yarn install
 
-# Copy Nginx configuration file (if you have a custom one)
-COPY nginx.conf /etc/nginx/nginx.conf
-
 # Expose the ports
 EXPOSE 80 443
 
