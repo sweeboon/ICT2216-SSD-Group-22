@@ -71,7 +71,7 @@ pipeline {
             }
         }
 
-        stage('Stop and Remove Existing Container') {
+        stage('Stop and Remove Docker Container') {
             steps {
                 script {
                     sh '''
@@ -86,7 +86,7 @@ pipeline {
             }
         }
 
-        stage('Run New Docker Container') {
+        stage('Deploy Docker Container') {
             steps {
                 script {
                     sh '''
@@ -105,17 +105,30 @@ pipeline {
         stage('Verify Mounted Files') {
             steps {
                 script {
-                    sh '''
-                        docker exec $CONTAINER_NAME ls -l /etc/ssl/certs
-                        docker exec $CONTAINER_NAME ls -l /etc/ssl/private
-                        docker exec $CONTAINER_NAME ls -l /etc/nginx
-                        docker exec $CONTAINER_NAME ls -l $MOUNTED_DIR
-                    '''
+                    sh 'docker exec $CONTAINER_NAME ls -l /etc/ssl/certs'
+                    sh 'docker exec $CONTAINER_NAME ls -l /etc/ssl/private'
+                    sh 'docker exec $CONTAINER_NAME ls -l /etc/nginx'
+                    sh 'docker exec $CONTAINER_NAME ls -l $MOUNTED_DIR'
                 }
             }
         }
 
-       
+        stage('Start Services') {
+            steps {
+                script {
+                    sh '''
+                        docker exec $CONTAINER_NAME /bin/bash -c '
+                        service nginx start &&
+                        cd /usr/src/app/react-flask-app/server &&
+                        source venv/bin/activate &&
+                        flask run --host=0.0.0.0 --port=5000 &
+                        cd /usr/src/app/react-flask-app/src &&
+                        yarn start --port 3000
+                        '
+                    '''
+                }
+            }
+        }
     }
 
     post {
