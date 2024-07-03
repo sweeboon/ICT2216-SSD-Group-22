@@ -77,7 +77,7 @@ pipeline {
                         if [ \$(docker ps -q -f name=${CONTAINER_NAME}) ]; then
                             docker cp ${WORKSPACE}/react-flask-app/. ${CONTAINER_NAME}:/usr/src/app
                         else
-                            docker run -d --name ${CONTAINER_NAME} --network jenkins-blueocean \
+                            docker run -d --name ${CONTAINER_NAME} --network jenkins-blueocean\
                             -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam221ct_fullchain.pem \
                             -v /home/student24/privkey.pem:/etc/ssl/private/forteam221ct_privkey.pem \
                             -v /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem \
