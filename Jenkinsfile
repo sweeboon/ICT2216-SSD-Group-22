@@ -36,12 +36,12 @@ pipeline {
         stage('Ensure Docker Container is Running') {
             steps {
                 script {
-                    sh '''
-                        if [ ! "$(docker ps -q -f name=${CONTAINER_NAME})" ]; then
-                            if [ "$(docker ps -aq -f status=exited -f name=${CONTAINER_NAME})" ]; then
+                    sh """
+                        if [ ! "\$(docker ps -q -f name=${CONTAINER_NAME})" ]; then
+                            if [ "\$(docker ps -aq -f status=exited -f name=${CONTAINER_NAME})" ]; then
                                 docker rm ${CONTAINER_NAME}
                             fi
-                            docker run -d --name ${CONTAINER_NAME} --network jenkins-blueocean \
+                            docker run -d --name ${CONTAINER_NAME} --network jenkins.blueocean \
                                 -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam221ct_fullchain.pem \
                                 -v /home/student24/privkey.pem:/etc/ssl/private/forteam221ct_privkey.pem \
                                 -v /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem \
@@ -51,7 +51,7 @@ pipeline {
                                 -p 80:80 -p 443:443 \
                                 ${DOCKER_IMAGE}:${env.BUILD_ID}
                         fi
-                    '''
+                    """
                 }
             }
         }
@@ -60,11 +60,8 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: '9e9add6b-9983-4371-81af-33e9987d85a0', variable: 'SECRET_ENV_FILE')]) {
-                        sh 'docker cp ${SECRET_ENV_FILE} ${CONTAINER_NAME}:${MOUNTED_DIR}/react-flask-app/server/.env'
-                        sh '''
-                            docker exec ${CONTAINER_NAME} bash -c "source ${MOUNTED_DIR}/react-flask-app/server/venv/bin/activate && \
-                            cd ${MOUNTED_DIR}/react-flask-app/server && flask db migrate && yarn start"
-                        '''
+                        sh 'docker cp $SECRET_ENV_FILE ${CONTAINER_NAME}:${MOUNTED_DIR}/react-flask-app/server/.env'
+                        sh 'docker exec ${CONTAINER_NAME} bash -c "source ${MOUNTED_DIR}/react-flask-app/server/venv/bin/activate && cd ${MOUNTED_DIR}/react-flask-app/server && yarn start"'
                     }
                 }
             }
