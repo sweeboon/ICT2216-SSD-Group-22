@@ -65,7 +65,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} ${WORKSPACE}/react-flask-app'
+                    sh 'docker build -t ${DOCKER_IMAGE}:${BUILD_ID} ${WORKSPACE}/react-flask-app'
                 }
             }
         }
@@ -83,7 +83,7 @@ pipeline {
                         -v /home/student24/privkey.pem:/etc/ssl/private/privkey.pem \
                         -v /home/student24/nginx/nginx.conf:/etc/nginx/nginx.conf \
                         -p 80:80 -p 443:443 \
-                        ${DOCKER_IMAGE}:${env.BUILD_ID}
+                        ${DOCKER_IMAGE}:${BUILD_ID}
                     """
                 }
             }
