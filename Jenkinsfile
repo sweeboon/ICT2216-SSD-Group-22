@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         VENV_PATH = "react-flask-app/server/venv"
-        DOCKER_IMAGE = 'nginx'
-        CONTAINER_NAME = 'nginx'
+        DOCKER_IMAGE = 'myapp'
+        CONTAINER_NAME = 'myapp-container'
         MOUNTED_DIR = '/usr/src/app'
     }
 
