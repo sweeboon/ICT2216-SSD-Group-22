@@ -1,25 +1,20 @@
 {
   "name": "react-flask-app",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
-  "proxy": "http://localhost:5000",
   "dependencies": {
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "axios": "^1.7.2",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.23.1",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.4"
+    "concurrently": "^6.2.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-scripts": "4.0.3",
+    "yarn": "^1.22.10"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
   },
   "scripts": {
-    "start": "concurrently \"react-scripts start\" \"yarn start-api\"",
-    "start-api": "cd server && (venv\\Scripts\\activate && flask run --no-debugger)",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "concurrently \"react-scripts start\" \"yarn start-api\" --port 3000",
+    "start-api": "cross-env-shell \"if [ $OS == 'Windows_NT' ]; then .\\venv\\Scripts\\activate; else source venv/bin/activate; fi && flask run --no-debugger\""
   },
   "eslintConfig": {
     "extends": [
@@ -38,8 +33,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
   }
 }
