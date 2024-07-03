@@ -15,6 +15,14 @@ pipeline {
             }
         }
 
+        stage('Install rsync') {
+            steps {
+                script {
+                    sh 'apt-get update && apt-get install -y rsync'
+                }
+            }
+        }
+
         stage('Verify Checkout') {
             steps {
                 script {
