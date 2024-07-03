@@ -4,7 +4,7 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'custom-nginx'
         CONTAINER_NAME = 'nginx'
-        MOUNTED_DIR = '/usr/src/app/react-flask-app'
+        MOUNTED_DIR = '/usr/src/app/'
     }
     stages {
         stage('Checkout') {
