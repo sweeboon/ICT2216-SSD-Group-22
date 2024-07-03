@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'docker:latest'
+            args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
     environment {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'custom-nginx'
@@ -45,6 +50,17 @@ pipeline {
                 }
             }
         }
+        stage('Install Docker Compose') {
+            steps {
+                script {
+                    sh '''
+                        curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                        chmod +x /usr/local/bin/docker-compose
+                        ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+                    '''
+                }
+            }
+        }
         stage('Copy .env File') {
             steps {
                 script {
@@ -64,7 +80,7 @@ pipeline {
         stage('Deploy Application') {
             steps {
                 script {
-                    sh 'docker-compose up -d react-flask-app'
+                    sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml up -d'
                 }
             }
         }
