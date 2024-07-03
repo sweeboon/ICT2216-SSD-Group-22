@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         VENV_PATH = "react-flask-app/server/venv"
+        DOCKER_IMAGE = 'custom-nginx'
         CONTAINER_NAME = 'nginx'
         MOUNTED_DIR = '/usr/src/app/react-flask-app'
     }
@@ -62,6 +63,14 @@ pipeline {
             }
         }
 
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh 'docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f ${WORKSPACE}/react-flask-app/Dockerfile ${WORKSPACE}/react-flask-app'
+                }
+            }
+        }
+
         stage('Ensure Docker Container is Running') {
             steps {
                 script {
@@ -76,7 +85,7 @@ pipeline {
                                     -v /home/student24/nginx/nginx.conf:/etc/nginx/nginx.conf \
                                     -v ${WORKSPACE}/react-flask-app:/usr/src/app/react-flask-app \
                                     -p 80:80 -p 443:443 \
-                                    nginx
+                                    ${DOCKER_IMAGE}:${env.BUILD_ID}
                             fi
                         fi
                     """

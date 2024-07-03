@@ -30,4 +30,5 @@ EXPOSE 80 443
 
 # Start the application
 CMD /bin/bash -c "nginx && \
-    cd /usr/src/app/server && . venv/bin/activate  && yarn start"
+    cd /usr/src/app/server && . venv/bin/activate && flask run --host=0.0.0.0 --port=5000 & \
+    cd /usr/src/app/src && yarn start"
