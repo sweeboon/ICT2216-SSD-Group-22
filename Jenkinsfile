@@ -64,7 +64,7 @@ pipeline {
         stage('Deploy Application') {
             agent {
                 docker {
-                    image 'docker:git'
+                    image 'docker:20.10.21-dind'
                     args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
