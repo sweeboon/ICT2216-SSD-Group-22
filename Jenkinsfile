@@ -1,26 +1,17 @@
 pipeline {
     agent any
-
     environment {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'custom-nginx'
         CONTAINER_NAME = 'nginx'
         MOUNTED_DIR = '/usr/src/app/react-flask-app'
     }
-
     stages {
-        stage('Wipe Workspace') {
-            steps {
-                cleanWs()
-            }
-        }
-
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
             }
         }
-
         stage('Verify Checkout') {
             steps {
                 script {
@@ -30,7 +21,6 @@ pipeline {
                 }
             }
         }
-
         stage('Setup Virtual Environment') {
             steps {
                 script {
@@ -42,7 +32,6 @@ pipeline {
                 }
             }
         }
-
         stage('Install Python Dependencies') {
             steps {
                 script {
@@ -50,7 +39,6 @@ pipeline {
                 }
             }
         }
-
         stage('Install Node.js Dependencies') {
             steps {
                 script {
@@ -58,7 +46,6 @@ pipeline {
                 }
             }
         }
-
         stage('Copy .env File') {
             steps {
                 script {
@@ -68,7 +55,6 @@ pipeline {
                 }
             }
         }
-
         stage('Build Docker Image') {
             steps {
                 script {
@@ -76,39 +62,44 @@ pipeline {
                 }
             }
         }
-
-        stage('Update Docker Container') {
+        stage('Ensure Docker Container is Running') {
             steps {
                 script {
                     sh '''
-                        if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
-                            docker stop $CONTAINER_NAME
-                            docker rm $CONTAINER_NAME
+                        if [ ! "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
+                            if [ "$(docker ps -aq -f status=exited -f name=$CONTAINER_NAME)" ]; then
+                                docker start $CONTAINER_NAME
+                            else
+                                docker run -d --name $CONTAINER_NAME --network jenkins-blueocean \
+                                    -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam22ict_fullchain.pem \
+                                    -v /home/student24/privkey.pem:/etc/ssl/private/forteam22ict_privkey.pem \
+                                    -v /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem \
+                                    -v /home/student24/privkey.pem:/etc/ssl/private/privkey.pem \
+                                    -v /home/student24/nginx/nginx.conf:/etc/nginx/nginx.conf \
+                                    -v $WORKSPACE/react-flask-app:/usr/src/app/react-flask-app \
+                                    -p 80:80 -p 443:443 -p 5000:5000 -p 3000:3000 \
+                                    $DOCKER_IMAGE:$BUILD_ID
+                            fi
                         fi
-                        docker run -d --name $CONTAINER_NAME --network jenkins-blueocean \
-                            -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam22ict_fullchain.pem \
-                            -v /home/student24/privkey.pem:/etc/ssl/private/forteam22ict_privkey.pem \
-                            -v /home/student24/nginx/nginx.conf:/etc/nginx/nginx.conf \
-                            -v $WORKSPACE/react-flask-app:/usr/src/app/react-flask-app \
-                            -p 80:80 -p 443:443 -p 5000:5000 -p 3000:3000 \
-                            $DOCKER_IMAGE:$BUILD_ID
                     '''
                 }
             }
         }
-
+        
         stage('Verify Mounted Files') {
             steps {
                 script {
-                    sh 'docker exec $CONTAINER_NAME ls -l /etc/ssl/certs'
-                    sh 'docker exec $CONTAINER_NAME ls -l /etc/ssl/private'
-                    sh 'docker exec $CONTAINER_NAME ls -l /etc/nginx'
-                    sh 'docker exec $CONTAINER_NAME ls -l $MOUNTED_DIR'
+                    sh '''
+                        docker exec $CONTAINER_NAME ls -l /etc/ssl/certs
+                        docker exec $CONTAINER_NAME ls -l /etc/ssl/private
+                        docker exec $CONTAINER_NAME ls -l /etc/nginx
+                        docker exec $CONTAINER_NAME ls -l $MOUNTED_DIR
+                    '''
                 }
             }
         }
+       
     }
-
     post {
         always {
             cleanWs()
