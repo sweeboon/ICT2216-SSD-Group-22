@@ -92,19 +92,7 @@ pipeline {
                 }
             }
         }
-
-        stage('Update Code in Mounted Volume') {
-            steps {
-                script {
-                    // Ensure the target directory exists
-                    sh 'docker exec $CONTAINER_NAME mkdir -p $MOUNTED_DIR'
-                    // Copy the entire react-flask-app directory to the container
-                    sh 'docker cp $WORKSPACE/react-flask-app/. $CONTAINER_NAME:$MOUNTED_DIR'
-                    // Copy the .env file to the server directory in the container
-                    sh 'docker cp $WORKSPACE/react-flask-app/server/.env $CONTAINER_NAME:$MOUNTED_DIR/server/.env'
-                }
-            }
-        }
+        
 
         stage('Verify Mounted Files') {
             steps {
@@ -119,7 +107,7 @@ pipeline {
             }
         }
 
-        
+       
     }
 
     post {
