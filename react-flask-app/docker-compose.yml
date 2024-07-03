@@ -32,17 +32,5 @@ services:
       - "3000"
       - "5000"
 
-  jenkins-blueocean:
-    container_name: jenkins-blueocean
-    image: myjenkins-blueocean:2.452.2-1
-    environment:
-      - JENKINS_OPTS=--prefix=/jenkins
-      - VIRTUAL_HOST=jenkins.forteam22ict.xyz
-      - VIRTUAL_PORT=8443
-    volumes:
-      - jenkins_home:/var/jenkins_home
-    expose:
-      - "8443"
-
 volumes:
   jenkins_home:
