@@ -1,36 +1,39 @@
-# Use the official Nginx image as a base
-FROM nginx:latest
+# Use an official Python and Node.js runtime as a parent image
+FROM node:16
 
-# Install necessary dependencies
+# Install Python and other dependencies
 RUN apt-get update && \
-    apt-get install -y curl gnupg python3 python3-venv python3-pip wget && \
-    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
-    apt-get install -y nodejs npm && \
-    curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null && \
-    echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list && \
-    apt-get update && \
-    apt-get install -y yarn
-
-# Copy your application code
-COPY . /usr/src/app
+    apt-get install -y python3 python3-venv python3-pip nginx
 
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Install Python dependencies within a virtual environment
-RUN python3 -m venv /usr/src/app/server/venv && \
-    wget https://bootstrap.pypa.io/get-pip.py && \
-    /usr/src/app/server/venv/bin/python get-pip.py && \
-    /usr/src/app/server/venv/bin/pip install --upgrade pip && \
-    /usr/src/app/server/venv/bin/pip install -r /usr/src/app/server/requirements.txt --break-system-packages
+# Copy package.json and yarn.lock files for React
+COPY react-flask-app/server/package*.json ./react-flask-app/server/
 
 # Install Node.js dependencies
-RUN cd /usr/src/app/src && yarn install
+RUN cd react-flask-app/server && yarn install
 
-# Expose the ports
-EXPOSE 80 443
+# Copy Python requirements file
+COPY react-flask-app/server/requirements.txt ./react-flask-app/server/
 
-# Start the application
-CMD /bin/bash -c "nginx && \
-    cd /usr/src/app/server && . venv/bin/activate && flask run --host=0.0.0.0 --port=5000 & \
-    cd /usr/src/app/src && yarn start --port 80"
+# Create and activate virtual environment, and install Python dependencies
+RUN python3 -m venv react-flask-app/server/venv && \
+    bash -c "source react-flask-app/server/venv/bin/activate && pip install -r react-flask-app/server/requirements.txt"
+
+# Copy Nginx configuration file
+COPY react-flask-app/nginx/nginx.conf /etc/nginx/nginx.conf
+
+# Copy the rest of the application code
+COPY . .
+
+# Expose ports
+EXPOSE 80
+EXPOSE 443
+EXPOSE 3000
+EXPOSE 5000
+
+# Command to start Nginx and the application
+CMD ["bash", "-c", "source /usr/src/app/react-flask-app/server/venv/bin/activate && \
+    cd /usr/src/app/react-flask-app/server && flask db migrate && flask db upgrade && yarn start & \
+    nginx -g 'daemon off;'"]
