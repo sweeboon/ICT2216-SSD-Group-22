@@ -23,15 +23,6 @@ pipeline {
             }
         }
 
-        stage('Verify .env File') {
-            steps {
-                script {
-                    // Check if the .env file exists
-                    sh 'if [ -f /var/jenkins_home/.env ]; then echo ".env file exists"; else echo ".env file does not exist"; exit 1; fi'
-                }
-            }
-        }
-
         stage('Setup Virtual Environment') {
             steps {
                 script {
