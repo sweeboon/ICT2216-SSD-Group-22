@@ -18,7 +18,7 @@ pipeline {
         stage('Install rsync') {
             steps {
                 script {
-                    sh 'sudo apt-get update && sudo apt-get install -y rsync'
+                    sh 'apt-get update && apt-get install -y rsync'
                 }
             }
         }
