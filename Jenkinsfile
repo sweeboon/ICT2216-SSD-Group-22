@@ -65,25 +65,27 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t ${DOCKER_IMAGE}:${BUILD_ID} ${WORKSPACE}/react-flask-app'
+                    sh 'docker build -t ${DOCKER_IMAGE}:${BUILD_ID} "${WORKSPACE}/react-flask-app"'
                 }
             }
         }
 
-        stage('Deploy Docker Image') {
+        stage('Update Container Project Folder') {
             steps {
                 script {
                     sh """
-                        docker stop ${CONTAINER_NAME} || true
-                        docker rm ${CONTAINER_NAME} || true
-                        docker run -d --name ${CONTAINER_NAME} --network jenkins-blueocean \
-                        -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam221ct_fullchain.pem \
-                        -v /home/student24/privkey.pem:/etc/ssl/private/forteam221ct_privkey.pem \
-                        -v /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem \
-                        -v /home/student24/privkey.pem:/etc/ssl/private/privkey.pem \
-                        -v /home/student24/nginx/nginx.conf:/etc/nginx/nginx.conf \
-                        -p 80:80 -p 443:443 \
-                        ${DOCKER_IMAGE}:${BUILD_ID}
+                        if [ \$(docker ps -q -f name=${CONTAINER_NAME}) ]; then
+                            docker cp ${WORKSPACE}/react-flask-app/. ${CONTAINER_NAME}:/usr/src/app
+                        else
+                            docker run -d --name ${CONTAINER_NAME} --network jenkins-blueocean \
+                            -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam221ct_fullchain.pem \
+                            -v /home/student24/privkey.pem:/etc/ssl/private/forteam221ct_privkey.pem \
+                            -v /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem \
+                            -v /home/student24/privkey.pem:/etc/ssl/private/privkey.pem \
+                            -v /home/student24/nginx/nginx.conf:/etc/nginx/nginx.conf \
+                            -p 80:80 -p 443:443 \
+                            ${DOCKER_IMAGE}:${BUILD_ID}
+                        fi
                     """
                 }
             }
