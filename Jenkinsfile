@@ -65,7 +65,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t ${DOCKER_IMAGE}:${BUILD_ID} ${WORKSPACE}/react-flask-app'
+                    sh 'docker build -t ${DOCKER_IMAGE}:${BUILD_ID} ${WORKSPACE}'
                 }
             }
         }
