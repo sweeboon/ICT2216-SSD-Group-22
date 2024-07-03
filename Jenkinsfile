@@ -4,7 +4,7 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'custom-nginx'
         CONTAINER_NAME = 'nginx'
-        MOUNTED_DIR = '/usr/src/app/'
+        MOUNTED_DIR = '/usr/src/app/react-flask-app'
     }
     stages {
         stage('Checkout') {
@@ -71,6 +71,8 @@ pipeline {
                                 docker start $CONTAINER_NAME
                             else
                                 docker run -d --name $CONTAINER_NAME --network jenkins-blueocean \
+                                    -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam22ict_fullchain.pem \
+                                    -v /home/student24/privkey.pem:/etc/ssl/private/forteam22ict_privkey.pem \
                                     -v /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem \
                                     -v /home/student24/privkey.pem:/etc/ssl/private/privkey.pem \
                                     -v /home/student24/nginx.conf:/etc/nginx/nginx.conf \
