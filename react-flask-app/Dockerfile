@@ -2,7 +2,7 @@
 FROM node:16
 
 # Set the working directory
-WORKDIR /usr/src/app
+WORKDIR /var/jenkins_home/workspace
 
 # Copy the package.json and yarn.lock files
 COPY package*.json yarn.lock ./
@@ -17,12 +17,9 @@ COPY . .
 RUN apt-get update && \
     apt-get install -y python3 python3-venv python3-pip
 
-# Verify that the necessary files are in place
-RUN ls -l /usr/src/app/react-flask-app/server/
-
 # Create and activate a virtual environment
-RUN python3 -m venv /usr/src/app/react-flask-app/server/venv
-RUN /usr/src/app/react-flask-app/server/venv/bin/pip install -r /usr/src/app/react-flask-app/server/requirements.txt
+RUN python3 -m venv /var/jenkins_home/workspace/react-flask-app/server/venv
+RUN /var/jenkins_home/workspace/react-flask-app/server/venv/bin/pip install -r /var/jenkins_home/workspace/react-flask-app/server/requirements.txt
 
 # Expose ports
 EXPOSE 3000 5000
