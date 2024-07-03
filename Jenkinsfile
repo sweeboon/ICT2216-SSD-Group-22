@@ -4,7 +4,6 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'custom-nginx'
         CONTAINER_NAME = 'react-flask-app'
-        DOCKER_CONFIG = "$HOME/.docker"
     }
     stages {
         stage('Checkout') {
@@ -66,7 +65,7 @@ pipeline {
             agent {
                 docker {
                     image 'docker:latest'
-                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock -v $HOME/.docker:/var/jenkins_home/.docker'
+                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
