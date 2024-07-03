@@ -5,6 +5,7 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
+        ENV_FILE_PATH = "/var/jenkins_home/.env"
     }
 
     stages {
@@ -20,6 +21,32 @@ pipeline {
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
+            }
+        }
+
+        stage('Verify Checkout') {
+            steps {
+                script {
+                    // Print the current workspace directory
+                    sh 'echo "Current workspace: ${WORKSPACE}"'
+                    // List the contents of the workspace directory
+                    sh 'ls -l ${WORKSPACE}'
+                    // List the contents of the react-flask-app directory
+                    sh 'ls -l ${WORKSPACE}/react-flask-app'
+                }
+            }
+        }
+
+        stage('Copy .env File') {
+            steps {
+                script {
+                    // Verify .env file exists
+                    sh 'if [ -f ${ENV_FILE_PATH} ]; then echo ".env file exists"; else echo ".env file does not exist"; exit 1; fi'
+                    // Copy the .env file to the workspace
+                    sh 'cp ${ENV_FILE_PATH} ${WORKSPACE}/react-flask-app/.env'
+                    // List the contents of the react-flask-app directory to verify
+                    sh 'ls -la ${WORKSPACE}/react-flask-app'
+                }
             }
         }
 
@@ -53,17 +80,11 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Read the .env file and pass the variables as build arguments
-                    def envVars = readFile('/var/jenkins_home/.env').split('\n').collect { line -> 
-                        return "--build-arg ${line.replace('=', '="')}\"" 
-                    }.join(' ')
-                    
                     // Verify Docker is accessible
                     sh 'docker --version'
                     sh 'docker ps'
-                    
                     // Build the Docker image
-                    sh "docker build ${envVars} -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f ${WORKSPACE}/react-flask-app/Dockerfile ${WORKSPACE}/react-flask-app"
+                    sh "docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} -f ${WORKSPACE}/react-flask-app/Dockerfile ${WORKSPACE}/react-flask-app"
                 }
             }
         }
