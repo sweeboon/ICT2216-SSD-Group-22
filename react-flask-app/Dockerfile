@@ -41,10 +41,9 @@ WORKDIR /usr/src/app
 
 # Install Python dependencies within a virtual environment
 RUN python3 -m venv /usr/src/app/server/venv && \
-    /bin/bash -c "source /usr/src/app/server/venv/bin/activate && \
-    python -m ensurepip && \
-    pip install --upgrade pip && \
-    pip install -r /usr/src/app/server/requirements.txt --break-system-packages"
+    /usr/src/app/server/venv/bin/python -m ensurepip --upgrade && \
+    /usr/src/app/server/venv/bin/pip install --upgrade pip && \
+    /usr/src/app/server/venv/bin/pip install -r /usr/src/app/server/requirements.txt --break-system-packages
 
 # Expose the ports
 EXPOSE 80 443 5000 3000
