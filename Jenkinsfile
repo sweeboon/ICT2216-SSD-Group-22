@@ -80,8 +80,8 @@ pipeline {
                                 docker start $CONTAINER_NAME
                             else
                                 docker run -d --name $CONTAINER_NAME --network jenkins-blueocean \
-                                    -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam221ct_fullchain.pem \
-                                    -v /home/student24/privkey.pem:/etc/ssl/private/forteam221ct_privkey.pem \
+                                    -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam22ict_fullchain.pem \
+                                    -v /home/student24/privkey.pem:/etc/ssl/private/forteam22ict_privkey.pem \
                                     -v /home/student24/nginx/nginx.conf:/etc/nginx/nginx.conf \
                                     -v $WORKSPACE/react-flask-app:/usr/src/app/react-flask-app \
                                     -p 80:80 -p 443:443 \
@@ -114,7 +114,7 @@ pipeline {
                         service nginx start &&
                         cd /usr/src/app/react-flask-app/server &&
                         source venv/bin/activate &&
-                        flask run --host=0.0.0.0 --port=80 &
+                        flask run --host=0.0.0.0 --port=5000 &
                         cd /usr/src/app/react-flask-app/src &&
                         yarn start --port 80
                         '
