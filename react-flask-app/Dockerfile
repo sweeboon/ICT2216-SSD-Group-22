@@ -17,15 +17,15 @@ RUN cd react-flask-app/src && yarn install
 # Copy Python requirements file
 COPY react-flask-app/server/requirements.txt ./react-flask-app/server/
 
-# Create and activate virtual environment, and install Python dependencies
-RUN python3 -m venv react-flask-app/server/venv && \
-    bash -c "source react-flask-app/server/venv/bin/activate && pip install -r react-flask-app/server/requirements.txt"
+# Copy Nginx configuration file
+COPY react-flask-app/nginx/nginx.conf /etc/nginx/nginx.conf
 
 # Copy the rest of the application code
 COPY . .
 
-# Copy Nginx configuration file
-COPY react-flask-app/nginx/nginx.conf /etc/nginx/nginx.conf
+# Create and activate virtual environment, and install Python dependencies
+RUN python3 -m venv react-flask-app/server/venv && \
+    bash -c "source react-flask-app/server/venv/bin/activate && pip install -r react-flask-app/server/requirements.txt"
 
 # Expose ports
 EXPOSE 80
@@ -33,8 +33,7 @@ EXPOSE 443
 EXPOSE 3000
 EXPOSE 5000
 
-# Command to start Nginx, Flask, and React
+# Command to start Nginx and the application
 CMD ["bash", "-c", "source /usr/src/app/react-flask-app/server/venv/bin/activate && \
-    cd /usr/src/app/react-flask-app/server && flask run --host=0.0.0.0 & \
-    cd /usr/src/app/react-flask-app/src && yarn start & \
+    cd /usr/src/app/react-flask-app/server && flask db migrate && cd /usr/src/app/react-flask-app/src && yarn start & \
     nginx -g 'daemon off;'"]
