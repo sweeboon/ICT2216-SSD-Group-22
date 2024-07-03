@@ -5,6 +5,7 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
+        MOUNTED_DIR = '/usr/src/app'
     }
 
     stages {
@@ -66,8 +67,8 @@ pipeline {
             steps {
                 script {
                     sh """
-                        if [ ! "$(docker ps -q -f name=${CONTAINER_NAME})" ]; then
-                            if [ "$(docker ps -aq -f status=exited -f name=${CONTAINER_NAME})" ]; then
+                        if [ ! "\$(docker ps -q -f name=${CONTAINER_NAME})" ]; then
+                            if [ "\$(docker ps -aq -f status=exited -f name=${CONTAINER_NAME})" ]; then
                                 docker start ${CONTAINER_NAME}
                             else
                                 docker run -d --name ${CONTAINER_NAME} --network my_network \
