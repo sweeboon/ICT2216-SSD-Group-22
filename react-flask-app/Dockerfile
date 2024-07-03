@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM node:14 as build
+FROM node:16 as build
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -9,6 +9,7 @@ COPY package*.json ./
 
 # Install dependencies
 RUN npm install
+RUN npm install -g concurrently
 
 # Copy the rest of the application code
 COPY . .
