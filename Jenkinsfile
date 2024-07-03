@@ -64,15 +64,12 @@ pipeline {
         stage('Deploy Application') {
             agent {
                 docker {
-                    image 'docker:20.10.21-dind'
+                    image 'docker/compose:1.29.2'
                     args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
                 script {
-                    sh 'curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
-                    sh 'chmod +x /usr/local/bin/docker-compose'
-                    sh 'ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose'
                     sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml up -d'
                 }
             }
