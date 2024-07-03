@@ -15,7 +15,7 @@ COPY . .
 
 # Setup Python environment
 RUN apt-get update && \
-    apt-get install -y python3 python3-venv python3-pip
+    apt-get install -y python3 python3-venv python3-pip rsync
 
 # Create and activate a virtual environment
 RUN python3 -m venv /usr/src/app/react-flask-app/server/venv
