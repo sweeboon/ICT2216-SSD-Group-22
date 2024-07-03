@@ -5,7 +5,7 @@ pipeline {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'nginx'
         CONTAINER_NAME = 'nginx'
-        ENV_FILE_PATH = "/var/jenkins_home/.env"
+        ENV_FILE_PATH = '/home/student24/.env'  // Adjust this path as necessary
     }
 
     stages {
@@ -40,11 +40,9 @@ pipeline {
         stage('Copy .env File') {
             steps {
                 script {
-                    // Verify .env file exists
-                    sh 'if [ -f ${ENV_FILE_PATH} ]; then echo ".env file exists"; else echo ".env file does not exist"; exit 1; fi'
-                    // Copy the .env file to the workspace
+                    // Copy the .env file from the external location to the Jenkins workspace
                     sh 'cp ${ENV_FILE_PATH} ${WORKSPACE}/react-flask-app/.env'
-                    // List the contents of the react-flask-app directory to verify
+                    // Verify the .env file is copied
                     sh 'ls -la ${WORKSPACE}/react-flask-app'
                 }
             }
