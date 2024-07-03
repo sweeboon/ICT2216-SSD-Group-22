@@ -71,7 +71,7 @@ pipeline {
                             if [ "\$(docker ps -aq -f status=exited -f name=${CONTAINER_NAME})" ]; then
                                 docker start ${CONTAINER_NAME}
                             else
-                                docker run -d --name ${CONTAINER_NAME} --network my_network \
+                                docker run -d --name ${CONTAINER_NAME} --network jenkins-blueocean \
                                     -v /home/student24/fullchain.pem:/etc/ssl/certs/forteam221ct_fullchain.pem \
                                     -v /home/student24/privkey.pem:/etc/ssl/private/forteam221ct_privkey.pem \
                                     -v /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem \
@@ -90,7 +90,7 @@ pipeline {
         stage('Update Code in Mounted Volume') {
             steps {
                 script {
-                    sh 'rsync -av --delete ${WORKSPACE}/react-flask-app/ ${MOUNTED_DIR}/'
+                    sh 'scp -r ${WORKSPACE}/react-flask-app/* ${MOUNTED_DIR}/'
                 }
             }
         }
