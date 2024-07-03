@@ -19,8 +19,8 @@ pipeline {
             steps {
                 script {
                     sh 'echo "Current workspace: ${WORKSPACE}"'
-                    sh 'ls -l "${WORKSPACE}"'
-                    sh 'ls -l "${WORKSPACE}/react-flask-app"'
+                    sh 'ls -l ${WORKSPACE}'
+                    sh 'ls -l ${WORKSPACE}/react-flask-app'
                 }
             }
         }
@@ -28,7 +28,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh 'docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} "${WORKSPACE}"'
+                    sh 'docker build -t ${DOCKER_IMAGE}:${env.BUILD_ID} ${WORKSPACE}'
                 }
             }
         }
