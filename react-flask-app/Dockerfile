@@ -19,8 +19,7 @@ WORKDIR /usr/src/app
 
 # Install Python dependencies within a virtual environment
 RUN python3 -m venv /usr/src/app/server/venv && \
-    wget https://bootstrap.pypa.io/get-pip.py && \
-    /usr/src/app/server/venv/bin/python get-pip.py && \
+    /usr/src/app/server/venv/bin/python -m ensurepip --upgrade && \
     /usr/src/app/server/venv/bin/pip install --upgrade pip && \
     /usr/src/app/server/venv/bin/pip install -r /usr/src/app/server/requirements.txt --break-system-packages
 
