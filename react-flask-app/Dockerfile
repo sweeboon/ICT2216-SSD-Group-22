@@ -17,6 +17,9 @@ COPY . .
 RUN apt-get update && \
     apt-get install -y python3 python3-venv python3-pip
 
+# Verify that the necessary files are in place
+RUN ls -l /usr/src/app/react-flask-app/server/
+
 # Create and activate a virtual environment
 RUN python3 -m venv /usr/src/app/react-flask-app/server/venv
 RUN /usr/src/app/react-flask-app/server/venv/bin/pip install -r /usr/src/app/react-flask-app/server/requirements.txt
