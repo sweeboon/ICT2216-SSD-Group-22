@@ -31,6 +31,8 @@ class Account(UserMixin, db.Model):
     login_count = db.Column(db.Integer, default=0)
     confirmed = db.Column(db.Boolean, default=False)
     confirmed_on = db.Column(db.DateTime(), nullable=True)
+    failed_attempts = db.Column(db.Integer, default=0)
+    lockout_time = db.Column(db.DateTime, nullable=True)
     otp = db.Column(db.String(6), nullable=True)  
     otp_generated_at = db.Column(db.DateTime(), nullable=True)  
     new_email = db.Column(db.String(255), nullable=True)  

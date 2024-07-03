@@ -8,8 +8,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');  // For success messages
-  const { isLoggedIn, handleLogin, isOtpRequested } = useAuth();  // Use new hooks
+  const { isLoggedIn, handleLogin, isOtpRequested } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -20,11 +19,13 @@ const Login = () => {
 
     try {
       await handleLogin(email, password, otp);
-      setSuccess('OTP sent to your email.');
       setError('');
     } catch (error) {
-      setError('Login failed. Please check your email, password, and OTP.');
-      setSuccess('');
+      if (error.response && error.response.status === 403) {
+        setError('Account is locked. Please try again later.');
+      } else {
+        setError('Invalid credentials or OTP. Please try again.');
+      }
     }
   };
 
@@ -52,7 +53,7 @@ const Login = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            disabled={isOtpRequested}  // Disable after OTP is requested
+            disabled={isOtpRequested}
           />
         </div>
         {isOtpRequested && (
@@ -69,8 +70,7 @@ const Login = () => {
         <button type="submit">
           {isOtpRequested ? 'Verify OTP and Login' : 'Request OTP'}
         </button>
-        {error && <p className="error">{error}</p>}  
-        {success && <p className="success">{success}</p>} 
+        {error && <p className="error">{error}</p>}
       </form>
     </div>
   );

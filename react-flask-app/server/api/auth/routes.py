@@ -17,6 +17,9 @@ import secrets
 
 logger = logging.getLogger(__name__)
 
+MAX_FAILED_ATTEMPTS = 5
+LOCKOUT_TIME = timedelta(minutes=15)
+
 @bp.route('/initiate_login', methods=['POST'])
 @csrf.exempt
 def initiate_login():
@@ -25,8 +28,26 @@ def initiate_login():
         return jsonify({'message': 'Email and password are required'}), 400
 
     account = Account.query.filter_by(email=data['email']).first()
-    if account is None or not pbkdf2_sha256.verify(data['password'], account.password):
+    if account is None:
         return jsonify({'message': 'Invalid email or password'}), 401
+
+    if account.lockout_time:
+        if datetime.now() >= account.lockout_time:
+            # Reset failed attempts if lockout time has passed
+            account.failed_attempts = 0
+            account.lockout_time = None
+        else:
+            return jsonify({'message': 'Account is locked. Please try again later.'}), 403
+
+    if not pbkdf2_sha256.verify(data['password'], account.password):
+        account.failed_attempts += 1
+        if account.failed_attempts >= MAX_FAILED_ATTEMPTS:
+            account.lockout_time = datetime.now() + LOCKOUT_TIME
+        db.session.commit()
+        return jsonify({'message': 'Invalid email or password'}), 401
+
+    account.failed_attempts = 0  # Reset failed attempts on successful password validation
+    db.session.commit()
 
     otp = generate_otp()
     account.otp = otp
@@ -47,20 +68,40 @@ def verify_otp_and_login():
     if account is None:
         return jsonify({'message': 'Invalid email address'}), 401
 
-    if verify_otp(account, data['otp']):
-        token = jwt.encode({
-            'sub': account.email,
-            'iat': datetime.now(),
-            'exp': datetime.now() + timedelta(minutes=30)
-        }, current_app.config['SECRET_KEY'], algorithm="HS256")
+    if account.lockout_time and datetime.now() < account.lockout_time:
+        return jsonify({'message': 'Account is locked. Please try again later.'}), 403
 
-        login_user(account, remember=True, duration=timedelta(minutes=30))
-        identity_changed.send(current_app._get_current_object(), identity=Identity(account.account_id))
-        roles = [role.name for role in account.roles]
+    try:
+        if verify_otp(account, data['otp']):
+            account.failed_attempts = 0  # Reset failed attempts on successful OTP validation
+            account.lockout_time = None  # Clear lockout time
+            account.last_login_at = datetime.now()
+            account.login_count += 1
+            db.session.commit()
 
-        return jsonify({'message': 'Login successful', 'token': token, 'username': account.email, 'roles': roles}), 200
-    else:
-        return jsonify({'message': 'Invalid or expired OTP'}), 400
+            token = jwt.encode({
+                'sub': account.email,
+                'iat': datetime.now(),
+                'exp': datetime.now() + timedelta(minutes=30)
+            }, current_app.config['SECRET_KEY'], algorithm="HS256")
+
+            login_user(account, remember=True, duration=timedelta(minutes=30))
+            identity_changed.send(current_app._get_current_object(), identity=Identity(account.account_id))
+            roles = [role.name for role in account.roles]
+
+            return jsonify({'message': 'Login successful', 'token': token, 'username': account.email, 'roles': roles}), 200
+        else:
+            account.failed_attempts += 1
+            if account.failed_attempts >= MAX_FAILED_ATTEMPTS:
+                account.lockout_time = datetime.now() + LOCKOUT_TIME
+            db.session.commit()
+            return jsonify({'message': 'Invalid or expired OTP'}), 400
+    except ValueError as e:
+        account.failed_attempts += 1
+        if account.failed_attempts >= MAX_FAILED_ATTEMPTS:
+            account.lockout_time = datetime.now() + LOCKOUT_TIME
+        db.session.commit()
+        return jsonify({'message': str(e)}), 400
 
 @bp.route('/request_otp', methods=['POST'])
 @csrf.exempt
@@ -147,7 +188,8 @@ def confirm_email():
         db.session.add(account)
         db.session.commit()
         return jsonify({'message': 'You have confirmed your account. Thanks!'}), 200
-
+#old login method without otp etc for SFR02
+"""
 @bp.route('/login', methods=['POST'])
 @csrf.exempt
 def login():
@@ -176,7 +218,7 @@ def login():
     roles = [role.name for role in account.roles]
 
     return jsonify({'message': 'Login successful', 'token': token, 'username': account.email, 'roles': roles}), 200
-
+"""
 @bp.route('/status', methods=['GET'])
 @csrf.exempt
 def status():
