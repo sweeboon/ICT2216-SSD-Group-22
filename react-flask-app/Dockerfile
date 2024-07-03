@@ -29,9 +29,6 @@ RUN cd /usr/src/app/src && yarn install
 # Build the React app
 RUN cd /usr/src/app/src && yarn build
 
-# Configure Nginx to serve the React app
-COPY nginx.conf /etc/nginx/nginx.conf
-
 # Expose the ports
 EXPOSE 80 443 5000 3000
 
