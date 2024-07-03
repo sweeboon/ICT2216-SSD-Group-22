@@ -99,6 +99,21 @@ pipeline {
                 }
             }
         }
+
+        stage('Start Services') {
+            steps {
+                script {
+                    sh """
+                        docker exec ${CONTAINER_NAME} /bin/bash -c '
+                        service nginx start &&
+                        cd /usr/src/app/react-flask-app/server &&
+                        source venv/bin/activate &&
+                        yarn start
+                        '
+                    """
+                }
+            }
+        }
     }
 
     post {

@@ -1,39 +1,31 @@
-# Use an official Python and Node.js runtime as a parent image
-FROM node:16
+# Use the official Nginx image as a base
+FROM nginx:latest
 
-# Install Python and other dependencies
+# Install necessary dependencies
 RUN apt-get update && \
-    apt-get install -y python3 python3-venv python3-pip nginx
+    apt-get install -y python3 python3-venv python3-pip yarn
+
+# Copy your application code
+COPY . /usr/src/app
 
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Copy package.json and yarn.lock files for React
-COPY react-flask-app/server/package*.json ./react-flask-app/server/
+# Install Python dependencies
+RUN python3 -m venv server/venv && \
+    . server/venv/bin/activate && \
+    pip install -r server/requirements.txt
 
 # Install Node.js dependencies
-RUN cd react-flask-app/server && yarn install
+RUN cd src && yarn install
 
-# Copy Python requirements file
-COPY react-flask-app/server/requirements.txt ./react-flask-app/server/
+# Copy Nginx configuration file (if you have a custom one)
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Create and activate virtual environment, and install Python dependencies
-RUN python3 -m venv react-flask-app/server/venv && \
-    bash -c "source react-flask-app/server/venv/bin/activate && pip install -r react-flask-app/server/requirements.txt"
+# Expose the ports
+EXPOSE 80 443
 
-# Copy Nginx configuration file
-COPY react-flask-app/nginx/nginx.conf /etc/nginx/nginx.conf
-
-# Copy the rest of the application code
-COPY . .
-
-# Expose ports
-EXPOSE 80
-EXPOSE 443
-EXPOSE 3000
-EXPOSE 5000
-
-# Command to start Nginx and the application
-CMD ["bash", "-c", "source /usr/src/app/react-flask-app/server/venv/bin/activate && \
-    cd /usr/src/app/react-flask-app/server && flask db migrate && yarn start & \
-    nginx -g 'daemon off;'"]
+# Start the application
+CMD /bin/bash -c "nginx && \
+    cd /usr/src/app/server && . venv/bin/activate && flask run --host=0.0.0.0 & \
+    cd /usr/src/app/src && yarn start"
