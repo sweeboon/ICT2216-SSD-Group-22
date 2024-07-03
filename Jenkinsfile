@@ -90,7 +90,12 @@ pipeline {
         stage('Update Code in Mounted Volume') {
             steps {
                 script {
-                    sh 'scp -r ${WORKSPACE}/react-flask-app/* ${MOUNTED_DIR}/'
+                    // Ensure the target directory exists
+                    sh 'docker exec ${CONTAINER_NAME} mkdir -p ${MOUNTED_DIR}'
+                    // Copy the entire react-flask-app directory to the container
+                    sh 'docker cp ${WORKSPACE}/react-flask-app ${CONTAINER_NAME}:${MOUNTED_DIR}'
+                    // Copy the .env file to the server directory in the container
+                    sh 'docker cp ${WORKSPACE}/react-flask-app/server/.env ${CONTAINER_NAME}:${MOUNTED_DIR}/react-flask-app/server/.env'
                 }
             }
         }
