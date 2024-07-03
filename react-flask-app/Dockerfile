@@ -1,6 +1,7 @@
 # Stage 1: Build React app
-FROM node:16 AS build
+FROM node:16 as build
 
+# Set the working directory
 WORKDIR /app
 
 # Copy package.json and yarn.lock and install dependencies
@@ -12,46 +13,35 @@ COPY . ./
 RUN yarn build
 
 # Stage 2: Setup Flask app and run both Flask and React
-FROM python:3.9-slim
+FROM python:3.9
 
-# Install Node.js and Yarn
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
-    && apt-get install -y nodejs \
-    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-    && apt-get update && apt-get install -y --no-install-recommends yarn \
-    && apt-get install -y bash \
-    && rm -rf /var/lib/apt/lists/*
+# Install yarn globally
+RUN apt-get update && apt-get install -y curl && \
+    curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
+    echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list && \
+    apt-get update && apt-get install -y yarn
 
+# Set the working directory
 WORKDIR /app
 
 # Copy the Flask app requirements and install them
 COPY server/requirements.txt ./
-RUN python -m venv /app/venv && \
-    /app/venv/bin/pip install --no-cache-dir -r requirements.txt && \
-    rm -rf /root/.cache/pip
+RUN pip install -r requirements.txt
 
-# Install concurrently to run multiple commands
-RUN yarn global add concurrently
-
-# Copy the Flask app
+# Copy the rest of the Flask app
 COPY server /app/server
 
 # Copy the React build from the first stage
 COPY --from=build /app/build /app/static
 
+# Copy the .env.txt file and rename it to .env
+COPY env.txt /app/.env
+
 # Copy the rest of the application
 COPY . /app
 
-# Copy the .env file from the project directory to the container
-COPY .env /app/.env
-
 # Expose the ports for Flask and React
-EXPOSE 3000
-EXPOSE 5000
+EXPOSE 3000 5000
 
-# Use bash to source the virtual environment, export env variables, and start the app
-CMD ["bash", "-c", "source /app/venv/bin/activate && export $(cat /app/.env | xargs) && cd /app && concurrently \"yarn start\" \"yarn start-api\""]
+# Start both the React and Flask app using yarn
+CMD ["yarn", "start"]
