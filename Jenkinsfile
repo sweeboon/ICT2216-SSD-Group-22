@@ -58,6 +58,18 @@ pipeline {
             }
         }
 
+        stage('Copy .env File') {
+            steps {
+                script {
+                    // Use the secret file
+                    withCredentials([file(credentialsId: '9e9add6b-9983-4371-81af-33e9987d85a0', variable: 'SECRET_ENV_FILE')]) {
+                        // Copy the secret file to the react-flask-app/server directory
+                        sh 'cp $SECRET_ENV_FILE ${WORKSPACE}/react-flask-app/server/.env'
+                    }
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
