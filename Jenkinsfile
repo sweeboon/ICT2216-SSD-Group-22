@@ -90,6 +90,7 @@ pipeline {
         stage('Update Code in Mounted Volume') {
             steps {
                 script {
+                    sh 'bash -c "if ! command -v rsync &> /dev/null; then apt-get update && apt-get install -y rsync; fi"'
                     sh 'rsync -av --delete ${WORKSPACE}/react-flask-app/ ${MOUNTED_DIR}/'
                 }
             }
@@ -98,7 +99,14 @@ pipeline {
 
     post {
         always {
-            cleanWs()
+            script {
+                try {
+                    cleanWs()
+                } catch (e) {
+                    echo "cleanWs not available, running custom cleanup."
+                    sh 'rm -rf ${WORKSPACE}/*'
+                }
+            }
         }
     }
 }
