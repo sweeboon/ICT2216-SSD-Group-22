@@ -3,8 +3,7 @@ pipeline {
     environment {
         VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'custom-nginx'
-        CONTAINER_NAME = 'nginx'
-        MOUNTED_DIR = '/usr/src/app/react-flask-app'
+        CONTAINER_NAME = 'react-flask-app'
     }
     stages {
         stage('Checkout') {
@@ -62,36 +61,10 @@ pipeline {
                 }
             }
         }
-        stage('Ensure Docker Container is Running') {
+        stage('Deploy Application') {
             steps {
                 script {
-                    sh '''
-                        if [ ! "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
-                            if [ "$(docker ps -aq -f status=exited -f name=$CONTAINER_NAME)" ]; then
-                                docker start $CONTAINER_NAME
-                            else
-                                docker run -d --name $CONTAINER_NAME --network jenkins-blueocean \
-                                    -v /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem \
-                                    -v /home/student24/privkey.pem:/etc/ssl/private/privkey.pem \
-                                    -v /home/student24/nginx.conf:/etc/nginx/nginx.conf \
-                                    -v $WORKSPACE/react-flask-app:/usr/src/app/react-flask-app \
-                                    -p 80:80 -p 443:443 -p 5000:5000 -p 3000:3000 \
-                                    $DOCKER_IMAGE:$BUILD_ID
-                            fi
-                        fi
-                    '''
-                }
-            }
-        }
-        stage('Verify Mounted Files') {
-            steps {
-                script {
-                    sh '''
-                        docker exec $CONTAINER_NAME ls -l /etc/ssl/certs
-                        docker exec $CONTAINER_NAME ls -l /etc/ssl/private
-                        docker exec $CONTAINER_NAME ls -l /etc/nginx
-                        docker exec $CONTAINER_NAME ls -l $MOUNTED_DIR
-                    '''
+                    sh 'docker-compose up -d react-flask-app'
                 }
             }
         }
