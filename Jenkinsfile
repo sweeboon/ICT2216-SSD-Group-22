@@ -64,7 +64,7 @@ pipeline {
         stage('Deploy Application') {
             agent {
                 docker {
-                    image 'docker:git' // Use the docker:git image that includes curl
+                    image 'docker:git'
                     args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
