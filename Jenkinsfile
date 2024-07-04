@@ -61,6 +61,13 @@ pipeline {
                 }
             }
         }
+        stage('Stop and Remove Existing Containers') {
+            steps {
+                script {
+                    sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml down'
+                }
+            }
+        }
         stage('Deploy Application') {
             agent {
                 docker {
@@ -68,13 +75,8 @@ pipeline {
                     args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
-            environment {
-                DOCKER_CONFIG = "$WORKSPACE/.docker"
-            }
             steps {
                 script {
-                    sh 'mkdir -p $DOCKER_CONFIG'
-                    sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml down'
                     sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml up -d'
                 }
             }
