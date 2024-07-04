@@ -54,10 +54,11 @@ pipeline {
                 }
             }
         }
-        stage('Build Docker Image') {
+        stage('Clean Up') {
             steps {
                 script {
-                    sh 'docker build -t $DOCKER_IMAGE:$BUILD_ID -f $WORKSPACE/react-flask-app/Dockerfile $WORKSPACE/react-flask-app'
+                    sh 'docker system prune -af'
+                    sh 'docker volume prune -f'
                 }
             }
         }
@@ -70,7 +71,21 @@ pipeline {
             }
             steps {
                 script {
+                    sh '''
+                        existing_container=$(docker ps -q --filter ancestor=jwilder/nginx-proxy)
+                        if [ ! -z "$existing_container" ]; then
+                            docker stop $existing_container
+                            docker rm $existing_container
+                        fi
+                    '''
                     sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml down'
+                }
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh 'docker build -t $DOCKER_IMAGE:$BUILD_ID -f $WORKSPACE/react-flask-app/Dockerfile $WORKSPACE/react-flask-app'
                 }
             }
         }
