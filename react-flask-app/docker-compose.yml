@@ -9,10 +9,9 @@ services:
       - "443:443"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.xyz.crt:ro
-      - /home/student24/privkey.pem:/etc/ssl/private/privkey.xyz.key:ro
+      - /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
+      - /home/student24/privkey.pem:/etc/ssl/private/privkey.pem:ro
       - /home/student24/nginx/vhost.d:/etc/nginx/vhost.d
-      - /home/student24/nginx/html:/usr/share/nginx/html
     environment:
       - DEFAULT_HOST=forteam22ict.xyz
 
@@ -30,6 +29,3 @@ services:
     expose:
       - "3000"
       - "5000"
-
-volumes:
-  jenkins_home:
