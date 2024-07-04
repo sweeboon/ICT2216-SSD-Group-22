@@ -71,7 +71,7 @@ pipeline {
         stage('Deploy Application') {
             agent {
                 docker {
-                    image 'docker:latest'
+                    image 'docker/compose:latest'
                     args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
