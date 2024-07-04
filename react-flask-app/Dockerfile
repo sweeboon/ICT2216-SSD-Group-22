@@ -17,10 +17,11 @@ COPY . /usr/src/app
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Install Python dependencies within a virtual environment
-RUN python3 -m venv /usr/src/app/server/venv && \
-    /usr/src/app/server/venv/bin/pip install --upgrade pip && \
-    /usr/src/app/server/venv/bin/pip install -r /usr/src/app/server/requirements.txt --break-system-packages
+# Create and activate virtual environment, then install Python dependencies
+RUN python3 -m venv /usr/src/app/venv && \
+    . /usr/src/app/venv/bin/activate && \
+    /usr/src/app/venv/bin/pip install --upgrade pip && \
+    /usr/src/app/venv/bin/pip install -r /usr/src/app/server/requirements.txt --break-system-packages
 
 # Install Node.js dependencies
 RUN cd /usr/src/app/src && yarn install
@@ -33,5 +34,5 @@ EXPOSE 80 443 5000 3000
 
 # Start the application
 CMD /bin/bash -c "nginx && \
-    cd /usr/src/app/server && . venv/bin/activate && flask run --host=0.0.0.0 --port=5000 & \
+    cd /usr/src/app/server && . /usr/src/app/venv/bin/activate && flask run --host=0.0.0.0 --port=5000 & \
     cd /usr/src/app/src && yarn start --port 3000"
