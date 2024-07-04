@@ -10,12 +10,17 @@ RUN npm run build
 FROM python:3.11-slim as build-flask
 WORKDIR /usr/src/app
 COPY --from=build-react /usr/src/app /usr/src/app
+RUN apt-get update && apt-get install -y curl gnupg && \
+    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
+    apt-get install -y nodejs npm && \
+    npm install -g yarn && \
+    apt-get clean
 RUN python -m venv venv
-RUN /bin/bash -c ". venv/bin/activate && pip install --upgrade pip && pip install -r /usr/src/app/server/requirements.txt"
+RUN /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r /usr/src/app/server/requirements.txt"
 
 # Expose the ports
 EXPOSE 5000
 EXPOSE 3000
 
 # Start the Flask and React app
-CMD ["/bin/bash", "-c", "cd /usr/src/app && . venv/bin/activate && flask run --host=0.0.0.0 --port=5000 & npm start --prefix /usr/src/app"]
+CMD /bin/bash -c "cd /usr/src/app/server && source venv/bin/activate && yarn start"
