@@ -3,10 +3,10 @@ FROM node:14 as build-react
 
 WORKDIR /usr/src/app
 
-COPY ./src/package*.json ./
+COPY react-flask-app/src/package*.json ./
 RUN yarn install
 
-COPY ./src .
+COPY react-flask-app/src ./
 RUN NODE_OPTIONS=--openssl-legacy-provider yarn build
 
 # Stage 2: Build Flask app
@@ -14,7 +14,7 @@ FROM python:3.11-slim as build-flask
 
 WORKDIR /usr/src/app
 
-COPY ./server /usr/src/app/server
+COPY react-flask-app/server /usr/src/app/server
 
 RUN python -m venv /usr/src/app/venv && \
     . /usr/src/app/venv/bin/activate && \

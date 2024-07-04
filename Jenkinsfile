@@ -1,6 +1,6 @@
 pipeline {
     agent any
-   
+
     stages {
         stage('Checkout') {
             steps {
@@ -35,7 +35,6 @@ pipeline {
                 docker {
                     image 'docker/compose:latest'
                     args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-                    
                 }
             }
             steps {
@@ -56,7 +55,6 @@ pipeline {
                 docker {
                     image 'docker/compose:latest'
                     args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-                    
                 }
             }
             steps {
