@@ -17,6 +17,12 @@ pipeline {
             }
         }
         stage('Clean Up') {
+            agent {
+                docker {
+                    image 'docker/compose:latest'
+                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             steps {
                 script {
                     sh 'docker system prune -af'
