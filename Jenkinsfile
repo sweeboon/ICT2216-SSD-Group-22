@@ -16,6 +16,25 @@ pipeline {
                 }
             }
         }
+        stage('Create start.sh Script') {
+            steps {
+                script {
+                    sh '''
+                        cat << 'EOF' > $WORKSPACE/react-flask-app/start.sh
+                        #!/bin/bash
+                        # Start the Flask app
+                        cd /usr/src/app/server
+                        source venv/bin/activate
+                        flask run --host=0.0.0.0 --port=5000 &
+                        # Start the React app
+                        cd /usr/src/app
+                        yarn start
+                        EOF
+                        chmod +x $WORKSPACE/react-flask-app/start.sh
+                    '''
+                }
+            }
+        }
         stage('Clean Up') {
             agent {
                 docker {
