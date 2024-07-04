@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../components/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
+import validator from 'validator';
 
 const Profile = () => {
   const { isLoggedIn, username } = useAuth();
@@ -67,21 +68,34 @@ const Profile = () => {
       return;
     }
 
-    if (profile.email !== profile.original_email) {
-      requestOtp('email', profile.email);
+    if (!validator.isEmail(profile.email)) {
+      setError('Invalid email format.');
+      return;
+    }
+
+    const sanitizedProfile = {
+      name: validator.escape(profile.name),
+      address: validator.escape(profile.address),
+      date_of_birth: validator.escape(profile.date_of_birth),
+      email: validator.normalizeEmail(profile.email),
+      original_email: profile.original_email
+    };
+
+    if (sanitizedProfile.email !== sanitizedProfile.original_email) {
+      requestOtp('email', sanitizedProfile.email);
     } else if (newPassword !== '') {
       requestOtp('password');
     } else {
-      updateProfile();
+      updateProfile(sanitizedProfile);
     }
   };
 
-  const updateProfile = async () => {
+  const updateProfile = async (sanitizedProfile) => {
     try {
-      const data = { ...profile };
+      const data = { ...sanitizedProfile };
       delete data.original_email; // Remove original_email from the payload
 
-      if (profile.email === profile.original_email) {
+      if (sanitizedProfile.email === sanitizedProfile.original_email) {
         delete data.email; // Remove email if it hasn't changed
       }
 
@@ -107,7 +121,7 @@ const Profile = () => {
       setOtpRequired(false);
       setOtpVerified(true);
       if (changeType === 'email' || changeType === 'password') {
-        updateProfile();
+        updateProfile(profile);
       }
     } catch (error) {
       console.error('Error verifying OTP:', error);

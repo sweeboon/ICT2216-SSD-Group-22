@@ -7,10 +7,31 @@ from datetime import datetime
 from ..auth.utils import generate_otp, verify_otp, send_otp
 from api.profile import bp
 from passlib.hash import pbkdf2_sha256
+import html
+import re
 
 # Logging setup
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Validate and sanitize input data
+def validate_email(email):
+    email_regex = r'^[^@]+@[^@]+\.[^@]+$'
+    return re.match(email_regex, email)
+
+def validate_password(password):
+    if len(password) < 8:
+        return False
+    if not any(char.isdigit() for char in password):
+        return False
+    if not any(char in '!@#$%^&*(),.?":{}|<>' for char in password):
+        return False
+    return True
+
+def sanitize_input(input):
+    if input is None:
+        return None
+    return html.escape(input)
 
 @bp.route('/request-otp', methods=['POST'])
 @login_required
@@ -18,24 +39,26 @@ logger = logging.getLogger(__name__)
 def request_otp():
     try:
         data = request.get_json()
-        change_type = data.get('change_type')
-        new_email = data.get('new_email', None)
+        logger.info(f"Raw data: {data}")
+        change_type = sanitize_input(data.get('change_type'))
+        new_email = sanitize_input(data.get('new_email'))
 
-        otp = generate_otp()
+        logger.info(f"Sanitized change_type: {change_type}, new_email: {new_email}")
 
-        # Integrate store_otp functionality here
         if current_user.is_anonymous:
             return jsonify({'error': 'User not authenticated'}), 401
 
         if change_type == 'email':
             if not new_email:
                 return jsonify({'error': 'Email is required'}), 400
+            if not validate_email(new_email):
+                return jsonify({'error': 'Invalid email format'}), 400
             existing_account = Account.query.filter_by(email=new_email).first()
             if existing_account:
                 return jsonify({'error': 'Email already in use'}), 400
             current_user.new_email = new_email
 
-        # Store OTP and timestamp in the user's record
+        otp = generate_otp()
         current_user.otp = otp
         current_user.otp_generated_at = datetime.now()
         db.session.commit()
@@ -53,10 +76,13 @@ def request_otp():
 def verify_otp_route():
     try:
         data = request.get_json()
-        otp = data.get('otp')
-        change_type = data.get('change_type')
-        new_password = data.get('new_password')
-        confirm_password = data.get('confirm_password')
+        logger.info(f"Raw data: {data}")
+        otp = sanitize_input(data.get('otp'))
+        change_type = sanitize_input(data.get('change_type'))
+        new_password = sanitize_input(data.get('new_password'))
+        confirm_password = sanitize_input(data.get('confirm_password'))
+
+        logger.info(f"Sanitized otp: {otp}, change_type: {change_type}, new_password: {new_password}")
 
         # Verify OTP
         result = verify_otp(current_user, otp)
@@ -65,6 +91,8 @@ def verify_otp_route():
             current_user.email = new_email
             current_user.new_email = None
         elif change_type == 'password':
+            if not validate_password(new_password):
+                return jsonify({'error': 'Password must be at least 8 characters long, contain at least one number, and one special character'}), 400
             if new_password != confirm_password:
                 return jsonify({'error': 'Passwords do not match'}), 400
             current_user.password = pbkdf2_sha256.hash(new_password)
@@ -97,17 +125,25 @@ def get_profile():
 def update_profile():
     try:
         data = request.get_json()
+        logger.info(f"Raw data: {data}")
         account = current_user
 
-        if 'email' in data or 'password' in data:
-            return jsonify({'error': 'OTP is required to change email or password'}), 400
+        # Sanitize and validate input data
+        sanitized_name = sanitize_input(data.get('name'))
+        sanitized_address = sanitize_input(data.get('address'))
+        sanitized_date_of_birth = sanitize_input(data.get('date_of_birth'))
 
-        if 'name' in data:
-            account.name = data['name']
-        if 'address' in data:
-            account.address = data['address']
-        if 'date_of_birth' in data:
-            account.date_of_birth = datetime.strptime(data['date_of_birth'], '%Y-%m-%d')
+        logger.info(f"Sanitized data: name={sanitized_name}, address={sanitized_address}, date_of_birth={sanitized_date_of_birth}")
+
+        if sanitized_name:
+            account.name = sanitized_name
+        if sanitized_address:
+            account.address = sanitized_address
+        if sanitized_date_of_birth:
+            try:
+                account.date_of_birth = datetime.strptime(sanitized_date_of_birth, '%Y-%m-%d')
+            except ValueError:
+                return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD.'}), 400
 
         db.session.commit()
         return jsonify({'message': 'Profile updated successfully'}), 200
