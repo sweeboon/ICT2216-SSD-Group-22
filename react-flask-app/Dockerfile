@@ -1,38 +1,45 @@
-FROM nginx:latest
+# Stage 1: Build React app
+FROM node:14 as build-react
 
-# Install necessary dependencies
-RUN apt-get update && \
-    apt-get install -y curl gnupg python3 python3-venv python3-pip wget && \
-    curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
-    apt-get install -y nodejs npm && \
-    curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null && \
-    echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list && \
-    apt-get update && \
-    apt-get install -y yarn && \
-    apt-get clean
-
-# Copy your application code
-COPY . /usr/src/app
-
-# Set the working directory
 WORKDIR /usr/src/app
 
-# Create and activate virtual environment, then install Python dependencies
-RUN python3 -m venv /usr/src/app/venv && \
+COPY ./src/package*.json ./
+RUN yarn install
+
+COPY ./src .
+RUN NODE_OPTIONS=--openssl-legacy-provider yarn build
+
+# Stage 2: Build Flask app
+FROM python:3.11-slim as build-flask
+
+WORKDIR /usr/src/app
+
+COPY ./server /usr/src/app/server
+
+RUN python -m venv /usr/src/app/venv && \
     . /usr/src/app/venv/bin/activate && \
-    /usr/src/app/venv/bin/pip install --upgrade pip && \
-    /usr/src/app/venv/bin/pip install -r /usr/src/app/server/requirements.txt --break-system-packages
+    pip install --upgrade pip && \
+    pip install -r /usr/src/app/server/requirements.txt --break-system-packages
 
-# Install Node.js dependencies
-RUN cd /usr/src/app/src && yarn install
+# Stage 3: Runtime environment
+FROM python:3.11-slim
 
-# Build the React app with legacy OpenSSL provider
-RUN cd /usr/src/app/src && NODE_OPTIONS=--openssl-legacy-provider yarn build
+WORKDIR /usr/src/app
+
+# Copy built React app from Stage 1
+COPY --from=build-react /usr/src/app/build /usr/src/app/build
+
+# Copy Flask app from Stage 2
+COPY --from=build-flask /usr/src/app/venv /usr/src/app/venv
+COPY --from=build-flask /usr/src/app/server /usr/src/app/server
+
+# Install serve globally
+RUN npm install -g serve
 
 # Expose the ports
-EXPOSE 80 443 5000 3000
+EXPOSE 5000 3000
 
-# Start the application
-CMD /bin/bash -c "nginx && \
+# Start the Flask and React applications
+CMD /bin/bash -c "\
     cd /usr/src/app/server && . /usr/src/app/venv/bin/activate && flask run --host=0.0.0.0 --port=5000 & \
-    cd /usr/src/app/src && yarn start --port 3000"
+    serve -s /usr/src/app/build -l 3000"
