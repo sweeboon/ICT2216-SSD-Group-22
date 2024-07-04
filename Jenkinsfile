@@ -16,7 +16,14 @@ pipeline {
                 }
             }
         }
-        
+        stage('Clean Up') {
+            steps {
+                script {
+                    sh 'docker system prune -af'
+                    sh 'docker volume prune -f'
+                }
+            }
+        }
         stage('Stop and Remove Existing Containers') {
             agent {
                 docker {
