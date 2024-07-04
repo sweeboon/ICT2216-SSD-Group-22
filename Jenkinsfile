@@ -1,7 +1,6 @@
 pipeline {
     agent any
     environment {
-        VENV_PATH = "react-flask-app/server/venv"
         DOCKER_IMAGE = 'custom-nginx'
         CONTAINER_NAME = 'react-flask-app'
     }
@@ -17,58 +16,6 @@ pipeline {
                     sh 'echo "Current workspace: $WORKSPACE"'
                     sh 'ls -l $WORKSPACE'
                     sh 'ls -l $WORKSPACE/react-flask-app'
-                }
-            }
-        }
-        stage('Setup Virtual Environment') {
-            agent {
-                docker {
-                    image 'python:3.11'
-                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
-            steps {
-                script {
-                    sh '''
-                        if [ ! -d "$WORKSPACE/$VENV_PATH" ]; then
-                            python3 -m venv $WORKSPACE/$VENV_PATH
-                        fi
-                    '''
-                }
-            }
-        }
-        stage('Install Python Dependencies') {
-            agent {
-                docker {
-                    image 'python:3.11'
-                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
-            steps {
-                script {
-                    sh 'bash -c "source $WORKSPACE/$VENV_PATH/bin/activate && pip install -r $WORKSPACE/react-flask-app/server/requirements.txt"'
-                }
-            }
-        }
-        stage('Install Node.js Dependencies') {
-            agent {
-                docker {
-                    image 'node:14'
-                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
-            steps {
-                script {
-                    sh 'bash -c "cd $WORKSPACE/react-flask-app/src && yarn install"'
-                }
-            }
-        }
-        stage('Copy .env File') {
-            steps {
-                script {
-                    withCredentials([file(credentialsId: '9e9add6b-9983-4371-81af-33e9987d85a0', variable: 'SECRET_ENV_FILE')]) {
-                        sh 'cp $SECRET_ENV_FILE $WORKSPACE/react-flask-app/server/.env'
-                    }
                 }
             }
         }
@@ -100,13 +47,6 @@ pipeline {
                 }
             }
         }
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    sh 'docker build -t $DOCKER_IMAGE:$BUILD_ID -f $WORKSPACE/react-flask-app/Dockerfile $WORKSPACE/react-flask-app'
-                }
-            }
-        }
         stage('Deploy Application') {
             agent {
                 docker {
@@ -116,7 +56,7 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml up -d'
+                    sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml up -d --build'
                 }
             }
         }
