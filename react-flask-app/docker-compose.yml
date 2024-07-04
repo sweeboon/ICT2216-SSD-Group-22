@@ -12,6 +12,7 @@ services:
       - /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
       - /home/student24/privkey.pem:/etc/ssl/private/privkey.pem:ro
       - /home/student24/nginx/vhost.d:/etc/nginx/vhost.d
+      - /home/student24/nginx/html:/usr/share/nginx/html
     environment:
       - DEFAULT_HOST=forteam22ict.xyz
 
@@ -23,9 +24,10 @@ services:
     environment:
       - VIRTUAL_HOST=forteam22ict.xyz
       - VIRTUAL_PORT=3000
-    volumes:
-      - .:/usr/src/app
-      - $WORKSPACE/react-flask-app:/usr/src/app/react-flask-app
     expose:
       - "3000"
-      - "5000"
+    volumes:
+      - .:/usr/src/app
+
+volumes:
+  jenkins_home:
