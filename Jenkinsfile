@@ -62,6 +62,12 @@ pipeline {
             }
         }
         stage('Stop and Remove Existing Containers') {
+            agent {
+                docker {
+                    image 'docker/compose:latest'
+                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             steps {
                 script {
                     sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml down'
