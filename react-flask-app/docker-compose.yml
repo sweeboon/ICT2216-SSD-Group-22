@@ -12,6 +12,8 @@ services:
       - /etc/nginx/sites-enabled/default:/etc/nginx/sites-enabled/default:ro
       - /home/student24/nginx/vhost.d:/etc/nginx/vhost.d
       - /home/student24/nginx/html:/usr/share/nginx/html
+      - /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
+      - /home/student24/privkey.pem:/etc/ssl/private/privkey.pem:ro
     environment:
       - DEFAULT_HOST=forteam22ict.xyz
 

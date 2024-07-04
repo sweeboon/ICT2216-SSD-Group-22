@@ -8,7 +8,8 @@ RUN apt-get update && \
     curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null && \
     echo "deb [signed-by=/usr/share/keyrings/yarnkey.gpg] https://dl.yarnpkg.com/debian stable main" | tee /etc/apt/sources.list.d/yarn.list && \
     apt-get update && \
-    apt-get install -y yarn
+    apt-get install -y yarn && \
+    apt-get clean
 
 # Copy your application code
 COPY . /usr/src/app
@@ -18,8 +19,6 @@ WORKDIR /usr/src/app
 
 # Install Python dependencies within a virtual environment
 RUN python3 -m venv /usr/src/app/server/venv && \
-    wget https://bootstrap.pypa.io/get-pip.py && \
-    /usr/src/app/server/venv/bin/python get-pip.py && \
     /usr/src/app/server/venv/bin/pip install --upgrade pip && \
     /usr/src/app/server/venv/bin/pip install -r /usr/src/app/server/requirements.txt --break-system-packages
 
