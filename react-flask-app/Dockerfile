@@ -17,10 +17,12 @@ RUN apt-get update && apt-get install -y curl gnupg && \
     apt-get clean
 RUN python -m venv venv
 RUN /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r /usr/src/app/server/requirements.txt"
+# Set environment variables
+ENV FLASK_APP=server.api
 
 # Expose the ports
 EXPOSE 5000
 EXPOSE 3000
 
 # Start the Flask and React app
-CMD /bin/bash -c "cd /usr/src/app/server && source venv/bin/activate && yarn start"
+CMD /bin/bash -c "cd /usr/src/app/server && source venv/bin/activate && flask run --host=0.0.0.0 --port=5000 & cd /usr/src/app && yarn start"
