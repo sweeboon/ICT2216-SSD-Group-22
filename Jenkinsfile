@@ -1,9 +1,6 @@
 pipeline {
     agent any
-    environment {
-        DOCKER_IMAGE = 'custom-nginx'
-        CONTAINER_NAME = 'react-flask-app'
-    }
+   
     stages {
         stage('Checkout') {
             steps {
@@ -19,14 +16,7 @@ pipeline {
                 }
             }
         }
-        stage('Clean Up') {
-            steps {
-                script {
-                    sh 'docker system prune -af'
-                    sh 'docker volume prune -f'
-                }
-            }
-        }
+        
         stage('Stop and Remove Existing Containers') {
             agent {
                 docker {
