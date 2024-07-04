@@ -2,7 +2,7 @@ FROM nginx:latest
 
 # Install necessary dependencies
 RUN apt-get update && \
-    apt-get install -y curl gnupg python3 python3-venv python3-pip python-is-python3 wget && \
+    apt-get install -y curl gnupg python3 python3-venv python3-pip wget && \
     curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
     apt-get install -y nodejs npm && \
     curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null && \
@@ -17,26 +17,10 @@ COPY . /usr/src/app
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Debug: List contents of /usr/src/app before creating the virtual environment
-RUN ls -al /usr/src/app
-RUN ls -al /usr/src/app/server
-
-# Verify Python version and location
-RUN python3 --version
-RUN which python3
-RUN python --version
-RUN which python
-
 # Install Python dependencies within a virtual environment
 RUN python3 -m venv /usr/src/app/server/venv && \
-    ls -al /usr/src/app/server/venv && \
-    ls -al /usr/src/app/server/venv/bin && \
-    /usr/src/app/server/venv/bin/python -m pip install --upgrade pip && \
-    /usr/src/app/server/venv/bin/python -m pip install -r /usr/src/app/server/requirements.txt --break-system-packages
-
-# Debug: Verify the virtual environment directory
-RUN ls -al /usr/src/app/server/venv
-RUN ls -al /usr/src/app/server/venv/bin
+    /usr/src/app/server/venv/bin/pip install --upgrade pip && \
+    /usr/src/app/server/venv/bin/pip install -r /usr/src/app/server/requirements.txt --break-system-packages
 
 # Install Node.js dependencies
 RUN cd /usr/src/app/src && yarn install
