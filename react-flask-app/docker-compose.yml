@@ -13,8 +13,6 @@ services:
       - /home/student24/nginx/html:/usr/share/nginx/html
       - /etc/letsencrypt/live/forteam22ict.xyz/fullchain.pem:/etc/ssl/certs/forteam22ict.xyz-fullchain.pem:ro
       - /etc/letsencrypt/live/forteam22ict.xyz/privkey.pem:/etc/ssl/private/forteam22ict.xyz-privkey.pem:ro
-      - /etc/letsencrypt/live/jenkins.forteam22ict.xyz/fullchain.pem:/etc/ssl/certs/jenkins.forteam22ict.xyz-fullchain.pem:ro
-      - /etc/letsencrypt/live/jenkins.forteam22ict.xyz/privkey.pem:/etc/ssl/private/jenkins.forteam22ict.xyz-privkey.pem:ro
     environment:
       - DEFAULT_HOST=forteam22ict.xyz
 
