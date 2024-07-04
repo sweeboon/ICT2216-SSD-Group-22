@@ -15,7 +15,6 @@ RUN apt-get update && apt-get install -y curl gnupg && \
     apt-get install -y nodejs npm && \
     npm install -g yarn && \
     apt-get clean
-COPY . .
 RUN python -m venv venv
 RUN /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r /usr/src/app/server/requirements.txt"
 
