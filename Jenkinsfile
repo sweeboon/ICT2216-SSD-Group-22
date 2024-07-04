@@ -21,6 +21,12 @@ pipeline {
             }
         }
         stage('Setup Virtual Environment') {
+            agent {
+                docker {
+                    image 'python:3.11'
+                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             steps {
                 script {
                     sh '''
@@ -32,6 +38,12 @@ pipeline {
             }
         }
         stage('Install Python Dependencies') {
+            agent {
+                docker {
+                    image 'python:3.11'
+                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             steps {
                 script {
                     sh 'bash -c "source $WORKSPACE/$VENV_PATH/bin/activate && pip install -r $WORKSPACE/react-flask-app/server/requirements.txt"'
@@ -39,6 +51,12 @@ pipeline {
             }
         }
         stage('Install Node.js Dependencies') {
+            agent {
+                docker {
+                    image 'node:14'
+                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             steps {
                 script {
                     sh 'bash -c "cd $WORKSPACE/react-flask-app/src && yarn install"'
