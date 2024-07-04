@@ -9,7 +9,6 @@ services:
       - "443:443"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
-      - /etc/nginx/sites-enabled/default:/etc/nginx/sites-enabled/default:ro
       - /home/student24/nginx/vhost.d:/etc/nginx/vhost.d
       - /home/student24/nginx/html:/usr/share/nginx/html
       - /etc/letsencrypt/live/forteam22ict.xyz/fullchain.pem:/etc/ssl/certs/forteam22ict.xyz-fullchain.pem:ro
@@ -32,6 +31,3 @@ services:
     expose:
       - "3000"
       - "5000"
-
-volumes:
-  jenkins_home:
