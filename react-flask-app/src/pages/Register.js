@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import '../assets/Auth.css';
 import axios from '../components/axiosConfig';
+import validator from 'validator';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -11,7 +12,6 @@ const Register = () => {
   const [error, setError] = useState('');
   const [registered, setRegistered] = useState(false);
 
-  // Function to validate password
   const validatePassword = (password) => {
     const minLength = 8;
     const hasNumber = /\d/;
@@ -29,12 +29,16 @@ const Register = () => {
     return null;
   };
 
-  // Function to handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email || !password || !username || !dateOfBirth || !address) {
       setError('All fields are required.');
+      return;
+    }
+
+    if (!validator.isEmail(email)) {
+      setError('Invalid email format.');
       return;
     }
 
@@ -45,14 +49,19 @@ const Register = () => {
     }
 
     try {
-      // Send POST request to backend with user data
+      const sanitizedEmail = validator.normalizeEmail(email);
+      const sanitizedUsername = validator.escape(username);
+      const sanitizedAddress = validator.escape(address);
+      const sanitizedDateOfBirth = validator.escape(dateOfBirth); // Sanitize date_of_birth
+
       const response = await axios.post('/auth/register', {
-        email,
+        email: sanitizedEmail,
         password,
-        username,
-        date_of_birth: dateOfBirth,
-        address,
+        username: sanitizedUsername,
+        date_of_birth: sanitizedDateOfBirth,
+        address: sanitizedAddress,
       });
+
       console.log('Registration response:', response.data);
       setRegistered(true);
     } catch (error) {

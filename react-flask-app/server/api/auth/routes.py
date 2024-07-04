@@ -13,6 +13,7 @@ from flask_wtf.csrf import generate_csrf
 import logging
 import pyotp
 import secrets
+import bleach,re
 
 
 logger = logging.getLogger(__name__)
@@ -192,19 +193,56 @@ def get_csrf_token():
     response.set_cookie('XSRF-TOKEN', csrf_token)
     return response
 
+# Validate and sanitize input data
+def validate_email(email):
+    email_regex = r'^[^@]+@[^@]+\.[^@]+$'
+    return re.match(email_regex, email)
+
+def validate_password(password):
+    if len(password) < 8:
+        return False
+    if not any(char.isdigit() for char in password):
+        return False
+    if not any(char in '!@#$%^&*(),.?":{}|<>' for char in password):
+        return False
+    return True
+
+def sanitize_input(input):
+    return bleach.clean(input, strip=True)
+
 @bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
 
-    if Account.query.filter_by(email=data['email']).first():
+    email = data.get('email')
+    password = data.get('password')
+    username = data.get('username')
+    date_of_birth = data.get('date_of_birth')
+    address = data.get('address')
+
+    if not email or not password or not username or not date_of_birth or not address:
+        return jsonify({'message': 'All fields are required'}), 400
+
+    if not validate_email(email):
+        return jsonify({'message': 'Invalid email format'}), 400
+
+    if not validate_password(password):
+        return jsonify({'message': 'Password must be at least 8 characters long, contain at least one number, and one special character'}), 400
+
+    email = sanitize_input(email)
+    username = sanitize_input(username)
+    address = sanitize_input(address)
+    date_of_birth = sanitize_input(date_of_birth)
+
+    if Account.query.filter_by(email=email).first():
         return jsonify({'message': 'Account already exists'}), 400
 
     account = Account(
-        email=data['email'],
-        password=pbkdf2_sha256.hash(data['password']),
-        name=data['username'],  
-        date_of_birth=datetime.strptime(data.get('date_of_birth'), '%Y-%m-%d').date() if data.get('date_of_birth') else None,
-        address=data.get('address')
+        email=email,
+        password=pbkdf2_sha256.hash(password),
+        name=username,
+        date_of_birth=datetime.strptime(date_of_birth, '%Y-%m-%d').date(),
+        address=address
     )
 
     user_role = Role.query.filter_by(name='User').first()
@@ -408,3 +446,5 @@ def refresh_token():
     except Exception as e:
         logging.error(f"Error refreshing token: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+
