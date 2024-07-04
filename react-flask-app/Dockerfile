@@ -17,10 +17,19 @@ COPY . /usr/src/app
 # Set the working directory
 WORKDIR /usr/src/app
 
+# Debug: List contents of /usr/src/app before creating the virtual environment
+RUN ls -al /usr/src/app
+RUN ls -al /usr/src/app/server
+
 # Install Python dependencies within a virtual environment
 RUN python3 -m venv /usr/src/app/server/venv && \
+    ls -al /usr/src/app/server/venv && \
     /usr/src/app/server/venv/bin/pip install --upgrade pip && \
     /usr/src/app/server/venv/bin/pip install -r /usr/src/app/server/requirements.txt --break-system-packages
+
+# Debug: Verify the virtual environment directory
+RUN ls -al /usr/src/app/server/venv
+RUN ls -al /usr/src/app/server/venv/bin
 
 # Install Node.js dependencies
 RUN cd /usr/src/app/src && yarn install
