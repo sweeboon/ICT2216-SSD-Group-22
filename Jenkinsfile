@@ -1,6 +1,6 @@
 pipeline {
     agent any
-   
+
     stages {
         stage('Checkout') {
             steps {
@@ -39,13 +39,6 @@ pipeline {
             }
             steps {
                 script {
-                    sh '''
-                        existing_container=$(docker ps -q --filter ancestor=jwilder/nginx-proxy)
-                        if [ ! -z "$existing_container" ]; then
-                            docker stop $existing_container
-                            docker rm $existing_container
-                        fi
-                    '''
                     sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml down'
                 }
             }

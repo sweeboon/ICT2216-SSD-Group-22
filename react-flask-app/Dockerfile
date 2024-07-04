@@ -17,8 +17,10 @@ RUN apt-get update && apt-get install -y curl gnupg && \
     apt-get clean
 RUN python -m venv venv
 RUN /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r /usr/src/app/server/requirements.txt"
+
 # Set environment variables
 ENV FLASK_APP=server.api
+ENV NODE_OPTIONS=--openssl-legacy-provider
 
 # Expose the ports
 EXPOSE 5000
