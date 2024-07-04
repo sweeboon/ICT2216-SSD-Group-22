@@ -14,11 +14,9 @@ RUN python -m venv venv
 RUN . venv/bin/activate && pip install --upgrade pip && pip install -r /usr/src/app/server/requirements.txt
 
 
-# Run Flask app
-CMD /bin/bash -c "nginx && \
-    cd /usr/src/app/server && . /usr/src/app/venv/bin/activate && flask run --host=0.0.0.0 --port=5000 & \
-    cd /usr/src/app && yarn start --port 3000"
-
-EXPOSE 80
-EXPOSE 443
+# Expose the ports
 EXPOSE 5000
+EXPOSE 3000
+
+# Start the Flask and React app
+CMD /bin/bash -c "cd /usr/src/app && . venv/bin/activate && flask run --host=0.0.0.0 --port=5000 & npm start --prefix /usr/src/app"
