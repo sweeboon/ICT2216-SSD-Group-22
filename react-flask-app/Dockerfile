@@ -2,8 +2,7 @@ FROM nginx:latest
 
 # Install necessary dependencies
 RUN apt-get update && \
-    apt-get install -y curl gnupg python3 python3-venv python3-pip wget && \
-    apt-get install -y python-is-python3 && \
+    apt-get install -y curl gnupg python3 python3-venv python3-pip python-is-python3 wget && \
     curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
     apt-get install -y nodejs npm && \
     curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /usr/share/keyrings/yarnkey.gpg >/dev/null && \
@@ -29,7 +28,7 @@ RUN python --version
 RUN which python
 
 # Install Python dependencies within a virtual environment
-RUN python -m venv /usr/src/app/server/venv && \
+RUN python3 -m venv /usr/src/app/server/venv && \
     ls -al /usr/src/app/server/venv && \
     ls -al /usr/src/app/server/venv/bin && \
     /usr/src/app/server/venv/bin/python -m pip install --upgrade pip && \
