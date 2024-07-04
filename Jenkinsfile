@@ -29,7 +29,7 @@ pipeline {
                 docker {
                     image 'docker/compose:latest'
                     args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-                    user 'admin'
+                    
                 }
             }
             steps {
@@ -50,7 +50,7 @@ pipeline {
                 docker {
                     image 'docker/compose:latest'
                     args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-                    user 'admin'
+                    
                 }
             }
             steps {
