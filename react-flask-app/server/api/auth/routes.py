@@ -53,14 +53,31 @@ def resend_confirmation_email():
     return jsonify({'message': 'Confirmation email sent. Please check your email.'}), 200
 
 
+def validate_email(email):
+    email_regex = r'^[^@]+@[^@]+\.[^@]+$'
+    return re.match(email_regex, email)
+
+def sanitize_input(input):
+    return bleach.clean(input, strip=True)
+
 @bp.route('/initiate_login', methods=['POST'])
 @csrf.exempt
 def initiate_login():
     data = request.get_json()
-    if 'email' not in data or 'password' not in data:
+
+    email = data.get('email')
+    password = data.get('password')
+
+    if not email or not password:
         return jsonify({'message': 'Email and password are required'}), 400
 
-    account = Account.query.filter_by(email=data['email']).first()
+    if not validate_email(email):
+        return jsonify({'message': 'Invalid email format'}), 400
+
+    email = sanitize_input(email)
+    password = sanitize_input(password)
+
+    account = Account.query.filter_by(email=email).first()
     if account is None:
         return jsonify({'message': 'Invalid email or password'}), 401
 
@@ -72,20 +89,19 @@ def initiate_login():
 
     if account.lockout_time:
         if datetime.now() >= account.lockout_time:
-            # Reset failed attempts if lockout time has passed
             account.failed_attempts = 0
             account.lockout_time = None
         else:
             return jsonify({'message': 'Account is locked. Please try again later.'}), 403
 
-    if not pbkdf2_sha256.verify(data['password'], account.password):
+    if not pbkdf2_sha256.verify(password, account.password):
         account.failed_attempts += 1
         if account.failed_attempts >= MAX_FAILED_ATTEMPTS:
             account.lockout_time = datetime.now() + LOCKOUT_TIME
         db.session.commit()
         return jsonify({'message': 'Invalid email or password'}), 401
 
-    account.failed_attempts = 0  # Reset failed attempts on successful password validation
+    account.failed_attempts = 0
     db.session.commit()
 
     now = datetime.now()
