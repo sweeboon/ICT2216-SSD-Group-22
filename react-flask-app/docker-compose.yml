@@ -12,24 +12,21 @@ services:
       - /etc/nginx/sites-enabled/default:/etc/nginx/sites-enabled/default:ro
       - /home/student24/nginx/vhost.d:/etc/nginx/vhost.d
       - /home/student24/nginx/html:/usr/share/nginx/html
-      - /etc/letsencrypt/live/forteam22ict.xyz/fullchain.pem:/etc/ssl/certs/forteam22ict.xyz-fullchain.pem:ro
-      - /etc/letsencrypt/live/forteam22ict.xyz/privkey.pem:/etc/ssl/private/forteam22ict.xyz-privkey.pem:ro
-      - /etc/letsencrypt/live/jenkins.forteam22ict.xyz/fullchain.pem:/etc/ssl/certs/jenkins.forteam22ict.xyz-fullchain.pem:ro
-      - /etc/letsencrypt/live/jenkins.forteam22ict.xyz/privkey.pem:/etc/ssl/private/jenkins.forteam22ict.xyz-privkey.pem:ro
+      - /home/student24/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
+      - /home/student24/privkey.pem:/etc/ssl/private/privkey.pem:ro
     environment:
       - DEFAULT_HOST=forteam22ict.xyz
 
   react-flask-app:
     build:
-      context: .
+      context: $WORKSPACE/react-flask-app
       dockerfile: Dockerfile
     container_name: react-flask-app
     environment:
       - VIRTUAL_HOST=forteam22ict.xyz
       - VIRTUAL_PORT=3000
     volumes:
-      - .:/usr/src/app
-      - $WORKSPACE/react-flask-app:/usr/src/app/react-flask-app
+      - $WORKSPACE/react-flask-app:/usr/src/app
     expose:
       - "3000"
       - "5000"
