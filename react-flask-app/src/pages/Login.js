@@ -3,7 +3,6 @@ import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
 import '../assets/Auth.css';
-import validator from 'validator';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -33,21 +32,8 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validator.isEmail(email)) {
-      setError('Invalid email format.');
-      return;
-    }
-
-    if (password.length < 8 || !/\d/.test(password) || !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      setError('Password must be at least 8 characters long and contain at least one number and one special character.');
-      return;
-    }
-
-    const sanitizedEmail = validator.normalizeEmail(email);
-    const sanitizedPassword = validator.escape(password);
-
     try {
-      const response = await handleLogin(sanitizedEmail, sanitizedPassword, otp);
+      const response = await handleLogin(email, password, otp);
       if (response.data.resend_confirmation) {
         setResendConfirmation(true);
       } else {
