@@ -36,4 +36,4 @@ RUN cd /usr/src/app
 RUN ls
 
 # Start the React app
-CMD ["/bin/sh", "-c", "./start.sh"]
+CMD ["sh", "start.sh"]
