@@ -41,4 +41,4 @@ EXPOSE 3000
 RUN yarn install
 
 # Start both Flask and React apps
-CMD /bin/bash -c "source venv/bin/activate && cd /usr/src/app && yarn start"
+CMD /bin/bash -c "yarn start"
