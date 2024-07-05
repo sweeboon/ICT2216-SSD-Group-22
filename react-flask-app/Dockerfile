@@ -37,4 +37,4 @@ RUN ls -l /usr/src/
 RUN cat /usr/src/app/src/start.sh
 
 # Start the Flask and React app
-CMD ["/usr/src/app/src/start.sh"]
+CMD ["/bin/bash", "/usr/src/app/src/start.sh"]
