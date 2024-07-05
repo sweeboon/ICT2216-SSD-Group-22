@@ -32,6 +32,8 @@ pipeline {
                         EOF
                         chmod +x $WORKSPACE/react-flask-app/start.sh
                     '''
+                    sh 'ls -l $WORKSPACE/react-flask-app/start.sh'
+                    sh 'cat $WORKSPACE/react-flask-app/start.sh'
                 }
             }
         }
