@@ -26,7 +26,9 @@ ENV NODE_OPTIONS=--openssl-legacy-provider
 EXPOSE 5000
 EXPOSE 3000
 
+RUN chmod -R 755 /usr/src/app
 RUN chmod +x /usr/src/app/start.sh
+RUN chmod +x /usr/src/app/entrypoint.sh
 
 # Debug step to list directory contents
 RUN ls -l /usr/src/app/
@@ -38,4 +40,4 @@ RUN ls
 RUN cat /usr/src/app/entrypoint.sh
 
 # Use the entrypoint script to start the application
-ENTRYPOINT ["#!/bin/sh", "/usr/src/app/entrypoint.sh"]
+ENTRYPOINT ["/bin/sh", "/usr/src/app/entrypoint.sh"]
