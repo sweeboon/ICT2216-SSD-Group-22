@@ -28,8 +28,6 @@ COPY ./server ./server
 # Create and activate virtual environment in the /usr/src/app/server directory, install dependencies
 RUN cd /usr/src/app/server && \
     python -m venv venv && \
-    ls -l /usr/src/app/server && \
-    ls -l /usr/src/app/server/venv && \
     /bin/bash -c "source /usr/src/app/server/venv/bin/activate && pip install --upgrade pip && pip install -r /usr/src/app/server/requirements.txt"
 
 # Set environment variables
@@ -44,5 +42,9 @@ EXPOSE 3000
 WORKDIR /usr/src/app
 RUN yarn install
 
+# Debug step: verify venv and directory contents
+RUN ls -l /usr/src/app/server/venv/bin && \
+    ls -l /usr/src/app/server
+
 # Start both Flask and React apps
-CMD ["/bin/bash", "-c", "cd /usr/src/app && source /usr/src/app/server/venv/bin/activate && yarn start"]
+CMD ["/bin/bash", "-c", "source /usr/src/app/server/venv/bin/activate && cd /usr/src/app && yarn start"]
