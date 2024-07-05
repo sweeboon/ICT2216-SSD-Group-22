@@ -1,23 +1,21 @@
 .landing-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; 
   font-family: 'Arial, sans-serif';
   color: #fff;
   text-align: center;
   position: relative;
-  justify-content: space-between;
-  min-height: 150vh;
-  padding-top: 20px;
-  margin-left: 1.35%;
-  margin-right: 1.35%;
 }
 
 .landing-page::before {
   content: '';
   position: absolute;
-  top: 210px;
+  top: 130px;
   left: 0;
   width: 100%;
   height: 70%;
-  background-color: rgba(0, 0, 0, 0.5); /* Adjust the alpha value (0.5) to control the transparency */
+  background-color: rgba(0, 0, 0, 0.5);
   background-image: url('../assets/images/alcohol.png');
   background-size: cover;
   background-position: center;
@@ -30,115 +28,77 @@
   position: relative;
   z-index: 1;
 }
-  .landing-page-header {
-    background-color: #000000;
-    color: #fff;
-    padding: 20px;
-  }
-  
-  .landing-page-header h1 {
-    margin: 0;
-    font-size: 2.5rem;
-    font-style: italic;
-  }
-  
-  .landing-page-header h2 {
-    margin: 10px 0;
-    font-size: 1.5rem;
-  }
-  
-  .landing-page-header button {
-    background-color: #ff6600;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    font-size: 1rem;
-    cursor: pointer;
-    border-radius: 5px;
-  }
-  
-  .landing-page-header button:hover {
-    background-color: #e55d00;
-  }
-  
-  .landing-page-content {
-    position: relative;
-    background-color: rgba(82, 79, 79, 0.8); /* Adjust the alpha value (0.8) to control the transparency */
-    top: 90px;
-    padding: 10px 20px;
-    border-radius: 10px;
-    margin: 0 auto;
-    max-width: 650px;
-    z-index: 1;
-  }
-  
-  .landing-page-content h3 {
-    font-size: 2rem;
-    margin-bottom: 20px;
-  }
-  
-  .landing-page-content p {
-    font-size: 1.2rem;
-    margin-bottom: 30px;
-  }
-  
-  .landing-page-content .btn {
-    background-color: #ff6600;
-    color: #fff;
-    text-decoration: none;
-    padding: 15px 30px;
-    font-size: 1rem;
-    border-radius: 5px;
-    display: inline-block;
-    font-family: Arial, sans-serif;
-    font-weight: bold;
-  }
-  
-  .landing-page-content .btn:hover {
-    background-color: #e55d00;
-  }
-  
-.landing-page-footer {
+
+.landing-page-header {
   background-color: #000000;
   color: #fff;
   padding: 20px;
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  box-sizing: border-box;
-}
-  
-  .landing-page-footer p {
-    margin: 0;
-    font-size: 1rem;
-  }
-  
-.product-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: center;
-  margin-top: 20px;
 }
 
-.product-card {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  max-width: 200px;
+.landing-page-header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-style: italic;
+}
+
+.landing-page-header h2 {
+  margin: 10px 0;
+  font-size: 1.5rem;
+}
+
+.landing-page-header button {
+  background-color: #ff6600;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.landing-page-header button:hover {
+  background-color: #e55d00;
+}
+
+.landing-page-content {
+  background-color: rgba(82, 79, 79, 0.8);
+  padding: 20px;
+  border-radius: 10px;
+  margin: 103px auto;
+  max-width: 650px;
+  max-height: 300px;
+  flex: 1;
+}
+
+.landing-page-content h3 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+.landing-page-content p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+}
+
+.landing-page-content .btn {
+  background-color: #ff6600;
+  color: #fff;
+  text-decoration: none;
+  padding: 15px 30px;
+  font-size: 1rem;
+  border-radius: 5px;
+  display: inline-block;
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+}
+
+.landing-page-content .btn:hover {
+  background-color: #e55d00;
+}
+
+.landing-page-footer {
+  background-color: #000000;
+  color: #fff;
+  padding: 10px 20px;
   text-align: center;
-}
-
-.product-image {
-  width: 100%;
-  height: auto;
-}
-
-.product-info {
-  padding: 10px;
-}
-
-.product-info p {
-  margin: 5px 0;
 }
