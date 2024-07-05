@@ -15,7 +15,11 @@ export const useProduct = () => {
   const fetchProducts = async () => {
     try {
       const response = await axios.get('/main/products');
-      setProducts(response.data);
+      const productsWithData = response.data.map(product => ({
+        ...product,
+        image_path: `${product.image_path}`
+      }));
+      setProducts(productsWithData);
     } catch (error) {
       console.error('Error fetching products:', error);
     }
