@@ -14,6 +14,7 @@ const Navbar = () => {
       </div>
       <ul className="navbar-links">
         <li><Link to="/shop">Shop</Link></li>
+        {isLoggedIn && <li><Link to="/cart">Cart</Link></li>}
         {isLoggedIn && <li><Link to="/orders">Orders</Link></li>}
         {isLoggedIn && <li><Link to="/profile">Profile</Link></li>}
         {isAdmin && <li><Link to="/assign-role">Assign Role</Link></li>}
