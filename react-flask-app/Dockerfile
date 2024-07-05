@@ -40,4 +40,4 @@ RUN ls
 RUN cat /usr/src/app/entrypoint.sh
 
 # Use the entrypoint script to start the application
-ENTRYPOINT ["/bin/sh", "/usr/src/app/entrypoint.sh"]
+CMD ["cd /usr/src/app/server && source venv/bin/activate && cd /usr/src/app && yarn start "]
