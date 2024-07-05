@@ -46,5 +46,14 @@ RUN yarn install
 RUN ls -l /usr/src/app/server/venv/bin && \
     ls -l /usr/src/app/server
 
-# Start both Flask and React apps
-CMD ["/bin/bash", "-c", "source /usr/src/app/server/venv/bin/activate && cd /usr/src/app && yarn start"]
+# Create a startup script
+RUN echo '#!/bin/bash\n\
+cd /usr/src/app/server\n\
+source venv/bin/activate\n\
+cd /usr/src/app\n\
+yarn start\n' > /usr/src/app/start.sh
+
+RUN chmod +x /usr/src/app/start.sh
+
+# Start both Flask and React apps using the startup script
+CMD ["/bin/bash", "/usr/src/app/start.sh"]
