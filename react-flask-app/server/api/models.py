@@ -81,6 +81,7 @@ class Cart(db.Model):
     created_at = db.Column(db.DateTime(), default=datetime.now)
     quantity = db.Column(db.Integer)
     cart_item_price = db.Column(db.Float)
+    product_price = db.Column(db.Float)
     session_id = db.Column(db.String(255))
     product = db.relationship("Product", backref="cart", lazy=True)
 

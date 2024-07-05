@@ -6,8 +6,7 @@ from api.models import Account, Role, Sessions, LoginAttempt
 from api import db, csrf, mail
 from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
-from .utils import generate_token, verify_token, generate_otp, send_otp, verify_otp
-from .email import send_email
+from .utils import generate_token, verify_token, generate_otp, send_otp, verify_otp, send_email
 import jwt
 from flask_wtf.csrf import generate_csrf
 import logging
