@@ -45,6 +45,7 @@ class Account(UserMixin, db.Model):
     orders = db.relationship('Order', backref='account', lazy=True)
     confirmation_email_sent_at = db.Column(db.DateTime(), nullable=True)  
     confirmation_token = db.Column(db.String(255), nullable=True)
+    otp_secret_key = db.Column(db.String(32), nullable=True)
 
     def get_id(self):
         return self.account_id
