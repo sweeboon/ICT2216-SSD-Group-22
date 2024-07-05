@@ -1,8 +1,8 @@
 from flask_login import current_user, login_required
-from flask import request, jsonify, abort, current_app, session
+from flask import request, jsonify, abort, current_app
 from flask_principal import RoleNeed, Permission
 from api.admin import bp
-from api.models import Account, Role, Order, Payment, Product
+from api.models import Account, Role, Order, Payment, Product, Category
 from api import db, csrf
 import base64
 
@@ -164,3 +164,10 @@ def delete_product(product_id):
     
     return '', 204
 
+@bp.route('/categories', methods=['GET'])
+@login_required
+@admin_permission.require(http_exception=403)
+def get_categories():
+    categories = Category.query.all()
+    categories_data = [{'category_id': category.category_id, 'category_name': category.category_name} for category in categories]
+    return jsonify(categories_data), 200

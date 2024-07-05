@@ -47,12 +47,8 @@ const Login = () => {
     const sanitizedPassword = validator.escape(password);
 
     try {
-      const response = await handleLogin(sanitizedEmail, sanitizedPassword, otp);
-      if (response.data.resend_confirmation) {
-        setResendConfirmation(true);
-      } else {
-        setError('');
-      }
+      await handleLogin(sanitizedEmail, sanitizedPassword, otp);
+      setError('');
     } catch (error) {
       if (error.response && error.response.status === 403 && error.response.data.resend_confirmation) {
         setResendConfirmation(true);

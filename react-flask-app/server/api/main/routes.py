@@ -4,7 +4,7 @@ from flask import request, jsonify, abort, current_app, session
 from flask_login import login_required, current_user
 from flask_principal import RoleNeed, Permission
 from werkzeug.security import generate_password_hash, check_password_hash
-from api.models import Product, Cart, Payment, Order, Sessions,Account
+from api.models import Product, Cart, Payment, Order,Account
 from api import db, csrf
 from api.main import bp
 
@@ -100,14 +100,11 @@ def get_product(product_id):
 @bp.route('/cart', methods=['GET'])
 def get_cart_items():
     account_id = current_user.get_id() if current_user.is_authenticated else None
-    session_id = request.args.get('session_id')
 
     if account_id:
         cart_items = Cart.query.filter_by(account_id=account_id).all()
-    elif session_id:
-        cart_items = Cart.query.filter_by(session_id=session_id).all()
     else:
-        return jsonify({'error': 'account_id or session_id must be provided'}), 400
+        return jsonify({'error': 'account_id must be provided'}), 400
 
     cart_list = [
         {
@@ -116,7 +113,6 @@ def get_cart_items():
             'product_description': item.product.product_description,
             'image_path': item.product.image_path,
             'account_id': item.account_id,
-            'session_id': item.session_id,
             'quantity': item.quantity,
             'cart_item_price': item.cart_item_price,
         } for item in cart_items
@@ -129,12 +125,10 @@ def add_to_cart():
     data = request.json
     if current_user.is_authenticated:
         account_id = current_user.get_id()
-        session_id = None
     else:
         account_id = None
-        session_id = data.get('session_id')
 
-    cart_item = Cart.query.filter_by(account_id=account_id, session_id=session_id, product_id=data['product_id']).first()
+    cart_item = Cart.query.filter_by(account_id=account_id, product_id=data['product_id']).first()
 
     if cart_item:
         # If item exists, update the quantity
@@ -145,7 +139,6 @@ def add_to_cart():
         new_item = Cart(
             product_id=data['product_id'],
             account_id=account_id,
-            session_id=session_id,
             quantity=data['quantity'],
             cart_item_price=data['cart_item_price']
         )
@@ -153,26 +146,6 @@ def add_to_cart():
     
     db.session.commit()
     return jsonify({'message': 'Item added to cart'}), 201
-
-@bp.route('/cart/transfer', methods=['POST'])
-@login_required
-def transfer_cart():
-    session_id = request.json.get('session_id')
-    if not session_id:
-        return jsonify({'error': 'Session ID is required'}), 400
-    
-    session_cart_items = Cart.query.filter_by(session_id=session_id).all()
-    for item in session_cart_items:
-        existing_item = Cart.query.filter_by(account_id=current_user.account_id, product_id=item.product_id).first()
-        if existing_item:
-            existing_item.quantity += item.quantity
-            existing_item.cart_item_price += item.cart_item_price
-        else:
-            item.account_id = current_user.account_id
-            item.session_id = None
-        db.session.commit()
-
-    return jsonify({'message': 'Cart items transferred to your account'}), 200
 
 @bp.route('/cart/<int:cart_id>', methods=['DELETE'])
 @csrf.exempt

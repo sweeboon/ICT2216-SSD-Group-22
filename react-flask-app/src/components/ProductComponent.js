@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useProduct } from '../hooks/useProduct';
 import { useAuth } from '../hooks/useAuth';
+import axios from '../components/axiosConfig'; // Ensure this path is correct based on your project structure
 
 const ProductComponent = () => {
   const { isLoggedIn, roles } = useAuth();
@@ -14,6 +15,20 @@ const ProductComponent = () => {
     handleUpdateProduct,
     handleDeleteProduct,
   } = useProduct();
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get('/admin/categories');
+        setCategories(response.data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -47,13 +62,18 @@ const ProductComponent = () => {
       <h2>Manage Products</h2>
       {isLoggedIn && isAdmin && (
         <form onSubmit={handleSubmit}>
-          <input
-            type="number"
+          <select
             name="category_id"
-            placeholder="Category ID"
             value={editProduct ? editProduct.category_id : newProduct.category_id}
             onChange={editProduct ? handleEditChange : handleChange}
-          />
+          >
+            <option value="">Select Category</option>
+            {categories.map((category) => (
+              <option key={category.category_id} value={category.category_id}>
+                {category.category_name}
+              </option>
+            ))}
+          </select>
           <textarea
             name="product_description"
             placeholder="Description"

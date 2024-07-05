@@ -2,7 +2,7 @@ from flask import jsonify, request, current_app, session, make_response
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_principal import Identity, AnonymousIdentity, identity_changed, RoleNeed, Permission
 from api.auth import bp
-from api.models import Account, Role, Sessions, LoginAttempt
+from api.models import Account, Role, LoginAttempt
 from api import db, csrf, mail
 from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
@@ -12,7 +12,7 @@ from flask_wtf.csrf import generate_csrf
 import logging
 import pyotp
 import secrets
-import bleach,re
+import bleach, re
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,52 @@ def validate_password(password):
         return False
     return True
 
+@bp.route('/reset_password_request', methods=['POST'])
+@csrf.exempt
+def reset_password_request():
+    data = request.get_json()
+    email = data.get('email')
+    account = Account.query.filter_by(email=email).first()
+
+    if account:
+        now = datetime.now()
+        if account.confirmation_email_sent_at and now < account.confirmation_email_sent_at + timedelta(minutes=1):
+            return jsonify({'message': 'Password reset link already sent. Please wait a minute before requesting a new one.'}), 400
+
+        token = generate_token(account.email)
+        reset_url = f"{current_app.config['FRONTEND_BASE_URL']}/reset-password?token={token}"
+        send_email('Reset Your Password', account.email, 'email/reset_password', reset_url=reset_url)
+        account.confirmation_email_sent_at = now
+        db.session.commit()
+
+    return jsonify({'message': 'If an account with that email exists, a password reset link has been sent.'}), 200
+
+@bp.route('/reset_password', methods=['POST'])
+@csrf.exempt
+def reset_password():
+    data = request.get_json()
+    token = data.get('token')
+    new_password = data.get('new_password')
+    confirm_password = data.get('confirm_password')
+
+    if new_password != confirm_password:
+        return jsonify({'error': 'Passwords do not match'}), 400
+
+    email = verify_token(token)
+    if email is False:
+        return jsonify({'error': 'Invalid or expired token'}), 400
+
+    account = Account.query.filter_by(email=email).first()
+    if not account:
+        return jsonify({'error': 'Invalid email address'}), 404
+
+    if not validate_password(new_password):
+        return jsonify({'error': 'Password must be at least 8 characters long, contain at least one number, and one special character'}), 400
+
+    account.password = pbkdf2_sha256.hash(new_password)
+    db.session.commit()
+    return jsonify({'message': 'Password reset successful'}), 200
+
 @bp.route('/resend_confirmation_email', methods=['POST'])
 @csrf.exempt
 def resend_confirmation_email():
@@ -54,11 +100,8 @@ def resend_confirmation_email():
         return jsonify({'message': 'Confirmation email already sent. Please wait a minute before requesting a new one.'}), 400
 
     token = generate_token(account.email)
-    print(token)
-    print(account.email)
     confirm_url = f"{current_app.config['FRONTEND_BASE_URL']}/confirm?token={token}"
     send_email('Confirm Your Account', account.email, 'email/confirm', confirm_url=confirm_url)
-    print(confirm_url)
 
     account.confirmation_token = token  
     account.confirmation_email_sent_at = now  
@@ -114,8 +157,7 @@ def initiate_login():
 
     otp = generate_otp(account)
     send_otp(account, otp)
-    return jsonify({'message': 'OTP sent to email.'}), 200
-
+    return jsonify({'message': 'OTP sent to email.', 'otp_required': True}), 200
 
 @bp.route('/verify_otp_and_login', methods=['POST'])
 @csrf.exempt
@@ -259,7 +301,6 @@ def register():
 
     return jsonify({'message': 'Account registered successfully. Please check your email to confirm your account.'}), 201
 
-
 @bp.route('/confirm', methods=['GET'])
 def confirm_email():
     token = request.args.get('token')
@@ -281,38 +322,7 @@ def confirm_email():
         db.session.add(account)
         db.session.commit()
         return jsonify({'message': 'You have confirmed your account. Thanks!'}), 200
-    
-#old login method without otp etc for SFR02
-"""
-@bp.route('/login', methods=['POST'])
-@csrf.exempt
-def login():
-    data = request.get_json()
-    if 'email' not in data or 'password' not in data:
-        return jsonify({'message': 'Email and password are required'}), 400
 
-    account = Account.query.filter_by(email=data['email']).first()
-    if account is None or not pbkdf2_sha256.verify(data['password'], account.password):
-        return jsonify({'message': 'Invalid email or password'}), 401
-
-    account.last_login_at = datetime.now()
-    account.login_count += 1
-    db.session.commit()
-
-    token = jwt.encode({
-        'sub': account.email,
-        'iat': datetime.now(),
-        'exp': datetime.now() + timedelta(minutes=30)
-    }, current_app.config['SECRET_KEY'], algorithm="HS256")
-
-    login_user(account, remember=True, duration=timedelta(minutes=30))
-
-    identity_changed.send(current_app._get_current_object(), identity=Identity(account.account_id))
-
-    roles = [role.name for role in account.roles]
-
-    return jsonify({'message': 'Login successful', 'token': token, 'username': account.email, 'roles': roles}), 200
-"""
 @bp.route('/status', methods=['GET'])
 @csrf.exempt
 def status():
@@ -334,91 +344,6 @@ def logout():
     response.delete_cookie('session')
     response.delete_cookie('XSRF-TOKEN')
     return response, 200
-
-@bp.route('/sessions', methods=['POST'])
-def create_session():
-    if current_user.is_authenticated:
-        return jsonify("User logged in")
-    try:
-        ssid = secrets.token_urlsafe(32)  # Generate a secure random token
-        payload = {
-            'ssid': ssid,
-            'exp': datetime.utcnow() + timedelta(days=1)  # Set token expiry
-        }
-        token = jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm='HS256')
-        new_session = Sessions(ssid=ssid, timestamp=datetime.utcnow(), token=token)
-        db.session.add(new_session)
-        db.session.commit()
-        return jsonify({'token': token, 'ssid': ssid}), 201
-    except Exception as e:
-        logging.error(f"Error creating session: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@bp.route('/sessions/<ssid>', methods=['PUT'])
-def update_session(ssid):
-    try:
-        token = request.headers.get('Authorization')
-        if not token:
-            return jsonify({'error': 'Token is missing'}), 403
-        try:
-            data = jwt.decode(token.split()[1], current_app.config['SECRET_KEY'], algorithms=['HS256'])
-            session = Sessions.query.get_or_404(data['ssid'])
-        except jwt.ExpiredSignatureError:
-            return jsonify({'error': 'Token has expired'}), 403
-        except jwt.InvalidTokenError:
-            return jsonify({'error': 'Invalid token'}), 403
-
-        payload = request.json
-        if 'timestamp' in payload:
-            session.timestamp = payload['timestamp']
-        if 'token' in payload:
-            session.token = payload['token']
-        if 'referer' in payload:
-            session.referer = payload['referer']
-        
-        db.session.commit()
-        return jsonify({'message': 'Session updated'}), 200
-    except Exception as e:
-        logging.error(f"Error updating session {ssid}: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@bp.route('/sessions', methods=['GET'])
-def get_session():
-    token = request.headers.get('Authorization')
-    if not token:
-        return jsonify({'error': 'Token is missing'}), 403
-    try:
-        data = jwt.decode(token.split()[1], current_app.config['SECRET_KEY'], algorithms=['HS256'])
-        session = Sessions.query.get(data['ssid'])
-        if session is None:
-            return jsonify({'error': 'Session not found'}), 404
-        session_data = {
-            'ssid': session.ssid,
-            'timestamp': session.timestamp,
-            'token': session.token,
-            'referer': session.referer
-        }
-        return jsonify(session_data), 200
-    except jwt.ExpiredSignatureError:
-        return jsonify({'error': 'Token has expired'}), 403
-    except jwt.InvalidTokenError:
-        return jsonify({'error': 'Invalid token'}), 403
-    except Exception as e:
-        logging.error(f"Error fetching session: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@bp.route('/sessions/cleanup', methods=['POST'])
-def cleanup_sessions():
-    try:
-        now = datetime.utcnow()
-        expired_sessions = Sessions.query.filter(Sessions.timestamp < now - timedelta(days=1)).all()
-        for session in expired_sessions:
-            db.session.delete(session)
-        db.session.commit()
-        return jsonify({'message': 'Expired sessions cleaned up'}), 200
-    except Exception as e:
-        logging.error(f"Error cleaning up sessions: {str(e)}")
-        return jsonify({'error': str(e)}), 500
 
 @bp.route('/refresh', methods=['POST'])
 @csrf.exempt
@@ -446,5 +371,3 @@ def refresh_token():
     except Exception as e:
         logging.error(f"Error refreshing token: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
-

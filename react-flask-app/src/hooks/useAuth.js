@@ -8,14 +8,16 @@ export const useAuth = () => {
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [roles, setRoles] = useState([]);
   const [redirectPath, setRedirectPath] = useState('/');
-  const [isOtpRequested, setIsOtpRequested] = useState(false);  // Track OTP request status
+  const [isOtpRequested, setIsOtpRequested] = useState(false);
 
   const navigate = useNavigate();
 
   const initiateLogin = useCallback(async (email, password) => {
     try {
       const response = await axios.post('/auth/initiate_login', { email, password });
-      setIsOtpRequested(true);
+      if (response.data.otp_required) {
+        setIsOtpRequested(true);
+      }
       return response.data;
     } catch (error) {
       setIsOtpRequested(false);
@@ -35,7 +37,6 @@ export const useAuth = () => {
       setUsername(loggedUsername);
       setRoles(userRoles);
       setIsLoggedIn(true);
-      console.log('Login successful, isLoggedIn:', true);
       navigate(redirectPath);
     } catch (error) {
       setIsLoggedIn(false);
@@ -63,7 +64,6 @@ export const useAuth = () => {
       localStorage.removeItem('session_token');
       document.cookie = 'XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       document.cookie = 'session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-      console.log('Logout successful, isLoggedIn:', false);
       navigate('/');
     } catch (error) {
       console.error('Logout failed:', error);
@@ -76,7 +76,6 @@ export const useAuth = () => {
       setIsLoggedIn(response.data.loggedIn);
       setUsername(response.data.username || '');
       setRoles(response.data.roles || []);
-      console.log('Auth status checked, isLoggedIn:', response.data.loggedIn);
     } catch (error) {
       console.error('Auth status check failed:', error);
       setIsLoggedIn(false);

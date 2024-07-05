@@ -2,42 +2,30 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from '../components/axiosConfig';
-import SessionManager from '../components/SessionManager';
 import '../css/Cart.css';
 
 const Cart = () => {
   const { isLoggedIn, username } = useAuth();
   const [cartItems, setCartItems] = useState([]);
-  const [ssid, setSsid] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
-  const session_id = location.state?.session_id || ssid;
 
   useEffect(() => {
     const fetchCartItems = async () => {
       try {
-        let response;
-        const token = localStorage.getItem('session_token');
         if (isLoggedIn) {
-          if (session_id) {
-            await axios.post('/main/cart/transfer', { session_id }, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-          }
-          response = await axios.get('/main/cart', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
+          const response = await axios.get('/main/cart');
+          setCartItems(response.data);
         } else {
-          response = await axios.get(`/main/cart?session_id=${session_id}`);
+          console.log('User is not logged in, cannot fetch cart items.');
         }
-        setCartItems(response.data);
       } catch (error) {
         console.error('Error fetching cart items:', error);
       }
     };
 
     fetchCartItems();
-  }, [session_id, isLoggedIn]);
+  }, [isLoggedIn]);
 
   const handleRemoveFromCart = async (cartId) => {
     try {
@@ -49,16 +37,16 @@ const Cart = () => {
   };
   
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (!isLoggedIn) {
-      navigate('/login', { state: { from: '/cart', session_id } });
-      return;
+      navigate('/login');
+    } else {
+      navigate('/payment');
     }
-    navigate('/payment');
   };
+  
   return (
     <div className="cart-page">
-      <SessionManager setSsid={setSsid} />
       <main className="cart-page-content">
         <section>
           <h3>Your Cart</h3>

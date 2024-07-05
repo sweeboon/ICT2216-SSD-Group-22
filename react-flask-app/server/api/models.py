@@ -11,12 +11,6 @@ roles_accounts = db.Table('roles_accounts',
     extend_existing=True
 )
 
-class Sessions(db.Model):
-    ssid = db.Column(db.String(255), primary_key=True)
-    timestamp = db.Column(db.DateTime())
-    token = db.Column(db.String(255), nullable=True)
-    referer = db.Column(db.String(255), nullable=True)
-
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True)
@@ -67,7 +61,7 @@ class OTP(db.Model):
 
 class Product(db.Model):
     product_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    category_id = db.Column(db.Integer)
+    category_id = db.Column(db.Integer, db.ForeignKey('category.category_id'), nullable=False)
     product_description = db.Column(db.String(255))
     product_price = db.Column(db.Float)
     stock = db.Column(db.Integer)
@@ -81,8 +75,6 @@ class Cart(db.Model):
     created_at = db.Column(db.DateTime(), default=datetime.now)
     quantity = db.Column(db.Integer)
     cart_item_price = db.Column(db.Float)
-    product_price = db.Column(db.Float)
-    session_id = db.Column(db.String(255))
     product = db.relationship("Product", backref="cart", lazy=True)
 
 class Payment(db.Model):
@@ -103,3 +95,8 @@ class Order(db.Model):
     order_price = db.Column(db.Float)
     order_date = db.Column(db.DateTime(), default=datetime.now)
     quantity = db.Column(db.Integer)
+
+class Category(db.Model):
+    category_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    category_name = db.Column(db.String(255), nullable = False)
+

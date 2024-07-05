@@ -15,6 +15,8 @@ import { useAuth } from './hooks/useAuth';
 import Navbar from './pages/Navbar';
 import ManageOrders from './pages/ManageOrders';
 import Shop from './pages/Shop'; // Import ShoppingPage component
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 const App = () => {
   const { isLoggedIn, roles } = useAuth();
@@ -41,6 +43,8 @@ const App = () => {
         <Route path="/assign-role" element={isLoggedIn && isAdmin ? <AssignRole /> : <Navigate to="/assign-role" />} />  
         <Route path="/manage-orders" element={isLoggedIn && isAdmin ? <ManageOrders /> : <Navigate to="/manage-orders" />} />  
         <Route path="/shop" element={isLoggedIn ? <Shop /> : <Navigate to="/login" state={{ from: '/shop' }} />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </div>
   );

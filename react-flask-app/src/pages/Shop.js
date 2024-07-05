@@ -2,13 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import '../css/Shop.css';
-import SessionManager from '../components/SessionManager';
 import axios from 'axios';
 
 const Shop = () => {
   const { isLoggedIn, username } = useAuth();
   const [products, setProducts] = useState([]);
-  const [ssid, setSsid] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,7 +26,6 @@ const Shop = () => {
     const cartItem = {
       product_id: product.product_id,
       account_id: null,
-      session_id: ssid,
       quantity: 1,
       cart_item_price: product.product_price,
     };
@@ -42,7 +39,7 @@ const Shop = () => {
   };
 
   const handleCheckout = () => {
-    navigate('/cart', { state: { session_id: ssid } });
+    navigate('/cart');
   };
   
   return (

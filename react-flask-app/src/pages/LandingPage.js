@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import '../css/LandingPage.css';
-import SessionManager from '../components/SessionManager';
 
 const LandingPage = () => {
   const { isLoggedIn, username } = useAuth();
-  const [ssid, setSsid] = useState('');
 
   return (
     <div className="landing-page">
-      <SessionManager setSsid={setSsid} />
       <header className="landing-page-header">
         <h1>Over18</h1>
         <h2>Welcome, {username}!</h2>
