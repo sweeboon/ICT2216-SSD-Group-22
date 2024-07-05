@@ -30,7 +30,8 @@ RUN chmod -R 755 /usr/src/app
 
 
 
+# Combine the commands to activate the virtual environment and start the React app
+ENTRYPOINT ["sh", "-c", "cd /usr/src/app/server && . venv/bin/activate && cd /usr/src/app"]
 
-
-# Use a single shell command to start the application
-CMD /bin/bash -c "cd /usr/src/app/server && source venv/bin/activate && cd /usr/src/app && yarn start"
+# Use CMD to start the React app
+CMD ["yarn", "start"]
