@@ -9,13 +9,11 @@ services:
     environment:
       - VIRTUAL_HOST=forteam22ict.xyz
       - VIRTUAL_PORT=3000
-    volumes:
-      - $WORKSPACE/react-flask-app:/usr/src/app
     expose:
       - "3000"
       - "5000"
     networks:
-          - jenkins
+      - jenkins
 
 networks:
   jenkins:

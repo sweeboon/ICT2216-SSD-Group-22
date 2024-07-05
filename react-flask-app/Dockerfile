@@ -10,7 +10,7 @@ RUN npm run build
 FROM python:3.11-slim as build-flask
 WORKDIR /usr/src/app
 
-# Copy React build files and package.json from the first stage
+# Copy React build files from the first stage
 COPY --from=build-react /usr/src/app/build ./frontend/build
 COPY --from=build-react /usr/src/app/package*.json ./
 COPY --from=build-react /usr/src/app/yarn.lock ./
@@ -28,7 +28,7 @@ COPY ./server ./server
 # Create and activate virtual environment in the /usr/src/app/server directory, install dependencies
 RUN cd /usr/src/app/server && \
     python -m venv venv && \
-    /bin/bash -c "source /usr/src/app/server/venv/bin/activate && pip install --upgrade pip && pip install -r /usr/src/app/server/requirements.txt"
+    /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"
 
 # Set environment variables
 ENV FLASK_APP=server.api
@@ -39,7 +39,6 @@ EXPOSE 5000
 EXPOSE 3000
 
 # Install Node.js dependencies for the React app
-WORKDIR /usr/src/app
 RUN yarn install
 
 # Debug step: verify venv and directory contents
