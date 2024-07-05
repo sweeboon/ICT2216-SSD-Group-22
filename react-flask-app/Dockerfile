@@ -10,7 +10,7 @@ RUN npm run build
 FROM python:3.11-slim as build-flask
 WORKDIR /usr/src/app
 
-# Copy React build files from the first stage
+# Copy React build files and package.json from the first stage
 COPY --from=build-react /usr/src/app/build ./frontend/build
 COPY --from=build-react /usr/src/app/package*.json ./
 COPY --from=build-react /usr/src/app/yarn.lock ./
@@ -38,7 +38,8 @@ EXPOSE 5000
 EXPOSE 3000
 
 # Install Node.js dependencies for the React app
+WORKDIR /usr/src/app
 RUN yarn install
 
 # Start both Flask and React apps
-CMD /bin/bash -c "yarn start"
+CMD ["/bin/bash", "-c", "cd /usr/src/app && source venv/bin/activate && yarn start"]
