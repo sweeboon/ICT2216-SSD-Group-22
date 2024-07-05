@@ -27,8 +27,8 @@ EXPOSE 5000
 EXPOSE 3000
 
 # Copy start.sh script from the src directory and make it executable
-COPY src/start.sh /usr/src/app/start.sh
-RUN chmod +x /usr/src/app/start.sh
+COPY src/start.sh /usr/src/app/src/start.sh
+RUN chmod +x /usr/src/app/src/start.sh
 
 # Start the Flask and React app
-CMD ["/usr/src/app/start.sh"]
+CMD ["/usr/src/app/src/start.sh"]
