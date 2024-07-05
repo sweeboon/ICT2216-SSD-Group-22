@@ -32,5 +32,5 @@ RUN chmod -R 755 /usr/src/app
 
 
 
-# Use the entrypoint script to start the application
-CMD ["cd /usr/src/app/server && source venv/bin/activate && cd /usr/src/app && yarn start "]
+# Use a single shell command to start the application
+CMD /bin/bash -c "cd /usr/src/app/server && source venv/bin/activate && cd /usr/src/app && yarn start"
