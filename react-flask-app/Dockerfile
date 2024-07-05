@@ -16,8 +16,7 @@ COPY --from=build-react /usr/src/app/package*.json ./
 COPY --from=build-react /usr/src/app/yarn.lock ./
 
 # Install system dependencies and Python virtual environment
-RUN apt-get update && apt-get install -y curl gnupg && \
-    apt-get install -y python3-venv && \
+RUN apt-get update && apt-get install -y bash curl gnupg && \
     curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
     apt-get install -y nodejs npm && \
     npm install -g yarn && \
