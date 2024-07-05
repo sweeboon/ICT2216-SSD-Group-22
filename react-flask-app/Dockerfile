@@ -9,24 +9,34 @@ RUN npm run build
 # Stage 2: Setup Flask app
 FROM python:3.11-slim as build-flask
 WORKDIR /usr/src/app
-COPY --from=build-react /usr/src/app /usr/src/app
+
+# Copy React build files from the first stage
+COPY --from=build-react /usr/src/app/build ./frontend/build
+
+# Install system dependencies and Python virtual environment
 RUN apt-get update && apt-get install -y curl gnupg && \
+    apt-get install -y python3-venv && \
     curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
     apt-get install -y nodejs npm && \
     npm install -g yarn && \
     apt-get clean
-RUN python -m venv venv
-RUN /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r /usr/src/app/server/requirements.txt"
+
+# Copy the Flask app code
+COPY ./server ./server
+
+# Create and activate virtual environment, install dependencies
+RUN python -m venv venv && \
+    . venv/bin/activate && \
+    pip install --upgrade pip && \
+    pip install -r /usr/src/app/server/requirements.txt
 
 # Set environment variables
 ENV FLASK_APP=server.api
 ENV NODE_OPTIONS=--openssl-legacy-provider
 
-# Expose the ports
+# Expose the ports on which the apps will run
 EXPOSE 5000
 EXPOSE 3000
 
-RUN chmod -R 755 /usr/src/app
-
-# Use CMD to start the React app
-CMD ["yarn", "start"]
+# Start both Flask and React apps
+CMD . venv/bin/activate && flask run --host=0.0.0.0 --port=5000 & cd /usr/src/app && yarn start
