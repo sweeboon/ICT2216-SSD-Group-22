@@ -1,5 +1,5 @@
 # Stage 1: Build React app
-FROM node:14 as build-react
+FROM node:18 as build-react
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install
