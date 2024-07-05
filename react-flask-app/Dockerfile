@@ -26,9 +26,14 @@ ENV NODE_OPTIONS=--openssl-legacy-provider
 EXPOSE 5000
 EXPOSE 3000
 
-# Copy start.sh script and make it executable
-COPY react-flask-app/start.sh /usr/src/app/start.sh
+# Copy start.sh script from the src directory and make it executable
+COPY src/start.sh /usr/src/app/start.sh
 RUN chmod +x /usr/src/app/start.sh
 
+# Debug step to list directory contents
+RUN ls -l /usr/src/app/
+RUN ls -l /usr/src/
+RUN cat /usr/src/app/start.sh
+
 # Start the Flask and React app
-CMD ["/usr/src/app/start.sh"]
+CMD ["/bin/bash", "/usr/src/app/start.sh"]
