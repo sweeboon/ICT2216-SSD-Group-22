@@ -12,6 +12,8 @@ WORKDIR /usr/src/app
 
 # Copy React build files from the first stage
 COPY --from=build-react /usr/src/app/build ./frontend/build
+COPY --from=build-react /usr/src/app/package*.json ./
+COPY --from=build-react /usr/src/app/yarn.lock ./
 
 # Install system dependencies and Python virtual environment
 RUN apt-get update && apt-get install -y curl gnupg && \
@@ -26,9 +28,7 @@ COPY ./server ./server
 
 # Create and activate virtual environment, install dependencies
 RUN python -m venv venv && \
-    . venv/bin/activate && \
-    pip install --upgrade pip && \
-    pip install -r /usr/src/app/server/requirements.txt
+    /bin/sh -c "source venv/bin/activate && pip install --upgrade pip && pip install -r /usr/src/app/server/requirements.txt"
 
 # Set environment variables
 ENV FLASK_APP=server.api
@@ -38,5 +38,8 @@ ENV NODE_OPTIONS=--openssl-legacy-provider
 EXPOSE 5000
 EXPOSE 3000
 
+# Install Node.js dependencies for the React app
+RUN yarn install
+
 # Start both Flask and React apps
-CMD . venv/bin/activate && flask run --host=0.0.0.0 --port=5000 & cd /usr/src/app && yarn start
+CMD /bin/sh -c "cd /usr/src/app/server && source venv/bin/activate && cd /usr/src/app && yarn start"
