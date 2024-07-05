@@ -35,6 +35,18 @@ pipeline {
                 }
             }
         }
+        stage('Commit start.sh Script') {
+            steps {
+                script {
+                    sh '''
+                        cd $WORKSPACE/react-flask-app
+                        git add start.sh
+                        git commit -m "Add start.sh script"
+                        git push origin main
+                    '''
+                }
+            }
+        }
         stage('Clean Up') {
             agent {
                 docker {

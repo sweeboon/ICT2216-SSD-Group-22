@@ -26,5 +26,9 @@ ENV NODE_OPTIONS=--openssl-legacy-provider
 EXPOSE 5000
 EXPOSE 3000
 
+# Copy start.sh script and make it executable
+COPY start.sh /usr/src/app/start.sh
+RUN chmod +x /usr/src/app/start.sh
+
 # Start the Flask and React app
-CMD /bin/bash -c "cd /usr/src/app/server && source venv/bin/activate && flask run --host=0.0.0.0 --port=5000 & cd /usr/src/app && yarn start"
+CMD ["/usr/src/app/start.sh"]
