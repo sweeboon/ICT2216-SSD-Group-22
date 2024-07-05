@@ -30,14 +30,8 @@ RUN chmod -R 755 /usr/src/app
 RUN chmod +x /usr/src/app/start.sh
 RUN chmod +x /usr/src/app/entrypoint.sh
 
-# Debug step to list directory contents
-RUN ls -l /usr/src/app/
-RUN ls -l /usr/src/
-RUN cat /usr/src/app/start.sh
-RUN cd /usr/src/app
-RUN ls
 
-RUN cat /usr/src/app/entrypoint.sh
+
 
 # Use the entrypoint script to start the application
 CMD ["cd /usr/src/app/server && source venv/bin/activate && cd /usr/src/app && yarn start "]
