@@ -30,5 +30,10 @@ EXPOSE 3000
 COPY src/start.sh /usr/src/app/src/start.sh
 RUN chmod +x /usr/src/app/src/start.sh
 
+# Debug step to list directory contents
+RUN ls -l /usr/src/app/src/
+RUN ls -l /usr/src/app/
+RUN ls -l /usr/src/
+
 # Start the Flask and React app
 CMD ["/usr/src/app/src/start.sh"]
