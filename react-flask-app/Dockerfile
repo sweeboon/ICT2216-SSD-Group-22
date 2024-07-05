@@ -32,6 +32,6 @@ RUN chmod +x /usr/src/app/start.sh
 RUN ls -l /usr/src/app/
 RUN ls -l /usr/src/
 RUN cat /usr/src/app/start.sh
-
+RUN ls -l /usr/src/app
 # Start the React app
 CMD ["/bin/sh", "-c", "cd /usr/src/app && ./start.sh"]
