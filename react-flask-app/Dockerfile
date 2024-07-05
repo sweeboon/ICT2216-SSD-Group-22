@@ -29,6 +29,7 @@ COPY ./server ./server
 RUN cd /usr/src/app/server && \
     python -m venv venv && \
     ls -l /usr/src/app/server && \
+    ls -l /usr/src/app/server/venv && \
     /bin/bash -c "source /usr/src/app/server/venv/bin/activate && pip install --upgrade pip && pip install -r /usr/src/app/server/requirements.txt"
 
 # Set environment variables
