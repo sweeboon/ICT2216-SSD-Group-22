@@ -20,5 +20,3 @@ services:
 networks:
   jenkins:
     external: true
-volumes:
-  jenkins_home:
