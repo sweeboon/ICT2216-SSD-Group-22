@@ -27,25 +27,19 @@ class Account(UserMixin, db.Model):
     email = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255))
     created_at = db.Column(db.DateTime(), default=datetime.now)
-    last_login_at = db.Column(db.DateTime(), nullable=True)
-    login_count = db.Column(db.Integer, default=0)
     confirmed = db.Column(db.Boolean, default=False)
     confirmed_on = db.Column(db.DateTime(), nullable=True)
-    failed_attempts = db.Column(db.Integer, default=0)
-    lockout_time = db.Column(db.DateTime, nullable=True)
-    otp = db.Column(db.String(6), nullable=True)  
-    otp_generated_at = db.Column(db.DateTime(), nullable=True)  
-    new_email = db.Column(db.String(255), nullable=True)  
     name = db.Column(db.String(255))
     date_of_birth = db.Column(db.Date)
-    address = db.Column(db.String(255))
+    address = db.Column(db.String(255))  # Address field added back
+    confirmation_email_sent_at = db.Column(db.DateTime(), nullable=True)
+    confirmation_token = db.Column(db.String(255), nullable=True)
     roles = db.relationship('Role', secondary=roles_accounts, backref=db.backref('accounts', lazy=True))
     carts = db.relationship('Cart', backref='account', lazy=True)
     payments = db.relationship('Payment', backref='account', lazy=True)
     orders = db.relationship('Order', backref='account', lazy=True)
-    confirmation_email_sent_at = db.Column(db.DateTime(), nullable=True)  
-    confirmation_token = db.Column(db.String(255), nullable=True)
-    otp_secret_key = db.Column(db.String(32), nullable=True)
+    login_attempts = db.relationship('LoginAttempt', backref='login_attempt', lazy=True)
+    otps = db.relationship('OTP', backref='otp_account', lazy=True)
 
     def get_id(self):
         return self.account_id
@@ -56,6 +50,20 @@ class Account(UserMixin, db.Model):
     def has_role(self, role_name):
         return role_name in self.get_roles()
 
+class LoginAttempt(db.Model):
+    attempt_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    account_id = db.Column(db.Integer, db.ForeignKey('account.account_id'), nullable=False)
+    failed_attempts = db.Column(db.Integer, default=0)
+    lockout_time = db.Column(db.DateTime, nullable=True)
+    last_login_at = db.Column(db.DateTime, nullable=True)
+    login_count = db.Column(db.Integer, default=0)
+
+class OTP(db.Model):
+    otp_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    account_id = db.Column(db.Integer, db.ForeignKey('account.account_id'), nullable=False)
+    otp = db.Column(db.String(6), nullable=True)
+    otp_generated_at = db.Column(db.DateTime(), nullable=True)
+    otp_secret_key = db.Column(db.String(32), nullable=True)
 
 class Product(db.Model):
     product_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -74,8 +82,6 @@ class Cart(db.Model):
     quantity = db.Column(db.Integer)
     cart_item_price = db.Column(db.Float)
     session_id = db.Column(db.String(255))
-
-    # Relationships
     product = db.relationship("Product", backref="cart", lazy=True)
 
 class Payment(db.Model):

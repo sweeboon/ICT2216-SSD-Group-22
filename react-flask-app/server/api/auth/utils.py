@@ -2,7 +2,7 @@ from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
 import pyotp
 from datetime import datetime
-from api.models import Account
+from api.models import Account, OTP
 from api.auth.email import send_otp_email
 from api import db
 import logging
@@ -11,24 +11,29 @@ logger = logging.getLogger(__name__)
 
 def generate_and_store_otp_secret(account):
     otp_secret_key = pyotp.random_base32()
-    account.otp_secret_key = otp_secret_key
+    new_otp = OTP(account_id=account.account_id, otp_secret_key=otp_secret_key)
+    db.session.add(new_otp)
     db.session.commit()
 
 def generate_otp(account):
     try:
-        if not account.otp_secret_key:
+        otp_record = OTP.query.filter_by(account_id=account.account_id).first()
+        if not otp_record:
             generate_and_store_otp_secret(account)
-        totp = pyotp.TOTP(account.otp_secret_key, interval=300)
+            otp_record = OTP.query.filter_by(account_id=account.account_id).first()
+        totp = pyotp.TOTP(otp_record.otp_secret_key, interval=300)
         otp = totp.now()
+        otp_record.otp = otp
+        otp_record.otp_generated_at = datetime.now()
+        db.session.commit()
         return otp
     except Exception as e:
         logger.error(f'Error generating OTP: {e}')
         raise
 
+
 def send_otp(account, otp):
     try:
-        # Send OTP email
-        from api.auth.email import send_otp_email
         send_otp_email(account.email, otp)
     except Exception as e:
         logger.error(f'Error sending OTP email: {e}')
@@ -36,27 +41,22 @@ def send_otp(account, otp):
 
 def verify_otp(account, otp):
     try:
-        if account.is_anonymous:
-            raise ValueError('Account not authenticated')
+        otp_record = OTP.query.filter_by(account_id=account.account_id).first()
+        if not otp_record:
+            return False
 
-        if not otp:
-            raise ValueError('OTP is required')
-
-        if not account.otp_secret_key:
-            raise ValueError('OTP secret key not found')
-
-        totp = pyotp.TOTP(account.otp_secret_key, interval=300)
+        totp = pyotp.TOTP(otp_record.otp_secret_key, interval=300)
         if not totp.verify(otp):
-            raise ValueError('Invalid or expired OTP')
+            return False
 
-        account.otp = None
-        account.otp_generated_at = None
+        otp_record.otp = None
+        otp_record.otp_generated_at = None
         db.session.commit()
 
-        return {'message': 'OTP verified successfully'}
+        return True
     except Exception as e:
         logger.error(f'Error verifying OTP: {e}')
-        raise
+        return False
 
 def get_serializer():
     return URLSafeTimedSerializer(current_app.config['SIGNER_SECRET_KEY'])

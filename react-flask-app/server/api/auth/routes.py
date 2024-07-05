@@ -2,7 +2,7 @@ from flask import jsonify, request, current_app, session, make_response
 from flask_login import login_user, logout_user, current_user, login_required
 from flask_principal import Identity, AnonymousIdentity, identity_changed, RoleNeed, Permission
 from api.auth import bp
-from api.models import Account, Role, Sessions
+from api.models import Account, Role, Sessions, LoginAttempt
 from api import db, csrf, mail
 from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
@@ -87,40 +87,34 @@ def initiate_login():
             'resend_confirmation': True
         }), 403
 
-    if account.lockout_time:
-        if datetime.now() >= account.lockout_time:
-            account.failed_attempts = 0
-            account.lockout_time = None
-        else:
-            return jsonify({'message': 'Account is locked. Please try again later.'}), 403
+    login_attempt = LoginAttempt.query.filter_by(account_id=account.account_id).first()
+    if not login_attempt:
+        login_attempt = LoginAttempt(account_id=account.account_id)
+        db.session.add(login_attempt)
+        db.session.commit()
+
+    if login_attempt.lockout_time and datetime.now() < login_attempt.lockout_time:
+        return jsonify({'message': 'Account is locked. Please try again later.'}), 403
 
     if not pbkdf2_sha256.verify(password, account.password):
-        account.failed_attempts += 1
-        if account.failed_attempts >= MAX_FAILED_ATTEMPTS:
-            account.lockout_time = datetime.now() + LOCKOUT_TIME
+        login_attempt.failed_attempts += 1
+        if login_attempt.failed_attempts >= MAX_FAILED_ATTEMPTS:
+            login_attempt.lockout_time = datetime.now() + LOCKOUT_TIME
         db.session.commit()
         return jsonify({'message': 'Invalid email or password'}), 401
 
-    account.failed_attempts = 0
+    login_attempt.failed_attempts = 0
     db.session.commit()
-
-    now = datetime.now()
-    if account.otp_generated_at and now < account.otp_generated_at + timedelta(minutes=1):
-        return jsonify({'message': 'OTP already sent. Please wait a minute before requesting a new OTP.'}), 400
 
     otp = generate_otp(account)
-    account.otp = otp
-    account.otp_generated_at = now
-    db.session.commit()
-
     send_otp(account, otp)
     return jsonify({'message': 'OTP sent to email.'}), 200
+
 
 @bp.route('/verify_otp_and_login', methods=['POST'])
 @csrf.exempt
 def verify_otp_and_login():
     data = request.get_json()
-    print(data)
     if 'email' not in data or 'otp' not in data:
         return jsonify({'message': 'Email and OTP are required'}), 400
 
@@ -128,17 +122,16 @@ def verify_otp_and_login():
     if account is None:
         return jsonify({'message': 'Invalid email address'}), 401
 
-    if account.lockout_time and datetime.now() < account.lockout_time:
+    login_attempt = LoginAttempt.query.filter_by(account_id=account.account_id).first()
+    if login_attempt.lockout_time and datetime.now() < login_attempt.lockout_time:
         return jsonify({'message': 'Account is locked. Please try again later.'}), 403
 
     try:
         if verify_otp(account, data['otp']):
-            account.failed_attempts = 0
-            account.lockout_time = None
-            account.last_login_at = datetime.now()
-            account.login_count += 1
-            account.otp = None  
-            account.otp_generated_at = None  
+            login_attempt.failed_attempts = 0
+            login_attempt.lockout_time = None
+            login_attempt.last_login_at = datetime.now()
+            login_attempt.login_count += 1
             db.session.commit()
 
             token = jwt.encode({
@@ -155,17 +148,18 @@ def verify_otp_and_login():
             response.set_cookie('token', token, httponly=True, secure=True, samesite='Strict')
             return response, 200
         else:
-            account.failed_attempts += 1
-            if account.failed_attempts >= MAX_FAILED_ATTEMPTS:
-                account.lockout_time = datetime.now() + LOCKOUT_TIME
+            login_attempt.failed_attempts += 1
+            if login_attempt.failed_attempts >= MAX_FAILED_ATTEMPTS:
+                login_attempt.lockout_time = datetime.now() + LOCKOUT_TIME
             db.session.commit()
             return jsonify({'message': 'Invalid or expired OTP'}), 400
     except ValueError as e:
-        account.failed_attempts += 1
-        if account.failed_attempts >= MAX_FAILED_ATTEMPTS:
-            account.lockout_time = datetime.now() + LOCKOUT_TIME
+        login_attempt.failed_attempts += 1
+        if login_attempt.failed_attempts >= MAX_FAILED_ATTEMPTS:
+            login_attempt.lockout_time = datetime.now() + LOCKOUT_TIME
         db.session.commit()
         return jsonify({'message': str(e)}), 400
+
 
 
 
@@ -228,6 +222,7 @@ def sanitize_input(input):
     return bleach.clean(input, strip=True)
 
 @bp.route('/register', methods=['POST'])
+@csrf.exempt
 def register():
     data = request.get_json()
 
@@ -270,14 +265,14 @@ def register():
     token = generate_token(account.email)
     confirm_url = f"{current_app.config['FRONTEND_BASE_URL']}/confirm?token={token}"
     send_email('Confirm Your Account', account.email, 'email/confirm', confirm_url=confirm_url)
-    print(confirm_url)
 
-    account.confirmation_token = token  
-    account.confirmation_email_sent_at = now  
+    account.confirmation_token = token
+    account.confirmation_email_sent_at = now
     db.session.add(account)
     db.session.commit()
 
     return jsonify({'message': 'Account registered successfully. Please check your email to confirm your account.'}), 201
+
 
 @bp.route('/confirm', methods=['GET'])
 def confirm_email():
