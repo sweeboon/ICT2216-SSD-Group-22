@@ -27,8 +27,7 @@ EXPOSE 5000
 EXPOSE 3000
 
 RUN chmod -R 755 /usr/src/app
-RUN chmod +x /usr/src/app/start.sh
-RUN chmod +x /usr/src/app/entrypoint.sh
+
 
 
 
