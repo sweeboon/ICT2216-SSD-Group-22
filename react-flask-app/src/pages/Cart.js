@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from '../components/axiosConfig';
 import SessionManager from '../components/SessionManager';
+import '../css/Cart.css';
 
 const Cart = () => {
   const { isLoggedIn, username } = useAuth();
@@ -46,6 +47,7 @@ const Cart = () => {
       console.error('Error removing from cart:', error);
     }
   };
+  
 
   const handleCheckout = async () => {
     if (!isLoggedIn) {
@@ -54,26 +56,22 @@ const Cart = () => {
     }
     navigate('/payment');
   };
-
   return (
     <div className="cart-page">
       <SessionManager setSsid={setSsid} />
-      <header className="cart-page-header">
-        <h1>Over18 Cart</h1>
-        <h2>Welcome, {username ? username : 'Guest'}!</h2>
-      </header>
       <main className="cart-page-content">
         <section>
           <h3>Your Cart</h3>
           {cartItems.length > 0 ? (
-            <div className="cart-grid">
+            <div className="cart-items">
               {cartItems.map((item) => (
-                <div key={item.cart_id} className="cart-card">
+                <div key={item.cart_id} className="cart-item">
                   <img src={item.image_path} alt={item.product_description} className="cart-image" />
                   <div className="cart-info">
-                    <p>{item.product_description}</p>
-                    <p>${item.cart_item_price.toFixed(2)}</p>
-                    <button onClick={() => handleRemoveFromCart(item.cart_id)} className="btn">
+                    <h2>{item.product_description}</h2>
+                    <p>Quantity: {item.quantity}</p>
+                    <p>Total: ${item.cart_item_price.toFixed(2)}</p>
+                    <button onClick={() => handleRemoveFromCart(item.cart_id)} className="btn remove-btn">
                       Remove from Cart
                     </button>
                   </div>
@@ -84,9 +82,11 @@ const Cart = () => {
             <p>Your cart is currently empty.</p>
           )}
         </section>
-        <button onClick={handleCheckout} className="btn">
-          Checkout
-        </button>
+        {cartItems.length > 0 && (
+          <button onClick={handleCheckout} className="btn checkout-btn">
+            Checkout
+          </button>
+        )}
       </main>
       <footer className="cart-page-footer">
         <p>&copy; 2024 Over18. All rights reserved.</p>
