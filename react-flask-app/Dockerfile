@@ -38,4 +38,4 @@ RUN ls
 RUN cat /usr/src/app/entrypoint.sh
 
 # Use the entrypoint script to start the application
-ENTRYPOINT ["/bin/sh", "/usr/src/app/entrypoint.sh"]
+ENTRYPOINT ["#!/bin/sh", "/usr/src/app/entrypoint.sh"]
