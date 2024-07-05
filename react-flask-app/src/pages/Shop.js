@@ -16,7 +16,7 @@ const Shop = () => {
         {products.map((product) => (
           <div key={product.product_id} className="product-item">
             <h3>{product.product_description}</h3>
-            <p>Price: ${product.product_price}</p>
+            <p>Price: ${product.product_price}/ bottle</p>
             <img src={product.image_path} alt={product.product_description} 
               style={{ width: '200px', height: '200px' }} />
             <button>Add to Cart</button>

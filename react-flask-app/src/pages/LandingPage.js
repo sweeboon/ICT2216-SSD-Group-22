@@ -56,7 +56,7 @@ const LandingPage = () => {
         <section>
           <h3>Explore Our Selection of Alcoholic Beverages</h3>
           <p>Discover a wide range of beers, wines, and spirits from around the world.</p>
-          <a href="/" className="btn">Shop Now</a>
+          <a href="/shop" className="btn">Shop Now</a>
         </section>
         <section>
           <h3>Our Products</h3>

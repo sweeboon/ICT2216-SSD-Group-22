@@ -13,7 +13,7 @@ const Navbar = () => {
         <a href="/">Over18</a>
       </div>
       <ul className="navbar-links">
-        <li><Link to="/">Shop</Link></li>
+        <li><Link to="/shop">Shop</Link></li>
         {isLoggedIn && <li><Link to="/orders">Orders</Link></li>}
         {isLoggedIn && <li><Link to="/profile">Profile</Link></li>}
         {isAdmin && <li><Link to="/assign-role">Assign Role</Link></li>}
