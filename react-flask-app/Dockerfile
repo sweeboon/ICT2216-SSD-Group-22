@@ -26,12 +26,14 @@ ENV NODE_OPTIONS=--openssl-legacy-provider
 EXPOSE 5000
 EXPOSE 3000
 
+# Copy start.sh script from the src directory and make it executable
+COPY src/start.sh /usr/src/app/start.sh
 RUN chmod +x /usr/src/app/start.sh
 
 # Debug step to list directory contents
 RUN ls -l /usr/src/app/src
 RUN ls -l /usr/src/app
-RUN cat /usr/src/app/src/start.sh
+RUN cat /usr/src/app/start.sh
 
 # Start the Flask and React app
-CMD ["/bin/bash", "/usr/src/app/src/start.sh"]
+CMD ["/bin/bash", "/usr/src/app/start.sh"]
