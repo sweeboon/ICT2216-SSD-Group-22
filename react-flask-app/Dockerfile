@@ -47,11 +47,10 @@ RUN ls -l /usr/src/app/server/venv/bin && \
     ls -l /usr/src/app/server
 
 # Create a startup script
-RUN echo '#!/bin/bash\n\
-cd /usr/src/app/server\n\
-source venv/bin/activate\n\
-cd /usr/src/app\n\
-yarn start\n' > /usr/src/app/start.sh
+RUN echo '#!/bin/bash\ncd /usr/src/app/server\nsource venv/bin/activate\ncd /usr/src/app\nyarn start\n' > /usr/src/app/start.sh
+
+# Verify the startup script
+RUN ls -l /usr/src/app/start.sh && cat /usr/src/app/start.sh
 
 RUN chmod +x /usr/src/app/start.sh
 
