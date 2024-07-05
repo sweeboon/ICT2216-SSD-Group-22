@@ -35,5 +35,7 @@ RUN cat /usr/src/app/start.sh
 RUN cd /usr/src/app
 RUN ls
 
-# Start the React app
-CMD ["sh", "start.sh"]
+RUN cat /usr/src/app/entrypoint.sh
+
+# Use the entrypoint script to start the application
+ENTRYPOINT ["/bin/sh", "/usr/src/app/entrypoint.sh"]
