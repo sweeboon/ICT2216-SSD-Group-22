@@ -34,6 +34,7 @@ RUN chmod +x /usr/src/app/src/start.sh
 RUN ls -l /usr/src/app/src/
 RUN ls -l /usr/src/app/
 RUN ls -l /usr/src/
+RUN cat /usr/src/app/src/start.sh
 
 # Start the Flask and React app
 CMD ["/usr/src/app/src/start.sh"]
