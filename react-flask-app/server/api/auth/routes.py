@@ -15,11 +15,26 @@ import pyotp
 import secrets
 import bleach,re
 
-
 logger = logging.getLogger(__name__)
 
 MAX_FAILED_ATTEMPTS = 5
 LOCKOUT_TIME = timedelta(minutes=15)
+
+def validate_email(email):
+    email_regex = r'^[^@]+@[^@]+\.[^@]+$'
+    return re.match(email_regex, email)
+
+def sanitize_input(input):
+    return bleach.clean(input, strip=True)
+
+def validate_password(password):
+    if len(password) < 8:
+        return False
+    if not any(char.isdigit() for char in password):
+        return False
+    if not any(char in '!@#$%^&*(),.?":{}|<>' for char in password):
+        return False
+    return True
 
 @bp.route('/resend_confirmation_email', methods=['POST'])
 @csrf.exempt
@@ -51,14 +66,6 @@ def resend_confirmation_email():
     db.session.commit()
 
     return jsonify({'message': 'Confirmation email sent. Please check your email.'}), 200
-
-
-def validate_email(email):
-    email_regex = r'^[^@]+@[^@]+\.[^@]+$'
-    return re.match(email_regex, email)
-
-def sanitize_input(input):
-    return bleach.clean(input, strip=True)
 
 @bp.route('/initiate_login', methods=['POST'])
 @csrf.exempt
@@ -160,9 +167,6 @@ def verify_otp_and_login():
         db.session.commit()
         return jsonify({'message': str(e)}), 400
 
-
-
-
 @bp.route('/request_otp', methods=['POST'])
 @csrf.exempt
 def request_otp():
@@ -203,23 +207,6 @@ def get_csrf_token():
     response = make_response(jsonify({'csrf_token': csrf_token}))
     response.set_cookie('XSRF-TOKEN', csrf_token)
     return response
-
-# Validate and sanitize input data
-def validate_email(email):
-    email_regex = r'^[^@]+@[^@]+\.[^@]+$'
-    return re.match(email_regex, email)
-
-def validate_password(password):
-    if len(password) < 8:
-        return False
-    if not any(char.isdigit() for char in password):
-        return False
-    if not any(char in '!@#$%^&*(),.?":{}|<>' for char in password):
-        return False
-    return True
-
-def sanitize_input(input):
-    return bleach.clean(input, strip=True)
 
 @bp.route('/register', methods=['POST'])
 @csrf.exempt
