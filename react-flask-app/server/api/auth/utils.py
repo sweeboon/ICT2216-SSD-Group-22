@@ -9,10 +9,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def generate_otp():
+def generate_and_store_otp_secret(account):
+    otp_secret_key = pyotp.random_base32()
+    account.otp_secret_key = otp_secret_key
+    db.session.commit()
+
+def generate_otp(account):
     try:
-        # Generate OTP
-        totp = pyotp.TOTP(current_app.config['OTP_SECRET_KEY'], interval=300)
+        if not account.otp_secret_key:
+            generate_and_store_otp_secret(account)
+        totp = pyotp.TOTP(account.otp_secret_key, interval=300)
         otp = totp.now()
         return otp
     except Exception as e:
@@ -36,8 +42,10 @@ def verify_otp(account, otp):
         if not otp:
             raise ValueError('OTP is required')
 
-        # Verify OTP
-        totp = pyotp.TOTP(current_app.config['OTP_SECRET_KEY'], interval=300)
+        if not account.otp_secret_key:
+            raise ValueError('OTP secret key not found')
+
+        totp = pyotp.TOTP(account.otp_secret_key, interval=300)
         if not totp.verify(otp):
             raise ValueError('Invalid or expired OTP')
 

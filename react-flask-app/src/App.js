@@ -1,6 +1,5 @@
 import React from 'react';
 import { Route, Routes, Navigate, useLocation } from 'react-router-dom';
-import HomePage from './pages/HomePage';
 import Cart from './pages/Cart';
 import PaymentPage from './pages/PaymentPage';
 import Login from './pages/Login';

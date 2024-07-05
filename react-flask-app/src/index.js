@@ -10,16 +10,14 @@ const container = document.getElementById('root');
 const root = createRoot(container);
 
 const Root = () => {
-  useTokenRefresh();  // Use the token refresh hook here
+  useTokenRefresh();  
 
   return (
-    <React.StrictMode>
-      <Router>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </Router>
-    </React.StrictMode>
+    <Router>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </Router>
   );
 };
 

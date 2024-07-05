@@ -59,6 +59,8 @@ export const useAuth = () => {
       setToken('');
       setRoles([]);
       localStorage.removeItem('token');
+      localStorage.removeItem('session_ssid');
+      localStorage.removeItem('session_token');
       document.cookie = 'XSRF-TOKEN=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       document.cookie = 'session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       console.log('Logout successful, isLoggedIn:', false);

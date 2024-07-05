@@ -1,8 +1,11 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
+import { useAuth } from '../hooks/useAuth';
 
 const SessionManager = ({ setSsid }) => {
+  const { isLoggedIn } = useAuth();  // Access the authentication status
+
   const saveSessionToLocalStorage = (token, ssid) => {
     localStorage.setItem('session_token', token);
     localStorage.setItem('session_ssid', ssid);
@@ -17,6 +20,11 @@ const SessionManager = ({ setSsid }) => {
   };
 
   useEffect(() => {
+    if (isLoggedIn) {
+      console.log('User is logged in, skipping session creation.');
+      return;
+    }
+
     const checkSession = async (token) => {
       try {
         const response = await axios.get('/auth/sessions', {
@@ -48,12 +56,16 @@ const SessionManager = ({ setSsid }) => {
 
     const storedToken = getSessionTokenFromLocalStorage();
     const storedSsid = getSessionSsidFromLocalStorage();
+
+    console.log('Stored session token:', storedToken);
+    console.log('Stored session ssid:', storedSsid);
+
     if (storedToken && storedSsid) {
       checkSession(storedToken);
     } else {
       createSession();
     }
-  }, [setSsid]);
+  }, [isLoggedIn, setSsid]);
 
   return null;
 };

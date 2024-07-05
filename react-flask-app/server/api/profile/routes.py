@@ -58,7 +58,7 @@ def request_otp():
                 return jsonify({'error': 'Email already in use'}), 400
             current_user.new_email = new_email
 
-        otp = generate_otp()
+        otp = generate_otp(current_user)
         current_user.otp = otp
         current_user.otp_generated_at = datetime.now()
         db.session.commit()

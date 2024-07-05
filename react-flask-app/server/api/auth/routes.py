@@ -108,7 +108,7 @@ def initiate_login():
     if account.otp_generated_at and now < account.otp_generated_at + timedelta(minutes=1):
         return jsonify({'message': 'OTP already sent. Please wait a minute before requesting a new OTP.'}), 400
 
-    otp = generate_otp()
+    otp = generate_otp(account)
     account.otp = otp
     account.otp_generated_at = now
     db.session.commit()
@@ -120,6 +120,7 @@ def initiate_login():
 @csrf.exempt
 def verify_otp_and_login():
     data = request.get_json()
+    print(data)
     if 'email' not in data or 'otp' not in data:
         return jsonify({'message': 'Email and OTP are required'}), 400
 
@@ -178,7 +179,7 @@ def request_otp():
     if not account:
         return jsonify({'error': 'Invalid email address'}), 404
 
-    otp = generate_otp()
+    otp = generate_otp(account)
     account.otp = otp
     account.otp_generated_at = datetime.now()
     db.session.commit()
@@ -355,6 +356,8 @@ def logout():
 
 @bp.route('/sessions', methods=['POST'])
 def create_session():
+    if current_user.is_authenticated:
+        return jsonify("User logged in")
     try:
         ssid = secrets.token_urlsafe(32)  # Generate a secure random token
         payload = {
