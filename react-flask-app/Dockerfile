@@ -3,11 +3,9 @@ FROM node:16 as build-react
 WORKDIR /usr/src/app
 COPY package*.json ./
 # Copy everything from the context
-
-# Use npm ci for faster, more reliable builds in CI environments
-RUN npm ci --prefer-offline --no-audit --progress=false --network-concurrency 1
 COPY . .
 # Install dependencies and build the React app
+RUN npm install
 RUN npm run build
 
 # Stage 2: Setup Flask app
@@ -18,15 +16,12 @@ WORKDIR /usr/src/app
 COPY --from=build-react /usr/src/app /usr/src/app
 
 # Install system dependencies and Python virtual environment
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    bash curl gnupg && \
+RUN apt-get update && apt-get install -y bash curl gnupg && \
     curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
-    apt-get install -y --no-install-recommends \
-    nodejs npm && \
+    apt-get install -y nodejs npm && \
     npm install -g yarn && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get clean
+
 
 # Copy the Flask app code
 COPY ./server ./server
@@ -49,8 +44,6 @@ EXPOSE 3000
 
 # Install Node.js dependencies for the React app
 RUN yarn install
-
-
 # Create a startup script
 RUN echo '#!/bin/bash\n' \
     'cd /usr/src/app/server\n' \
@@ -60,11 +53,6 @@ RUN echo '#!/bin/bash\n' \
     'cd /usr/src/app\n' \
     'yarn start\n' > /usr/src/app/start.sh
 RUN chmod +x /usr/src/app/start.sh
-
-# Verify the directory contents
-RUN ls -l /usr/src/app/
-RUN ls -l /usr/src/app/server/
-RUN ls -l /usr/src/app/server/venv/bin
 
 # Start both Flask and React apps using the startup script
 CMD ["/bin/bash", "/usr/src/app/start.sh"]
