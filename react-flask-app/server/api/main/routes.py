@@ -165,6 +165,18 @@ def remove_from_cart(cart_id):
     db.session.commit()
     return jsonify({'message': 'Item removed from cart'}), 200
 
+@bp.route('/cart/total', methods=['GET'])
+@login_required
+def get_cart_total():
+    account_id = current_user.account_id
+    cart_items = Cart.query.filter_by(account_id=account_id).all()
+    
+    if not cart_items:
+        return jsonify({'total_amount': 0, 'message': 'Your cart is empty. Add items to your cart before proceeding to checkout.'}), 200
+
+    total_amount = sum(item.cart_item_price for item in cart_items)
+    return jsonify({'total_amount': total_amount, 'message': 'You have items in your cart. You can proceed to checkout.'}), 200
+
 @bp.route('/orders', methods=['GET'])
 @login_required
 def get_orders():
