@@ -40,7 +40,7 @@ EXPOSE 3000
 RUN yarn install
 
 # Create a startup script
-RUN echo '#!/bin/bash\ncd /usr/src/app/server\nsource venv/bin/activate\ncd /usr/src/app\nyarn start\n' > /usr/src/app/start.sh
+RUN echo '#!/bin/bash\ncd /usr/src/app/server\n. venv/bin/activate\ncd /usr/src/app\nyarn start\n' > /usr/src/app/start.sh
 RUN chmod +x /usr/src/app/start.sh
 
 # Verify the directory contents
