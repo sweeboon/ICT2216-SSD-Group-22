@@ -1,7 +1,7 @@
 # Stage 1: Build React app
 FROM node:16 as build-react
 WORKDIR /usr/src/app
-
+COPY package*.json ./
 # Copy everything from the context
 COPY . .
 RUN ls -l /usr/src/app/
@@ -22,6 +22,8 @@ RUN apt-get update && apt-get install -y bash curl gnupg && \
     apt-get install -y nodejs npm && \
     npm install -g yarn && \
     apt-get clean
+# Copy the Flask app code
+COPY ./server ./server
 # Copy .env file
 COPY ./server/.env /usr/src/app/server/.env
 # Create and activate virtual environment, install dependencies
