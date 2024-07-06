@@ -13,7 +13,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}") {
-                    git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '468c3eb2-e89c-44f6-ac2f-5cf9b1fbfba5'
+                    git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
                 }
             }
         }
@@ -29,7 +29,7 @@ pipeline {
         stage('Copy .env File') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: '9e9add6b-9983-4371-81af-33e9987d85a0', variable: 'SECRET_ENV_FILE')]) {
+                    withCredentials([file(credentialsId: '468c3eb2-e89c-44f6-ac2f-5cf9b1fbfba5', variable: 'SECRET_ENV_FILE')]) {
                         sh 'cp $SECRET_ENV_FILE $CUSTOM_WORKSPACE/react-flask-app/server/.env'
                         sh 'ls -l $CUSTOM_WORKSPACE/react-flask-app/server/.env'  // Verify the .env file is copied
                     }
