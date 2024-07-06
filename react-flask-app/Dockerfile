@@ -43,6 +43,7 @@ EXPOSE 3000
 RUN yarn install
 
 # Debug step: verify venv and directory contents
+RUN ls -l /usr/src/app/
 RUN ls -l /usr/src/app/server/venv/bin && \
     ls -l /usr/src/app/server
 RUN ls -l /usr/src/app/src/
