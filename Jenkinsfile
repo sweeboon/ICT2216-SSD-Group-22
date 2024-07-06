@@ -4,24 +4,22 @@ pipeline {
         CUSTOM_WORKSPACE = '/var/jenkins_home/workspace/ICT2216'
     }
 
-    options {
-        customWorkspace("${env.CUSTOM_WORKSPACE}")
-    }
-
     stages {
         stage('Clean Workspace') {
             steps {
-                cleanWs()
+                deleteDir()
             }
         }
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
+                dir("${env.CUSTOM_WORKSPACE}") {
+                    git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
+                }
             }
         }
         stage('Verify Checkout') {
             steps {
-                script {
+                dir("${env.CUSTOM_WORKSPACE}") {
                     sh 'echo "Current workspace: $CUSTOM_WORKSPACE"'
                     sh 'ls -l $CUSTOM_WORKSPACE'
                     sh 'ls -l $CUSTOM_WORKSPACE/react-flask-app'
@@ -74,9 +72,11 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'echo "Current workspace during deploy: $CUSTOM_WORKSPACE"'
-                    sh 'ls -l $CUSTOM_WORKSPACE/react-flask-app/server/.env'  // Ensure .env file is present before build
-                    sh 'docker-compose -f $CUSTOM_WORKSPACE/react-flask-app/docker-compose.yml up -d --build'
+                    dir("${env.CUSTOM_WORKSPACE}") {
+                        sh 'echo "Current workspace during deploy: $CUSTOM_WORKSPACE"'
+                        sh 'ls -l $CUSTOM_WORKSPACE/react-flask-app/server/.env'  // Ensure .env file is present before build
+                        sh 'docker-compose -f $CUSTOM_WORKSPACE/react-flask-app/docker-compose.yml up -d --build'
+                    }
                 }
             }
         }
