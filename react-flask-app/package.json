@@ -16,7 +16,7 @@
     "cross-env": "^7.0.3"
   },
   "scripts": {
-    "start": "concurrently \"react-scripts start\" \"yarn start-api\"",
+    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider concurrently \"react-scripts start\" \"yarn start-api\" --port 3000",
     "start-api": "cd server && cross-env-shell 'if [ \"$OS\" = \"Windows_NT\" ]; then .\\venv\\Scripts\\activate; else . venv/bin/activate; fi && flask run --no-debugger'",
     "build": "react-scripts build"
   },
