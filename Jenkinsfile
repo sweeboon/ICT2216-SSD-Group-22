@@ -2,6 +2,11 @@ pipeline {
     agent any
 
     stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
         stage('Checkout') {
             steps {
                 git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
@@ -62,8 +67,8 @@ pipeline {
             }
             steps {
                 script {
-                    // Verify .env file before building
-                    sh 'ls -l $WORKSPACE/react-flask-app/server/.env'
+                    sh 'echo "Current workspace during deploy: $WORKSPACE"'
+                    sh 'ls -l $WORKSPACE/react-flask-app/server/.env'  // Ensure .env file is present before build
                     sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml up -d --build'
                 }
             }
