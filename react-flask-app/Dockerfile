@@ -45,8 +45,15 @@ EXPOSE 3000
 # Install Node.js dependencies for the React app
 RUN yarn install
 
+
 # Create a startup script
-RUN echo '#!/bin/bash\ncd /usr/src/app/server\n. venv/bin/activate\ncd /usr/src/app\nyarn start\n' > /usr/src/app/start.sh
+RUN echo '#!/bin/bash\n' \
+    'cd /usr/src/app/server\n' \
+    '. venv/bin/activate\n' \
+    'flask db migrate\n' \
+    'flask db upgrade\n' \
+    'cd /usr/src/app\n' \
+    'yarn start\n' > /usr/src/app/start.sh
 RUN chmod +x /usr/src/app/start.sh
 
 # Verify the directory contents
