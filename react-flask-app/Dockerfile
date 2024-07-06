@@ -3,12 +3,13 @@ FROM node:16 as build-react
 WORKDIR /usr/src/app
 COPY package*.json ./
 # Copy everything from the context
+
+# Use npm ci for faster, more reliable builds in CI environments
+RUN npm ci --prefer-offline --no-audit --progress=false --network-concurrency 1
 COPY . .
-RUN ls -l /usr/src/app/
 # Install dependencies and build the React app
-RUN npm install
 RUN npm run build
-RUN ls -l /usr/src/app/
+
 # Stage 2: Setup Flask app
 FROM python:3.11-slim as build-flask
 WORKDIR /usr/src/app
@@ -17,22 +18,26 @@ WORKDIR /usr/src/app
 COPY --from=build-react /usr/src/app /usr/src/app
 
 # Install system dependencies and Python virtual environment
-RUN apt-get update && apt-get install -y bash curl gnupg && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    bash curl gnupg && \
     curl -sL https://deb.nodesource.com/setup_14.x | bash - && \
-    apt-get install -y nodejs npm && \
+    apt-get install -y --no-install-recommends \
+    nodejs npm && \
     npm install -g yarn && \
-    apt-get clean
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy the Flask app code
 COPY ./server ./server
 
 # Ensure .env file is included
 COPY ./server/.env /usr/src/app/server/.env
 
-
 # Create and activate virtual environment, install dependencies
 RUN cd /usr/src/app/server && \
     python -m venv venv && \
-    /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"
+    /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt"
 
 # Set environment variables
 ENV FLASK_APP=wsgi.py
