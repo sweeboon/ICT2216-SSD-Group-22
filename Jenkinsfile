@@ -1,5 +1,12 @@
 pipeline {
     agent any
+    environment {
+        CUSTOM_WORKSPACE = '/var/jenkins_home/workspace/ICT2216'
+    }
+
+    options {
+        customWorkspace("${env.CUSTOM_WORKSPACE}")
+    }
 
     stages {
         stage('Clean Workspace') {
@@ -15,9 +22,9 @@ pipeline {
         stage('Verify Checkout') {
             steps {
                 script {
-                    sh 'echo "Current workspace: $WORKSPACE"'
-                    sh 'ls -l $WORKSPACE'
-                    sh 'ls -l $WORKSPACE/react-flask-app'
+                    sh 'echo "Current workspace: $CUSTOM_WORKSPACE"'
+                    sh 'ls -l $CUSTOM_WORKSPACE'
+                    sh 'ls -l $CUSTOM_WORKSPACE/react-flask-app'
                 }
             }
         }
@@ -25,8 +32,8 @@ pipeline {
             steps {
                 script {
                     withCredentials([file(credentialsId: '9e9add6b-9983-4371-81af-33e9987d85a0', variable: 'SECRET_ENV_FILE')]) {
-                        sh 'cp $SECRET_ENV_FILE $WORKSPACE/react-flask-app/server/.env'
-                        sh 'ls -l $WORKSPACE/react-flask-app/server/.env'  // Verify the .env file is copied
+                        sh 'cp $SECRET_ENV_FILE $CUSTOM_WORKSPACE/react-flask-app/server/.env'
+                        sh 'ls -l $CUSTOM_WORKSPACE/react-flask-app/server/.env'  // Verify the .env file is copied
                     }
                 }
             }
@@ -54,7 +61,7 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml down'
+                    sh 'docker-compose -f $CUSTOM_WORKSPACE/react-flask-app/docker-compose.yml down'
                 }
             }
         }
@@ -67,9 +74,9 @@ pipeline {
             }
             steps {
                 script {
-                    sh 'echo "Current workspace during deploy: $WORKSPACE"'
-                    sh 'ls -l $WORKSPACE/react-flask-app/server/.env'  // Ensure .env file is present before build
-                    sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml up -d --build'
+                    sh 'echo "Current workspace during deploy: $CUSTOM_WORKSPACE"'
+                    sh 'ls -l $CUSTOM_WORKSPACE/react-flask-app/server/.env'  // Ensure .env file is present before build
+                    sh 'docker-compose -f $CUSTOM_WORKSPACE/react-flask-app/docker-compose.yml up -d --build'
                 }
             }
         }
