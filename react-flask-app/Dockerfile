@@ -45,7 +45,7 @@ RUN yarn install
 # Debug step: verify venv and directory contents
 RUN ls -l /usr/src/app/server/venv/bin && \
     ls -l /usr/src/app/server
-RUN ls -l /usr/src/app/src/index.js
+RUN ls -l /usr/src/app/src/
 # Create a startup script
 RUN echo '#!/bin/bash\ncd /usr/src/app/server\nsource venv/bin/activate\ncd /usr/src/app\nyarn start\n' > /usr/src/app/start.sh
 
