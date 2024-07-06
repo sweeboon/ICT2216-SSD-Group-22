@@ -9,7 +9,7 @@ const LandingPage = () => {
     <div className="landing-page">
       <header className="landing-page-header">
         <h1>Over18</h1>
-        <h2>Welcome, {username}!</h2>
+        <h2>Welcome, {username ? username : 'Guest'}!</h2>
       </header>
       <main className="landing-page-content">
         <section>

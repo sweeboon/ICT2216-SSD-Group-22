@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
-import '../assets/Auth.css';
+import '../css/Auth.css';
 import validator from 'validator';
 
 const Login = () => {
@@ -84,53 +84,60 @@ const Login = () => {
   }
 
   return (
-    <div className="auth-container">
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email:</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+    <div className="login">
+      <div className="content">
+        <div className="auth-container">
+          <h2>Login</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Email:</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Password:</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isOtpRequested}
+              />
+            </div>
+            {isOtpRequested && (
+              <div className="form-group">
+                <label>OTP:</label>
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+            <button type="submit" disabled={resendCooldown}>
+              {isOtpRequested ? 'Verify OTP and Login' : 'Request OTP'}
+            </button>
+            {error && <p className="error">{error}</p>}
+          </form>
+          {resendConfirmation && (
+            <div>
+              <p>Your account is not verified yet. Do you want to resend the confirmation email?</p>
+              <button onClick={handleResendConfirmation} disabled={resendCooldown}>
+                Resend Confirmation Email
+              </button>
+            </div>
+          )}
+          {resendCooldown && <p>Please wait {resendCooldownTime} seconds before requesting a new confirmation email.</p>}
         </div>
-        <div>
-          <label>Password:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={isOtpRequested}
-          />
-        </div>
-        {isOtpRequested && (
-          <div>
-            <label>OTP:</label>
-            <input
-              type="text"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              required
-            />
-          </div>
-        )}
-        <button type="submit" disabled={resendCooldown}>
-          {isOtpRequested ? 'Verify OTP and Login' : 'Request OTP'}
-        </button>
-        {error && <p className="error">{error}</p>}
-      </form>
-      {resendConfirmation && (
-        <div>
-          <p>Your account is not confirmed. Do you want to resend the confirmation email?</p>
-          <button onClick={handleResendConfirmation} disabled={resendCooldown}>
-            Resend Confirmation Email
-          </button>
-        </div>
-      )}
-      {resendCooldown && <p>Please wait {resendCooldownTime} seconds before requesting a new confirmation email.</p>}
+      </div>
+      <footer className="footer">
+        <p>&copy; 2024 Over18. All rights reserved.</p>
+      </footer>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../assets/Auth.css';
+import '../css/Auth.css';
 import axios from '../components/axiosConfig';
 import validator from 'validator';
 
@@ -71,61 +71,80 @@ const Register = () => {
   };
 
   if (registered) {
-    return <div className="auth-container"><h2>Registration Successful!</h2></div>;
+    return <div className="content"><h2
+    style={{
+      color: '#333',
+      fontSize: '24px',
+      textAlign: 'center',
+      backgroundColor: 'rgba(255, 255, 255, 0.8)',
+      padding: '20px',
+      boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)'
+    }}
+  >Registration Successful!</h2>
+          <footer className="footer">
+        <p>&copy; 2024 Over18. All rights reserved.</p>
+      </footer></div>;
   }
 
   return (
-    <div className="auth-container">
-      <h2>Register</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Username:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
+    <div className="register">
+      <div className="content">
+        <div className="auth-container">
+          <h2>Register</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Username:</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Email:</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Password:</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Date of Birth:</label>
+              <input
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Address:</label>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+              />
+            </div>
+            <button type="submit">Register</button>
+            {error && <p className="error">{error}</p>}
+          </form>
         </div>
-        <div>
-          <label>Email:</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Password:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Date of Birth:</label>
-          <input
-            type="date"
-            value={dateOfBirth}
-            onChange={(e) => setDateOfBirth(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Address:</label>
-          <input
-            type="text"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Register</button>
-        {error && <p>{error}</p>}
-      </form>
+      </div>
+      <footer className="footer">
+        <p>&copy; 2024 Over18. All rights reserved.</p>
+      </footer>
     </div>
   );
 };
