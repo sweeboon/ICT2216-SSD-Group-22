@@ -14,6 +14,7 @@ WORKDIR /usr/src/app
 COPY --from=build-react /usr/src/app/build ./frontend/build
 COPY --from=build-react /usr/src/app/package*.json ./
 COPY --from=build-react /usr/src/app/yarn.lock ./
+COPY --from=build-react /usr/src/app/public ./public
 
 # Install system dependencies and Python virtual environment
 RUN apt-get update && apt-get install -y bash curl gnupg && \
