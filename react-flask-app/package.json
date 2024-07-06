@@ -16,8 +16,8 @@
     "cross-env": "^7.0.3"
   },
   "scripts": {
-  "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider concurrently \"react-scripts start\" \"yarn start-api\" --port 3000",
-  "start-api": "node -e \"if (process.platform === 'win32') { process.exitCode = require('child_process').spawnSync('bash', ['-c', 'cd server && source venv/Scripts/activate && flask run --host=0.0.0.0 --port=5000 --no-debugger'], { stdio: 'inherit' }).status } else { process.exitCode = require('child_process').spawnSync('sh', ['-c', 'cd server && . venv/bin/activate && flask run --host=0.0.0.0 --port=5000 --no-debugger'], { stdio: 'inherit' }).status }\"",
+  "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider concurrently \"react-scripts start\" \"yarn start-api\" --port 5000",
+  "start-api": "node -e \"if (process.platform === 'win32') { process.exitCode = require('child_process').spawnSync('bash', ['-c', 'cd server && source venv/Scripts/activate && flask run --host=0.0.0.0 --port=3000 --no-debugger'], { stdio: 'inherit' }).status } else { process.exitCode = require('child_process').spawnSync('sh', ['-c', 'cd server && . venv/bin/activate && flask run --host=0.0.0.0 --port=5000 --no-debugger'], { stdio: 'inherit' }).status }\"",
   "build": "react-scripts build"
 },
   "eslintConfig": {
