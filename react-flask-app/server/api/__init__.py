@@ -11,9 +11,6 @@ from flask_principal import Principal, RoleNeed, UserNeed, identity_loaded, Iden
 import jwt
 from datetime import datetime, timedelta
 from supabase import create_client, Client
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-import os 
 
 load_dotenv()
 db = SQLAlchemy()
@@ -22,12 +19,6 @@ mail = Mail()
 csrf = CSRFProtect()
 login_manager = LoginManager()
 principal = Principal()
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["500 per day", "10 per hour"],
-    storage_uri=os.getenv("MONGODB_URI")
-)
-
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -42,7 +33,6 @@ def create_app(config_class=Config):
     CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
 
     app.supabase = create_client(app.config["SUPABASE_URL"], app.config["SUPABASE_KEY"])
-    limiter.init_app(app)
 
     from api.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')

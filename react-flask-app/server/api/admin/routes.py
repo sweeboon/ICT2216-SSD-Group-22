@@ -6,14 +6,12 @@ from api.models import Account, Role, Order, Payment, Product, Category
 from api import db, csrf
 import base64
 from passlib.hash import pbkdf2_sha256
-from api import limiter
 
 admin_permission = Permission(RoleNeed('Admin'))
 
 @bp.route('/users', methods=['GET'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute")
 def get_users():
     users = Account.query.filter(~Account.roles.any(Role.name == 'Admin'), Account.account_id != current_user.account_id).all()
     users_data = []
@@ -31,7 +29,6 @@ def get_users():
 @bp.route('/users/<int:account_id>', methods=['PUT'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute")
 def update_user(account_id):
     data = request.get_json()
     user = Account.query.get(account_id)
@@ -56,7 +53,6 @@ def update_user(account_id):
 @bp.route('/users/<int:account_id>', methods=['DELETE'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute")
 def delete_user(account_id):
     user = Account.query.get(account_id)
     if not user:
@@ -70,10 +66,10 @@ def delete_user(account_id):
     
     return jsonify({'message': 'User deleted successfully'}), 200
 
+
 @bp.route('/assign-role', methods=['POST'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute")
 def assign_role():
     data = request.get_json()
     account_id = data.get('account_id')
@@ -101,7 +97,6 @@ def assign_role():
 @bp.route('/roles', methods=['GET'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute")
 def get_roles():
     roles = Role.query.all()
     roles_data = [{'id': role.id, 'name': role.name} for role in roles]
@@ -110,7 +105,6 @@ def get_roles():
 @bp.route('/orders', methods=['GET'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute")
 def get_all_orders():
     orders = Order.query.all()
     orders_data = [{
@@ -131,7 +125,6 @@ def get_all_orders():
 @bp.route('/orders/<int:order_id>/status', methods=['PUT'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute")
 def update_order_status(order_id):
     order = Order.query.get_or_404(order_id)
     new_status = request.json.get('status')
@@ -146,11 +139,11 @@ def update_order_status(order_id):
     db.session.commit()
     return jsonify({'message': 'Order status updated successfully'}), 200
 
+# Create a New Product
 @bp.route('/products', methods=['POST'])
 @csrf.exempt
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute")
 def create_product():
     if not request.json or not all(key in request.json for key in ['category_id', 'product_description', 'product_price', 'stock', 'image_path']):
         abort(400)  # Bad request
@@ -180,11 +173,11 @@ def create_product():
 
     return jsonify({'product_id': new_product.product_id}), 201
 
+# Update a Product
 @bp.route('/products/<int:product_id>', methods=['PUT'])
 @csrf.exempt
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute")
 def update_product(product_id):
     product = Product.query.get_or_404(product_id)
     
@@ -201,11 +194,11 @@ def update_product(product_id):
     
     return jsonify({'product_id': product.product_id}), 200
 
+# Delete a Product
 @bp.route('/products/<int:product_id>', methods=['DELETE'])
 @csrf.exempt
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute")
 def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
     db.session.delete(product)
@@ -216,7 +209,6 @@ def delete_product(product_id):
 @bp.route('/categories', methods=['GET'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute")
 def get_categories():
     categories = Category.query.all()
     categories_data = [{'category_id': category.category_id, 'category_name': category.category_name} for category in categories]
