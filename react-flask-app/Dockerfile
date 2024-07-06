@@ -35,7 +35,7 @@ RUN cd /usr/src/app/server && \
     /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"
 
 # Set environment variables
-ENV FLASK_APP=server.api
+ENV FLASK_APP=wsgi.py
 ENV NODE_OPTIONS=--openssl-legacy-provider
 
 # Expose the ports on which the apps will run
