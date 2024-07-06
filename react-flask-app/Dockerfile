@@ -24,8 +24,10 @@ RUN apt-get update && apt-get install -y bash curl gnupg && \
     apt-get clean
 # Copy the Flask app code
 COPY ./server ./server
-# Copy .env file
+
+# Ensure .env file is included
 COPY ./server/.env /usr/src/app/server/.env
+
 # Create and activate virtual environment, install dependencies
 RUN cd /usr/src/app/server && \
     python -m venv venv && \

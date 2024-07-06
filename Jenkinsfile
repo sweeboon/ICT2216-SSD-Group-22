@@ -62,6 +62,8 @@ pipeline {
             }
             steps {
                 script {
+                    // Verify .env file before building
+                    sh 'ls -l $WORKSPACE/react-flask-app/server/.env'
                     sh 'docker-compose -f $WORKSPACE/react-flask-app/docker-compose.yml up -d --build'
                 }
             }
