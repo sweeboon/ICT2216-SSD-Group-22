@@ -13,7 +13,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}") {
-                    git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '92db66e9-d356-45db-af30-b8897191973c'
+                    git url: 'https://github.com/sweeboon/ICT2216-SSD-Group-22.git', branch: 'main', credentialsId: '468c3eb2-e89c-44f6-ac2f-5cf9b1fbfba5'
                 }
             }
         }
