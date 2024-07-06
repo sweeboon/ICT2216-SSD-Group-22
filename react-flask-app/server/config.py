@@ -13,6 +13,7 @@ class Config:
     SUPABASE_URL = os.environ.get("SUPABASE_URL")
     SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
     SUPABASE_BUCKET = os.environ.get("SUPABASE_BUCKET")
+    MONGODB_URI = os.environ.get("MONGODB_URI")
     
     # Session configurations
     SESSION_PERMANENT = True

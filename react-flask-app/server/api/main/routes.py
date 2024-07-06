@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 from flask_principal import RoleNeed, Permission
 from werkzeug.security import generate_password_hash, check_password_hash
 from api.models import Product, Cart, Payment, Order, Account
-from api import db, csrf
+from api import db, csrf, limiter
 from api.main import bp
 
 # Setup logging
@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 # Check if the cart has items
 @bp.route('/cart/check', methods=['GET'])
 @login_required
+@limiter.limit("10 per minute")
 def check_cart():
     account_id = current_user.account_id
     cart_items = Cart.query.filter_by(account_id=account_id).all()
@@ -28,6 +29,7 @@ def check_cart():
 @bp.route('/payment', methods=['POST'])
 @login_required
 @csrf.exempt
+@limiter.limit("10 per minute")
 def create_payment():
     try:
         data = request.get_json()
@@ -82,6 +84,7 @@ def create_payment():
 # Read All Products
 @bp.route('/products', methods=['GET'])
 @csrf.exempt
+@limiter.limit("10 per minute")
 def get_products():
     logger.info("Fetching all products")
     products = Product.query.all()
@@ -100,6 +103,7 @@ def get_products():
 # Read a Single Product
 @bp.route('/products/<int:product_id>', methods=['GET'])
 @csrf.exempt
+@limiter.limit("10 per minute")
 def get_product(product_id):
     logger.info(f"Fetching product with ID {product_id}")
     product = Product.query.get_or_404(product_id)
@@ -108,6 +112,7 @@ def get_product(product_id):
 
 
 @bp.route('/cart', methods=['GET'])
+@limiter.limit("10 per minute")
 def get_cart_items():
     account_id = current_user.get_id() if current_user.is_authenticated else None
 
@@ -131,6 +136,7 @@ def get_cart_items():
 
 @bp.route('/cart', methods=['POST'])
 @csrf.exempt
+@limiter.limit("10 per minute")
 def add_to_cart():
     data = request.json
     if current_user.is_authenticated:
@@ -159,6 +165,7 @@ def add_to_cart():
 
 @bp.route('/cart/<int:cart_id>', methods=['DELETE'])
 @csrf.exempt
+@limiter.limit("10 per minute")
 def remove_from_cart(cart_id):
     cart_item = Cart.query.get_or_404(cart_id)
     db.session.delete(cart_item)
@@ -167,6 +174,7 @@ def remove_from_cart(cart_id):
 
 @bp.route('/cart/total', methods=['GET'])
 @login_required
+@limiter.limit("10 per minute")
 def get_cart_total():
     account_id = current_user.account_id
     cart_items = Cart.query.filter_by(account_id=account_id).all()
@@ -179,6 +187,7 @@ def get_cart_total():
 
 @bp.route('/orders', methods=['GET'])
 @login_required
+@limiter.limit("10 per minute")
 def get_orders():
     account_id = current_user.account_id
     orders = Order.query.filter_by(account_id=account_id).all()

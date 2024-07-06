@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from flask_principal import Identity, AnonymousIdentity, identity_changed, RoleNeed, Permission
 from api.auth import bp
 from api.models import Account, Role, LoginAttempt
-from api import db, csrf, mail
+from api import db, csrf, limiter
 from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
 from .utils import generate_token, verify_token, generate_otp, send_otp, verify_otp, send_email
@@ -37,6 +37,7 @@ def validate_password(password):
 
 @bp.route('/reset_password_request', methods=['POST'])
 @csrf.exempt
+@limiter.limit("5 per minute")
 def reset_password_request():
     data = request.get_json()
     email = data.get('email')
@@ -57,6 +58,7 @@ def reset_password_request():
 
 @bp.route('/reset_password', methods=['POST'])
 @csrf.exempt
+@limiter.limit("5 per minute")
 def reset_password():
     data = request.get_json()
     token = data.get('token')
@@ -83,6 +85,7 @@ def reset_password():
 
 @bp.route('/resend_confirmation_email', methods=['POST'])
 @csrf.exempt
+@limiter.limit("5 per minute")
 def resend_confirmation_email():
     data = request.get_json()
     if 'email' not in data:
@@ -111,6 +114,7 @@ def resend_confirmation_email():
 
 @bp.route('/initiate_login', methods=['POST'])
 @csrf.exempt
+@limiter.limit("10 per minute")
 def initiate_login():
     data = request.get_json()
 
@@ -161,6 +165,7 @@ def initiate_login():
 
 @bp.route('/verify_otp_and_login', methods=['POST'])
 @csrf.exempt
+@limiter.limit("10 per minute")
 def verify_otp_and_login():
     data = request.get_json()
     if 'email' not in data or 'otp' not in data:
@@ -210,6 +215,7 @@ def verify_otp_and_login():
 
 @bp.route('/request_otp', methods=['POST'])
 @csrf.exempt
+@limiter.limit("5 per minute")
 def request_otp():
     data = request.get_json()
     email = data.get('email')
@@ -228,6 +234,7 @@ def request_otp():
 
 @bp.route('/verify_otp', methods=['POST'])
 @csrf.exempt
+@limiter.limit("10 per minute")
 def verify_otp_route():
     data = request.get_json()
     email = data.get('email')
@@ -243,6 +250,7 @@ def verify_otp_route():
         return jsonify({'error': 'Invalid or expired OTP.'}), 400
 
 @bp.route('/csrf-token', methods=['POST'])
+@limiter.limit("10 per minute")
 def get_csrf_token():
     csrf_token = generate_csrf(secret_key=current_app.config['SECRET_KEY'])
     response = make_response(jsonify({'csrf_token': csrf_token}))
@@ -251,6 +259,7 @@ def get_csrf_token():
 
 @bp.route('/register', methods=['POST'])
 @csrf.exempt
+@limiter.limit("5 per minute")
 def register():
     data = request.get_json()
 
@@ -302,6 +311,7 @@ def register():
     return jsonify({'message': 'Account registered successfully. Please check your email to confirm your account.'}), 201
 
 @bp.route('/confirm', methods=['GET'])
+@limiter.limit("5 per minute")
 def confirm_email():
     token = request.args.get('token')
     email = verify_token(token)
@@ -325,6 +335,7 @@ def confirm_email():
 
 @bp.route('/status', methods=['GET'])
 @csrf.exempt
+@limiter.limit("10 per minute")
 def status():
     if current_user.is_authenticated:
         roles = [role.name for role in current_user.roles]
@@ -335,6 +346,7 @@ def status():
 @bp.route('/logout', methods=['POST'])
 @csrf.exempt
 @login_required
+@limiter.limit("10 per minute")
 def logout():
     logout_user()
     for key in ('identity.name', 'identity.auth_type'):
@@ -344,30 +356,3 @@ def logout():
     response.delete_cookie('session')
     response.delete_cookie('XSRF-TOKEN')
     return response, 200
-
-@bp.route('/refresh', methods=['POST'])
-@csrf.exempt
-@login_required
-def refresh_token():
-    try:
-        token = request.cookies.get('token')
-        if not token:
-            return jsonify({'message': 'Token is missing'}), 403
-
-        data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
-        new_token = jwt.encode({
-            'sub': data['sub'],
-            'iat': datetime.now(),
-            'exp': datetime.now() + timedelta(minutes=30)
-        }, current_app.config['SECRET_KEY'], algorithm="HS256")
-
-        response = jsonify({'message': 'Token refreshed'})
-        response.set_cookie('token', new_token, httponly=True, secure=True, samesite='Strict')
-        return response
-    except jwt.ExpiredSignatureError:
-        return jsonify({'message': 'Token has expired'}), 403
-    except jwt.InvalidTokenError:
-        return jsonify({'message': 'Invalid token'}), 403
-    except Exception as e:
-        logging.error(f"Error refreshing token: {str(e)}")
-        return jsonify({'error': str(e)}), 500
