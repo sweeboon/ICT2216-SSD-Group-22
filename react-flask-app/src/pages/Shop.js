@@ -4,7 +4,6 @@ import { useAuth } from '../hooks/useAuth';
 import '../css/Shop.css';
 import axios from '../components/axiosConfig';
 
-
 const Shop = () => {
   const { isLoggedIn, username } = useAuth();
   const [products, setProducts] = useState([]);
@@ -36,15 +35,17 @@ const Shop = () => {
     try {
       await axios.post('/main/cart', cartItem);
       console.log('Added to cart');
+      alert(`Added ${product.product_description} to cart.`);
     } catch (error) {
       console.error('Error adding to cart:', error);
+      alert('Failed to add to cart. Please try again.');
     }
   };
 
   const handleCheckout = () => {
     navigate('/cart');
   };
-  
+
   return (
     <div className="shop">
       <h1>Product Catalog</h1>
