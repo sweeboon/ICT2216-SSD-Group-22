@@ -36,5 +36,3 @@ class Config:
 
     # Frontend configurations
     FRONTEND_BASE_URL = os.environ.get('FRONTEND_BASE_URL')
-    # Backend base URL
-    BACKEND_BASE_URL = os.environ.get("BACKEND_BASE_URL")  # Add this line
