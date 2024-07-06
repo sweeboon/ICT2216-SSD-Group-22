@@ -9,23 +9,23 @@ const PaymentPage = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Check if there are items in the cart
-        const checkCart = async () => {
+        // Fetch the total amount from the backend
+        const fetchTotalAmount = async () => {
             try {
-                const response = await axios.get('/main/cart/check');
-                if (response.data.message === 'Your cart is empty. Add items to your cart before proceeding to checkout.') {
-                    navigate('/cart');  // Redirect to cart if it's empty
-                } else {
-                    // Assume you have a way to calculate total amount in your application
-                    // This is just a placeholder value
-                    setTotalAmount(100);  // Replace with actual total amount
+                const response = await axios.get('/main/cart/total');
+                setTotalAmount(response.data.total_amount);
+                setMessage(response.data.message);
+                if (response.data.total_amount === 0) {
+                    alert(response.data.message);
+                    navigate('/shop');  // Redirect to shop page if the cart is empty
                 }
             } catch (error) {
-                console.error('Error checking cart:', error);
+                console.error('Error fetching total amount:', error);
+                setMessage('Error fetching total amount. Please try again.');
             }
         };
 
-        checkCart();
+        fetchTotalAmount();
     }, [navigate]);
 
     const handlePayment = async () => {
