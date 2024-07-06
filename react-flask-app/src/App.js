@@ -10,13 +10,13 @@ import ConfirmEmail from './pages/ConfirmEmail';
 import ConfirmationResult from './pages/ConfirmEmail';
 import OrdersPage from './pages/OrdersPage';
 import ProductComponent from './components/ProductComponent';
-import AssignRole from './pages/AssignRole';  // Import AssignRole component
 import { useAuth } from './hooks/useAuth';
 import Navbar from './pages/Navbar';
 import ManageOrders from './pages/ManageOrders';
 import Shop from './pages/Shop'; // Import ShoppingPage component
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import ManageUsers from './pages/ManageUsers';
 
 const App = () => {
   const { isLoggedIn, roles } = useAuth();
@@ -40,7 +40,7 @@ const App = () => {
         <Route path="/products" element={isLoggedIn && isAdmin ? <ProductComponent /> : <Navigate to="/products" />} />
         <Route path="/confirm" element={<ConfirmEmail />} />
         <Route path="/confirm-result" element={<ConfirmationResult />} />
-        <Route path="/assign-role" element={isLoggedIn && isAdmin ? <AssignRole /> : <Navigate to="/assign-role" />} />  
+        <Route path="/manage-users" element={isLoggedIn && isAdmin ? <ManageUsers /> : <Navigate to="/manage-users" />} />
         <Route path="/manage-orders" element={isLoggedIn && isAdmin ? <ManageOrders /> : <Navigate to="/manage-orders" />} />  
         <Route path="/shop" element={isLoggedIn ? <Shop /> : <Navigate to="/login" state={{ from: '/shop' }} />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

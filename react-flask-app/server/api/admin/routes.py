@@ -5,6 +5,7 @@ from api.admin import bp
 from api.models import Account, Role, Order, Payment, Product, Category
 from api import db, csrf
 import base64
+from passlib.hash import pbkdf2_sha256
 
 admin_permission = Permission(RoleNeed('Admin'))
 
@@ -12,18 +13,59 @@ admin_permission = Permission(RoleNeed('Admin'))
 @login_required
 @admin_permission.require(http_exception=403)
 def get_users():
-    # Exclude other admin users
-    users = Account.query.filter(Account.account_id != current_user.account_id).all()
+    users = Account.query.filter(~Account.roles.any(Role.name == 'Admin'), Account.account_id != current_user.account_id).all()
     users_data = []
     for user in users:
         user_roles = [role.name for role in user.roles]
-        if 'Admin' not in user_roles: 
-            users_data.append({
-                'account_id': user.account_id,
-                'email': user.email,
-                'roles': user_roles
-            })
+        users_data.append({
+            'account_id': user.account_id,
+            'email': user.email,
+            'name': user.name,
+            'address': user.address,
+            'roles': user_roles
+        })
     return jsonify(users_data), 200
+
+@bp.route('/users/<int:account_id>', methods=['PUT'])
+@login_required
+@admin_permission.require(http_exception=403)
+def update_user(account_id):
+    data = request.get_json()
+    user = Account.query.get(account_id)
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+
+    if any(role.name == 'Admin' for role in user.roles):
+        return jsonify({'message': 'Cannot modify admin users'}), 403
+
+    user.email = data.get('email', user.email)
+    user.name = data.get('name', user.name)
+    user.address = data.get('address', user.address)
+    
+    new_password = data.get('password')
+    if new_password:
+        user.password = pbkdf2_sha256.hash(new_password)
+    
+    db.session.commit()
+    
+    return jsonify({'message': 'User updated successfully'}), 200
+
+@bp.route('/users/<int:account_id>', methods=['DELETE'])
+@login_required
+@admin_permission.require(http_exception=403)
+def delete_user(account_id):
+    user = Account.query.get(account_id)
+    if not user:
+        return jsonify({'message': 'User not found'}), 404
+    
+    if any(role.name == 'Admin' for role in user.roles):
+        return jsonify({'message': 'Cannot delete admin users'}), 403
+
+    db.session.delete(user)
+    db.session.commit()
+    
+    return jsonify({'message': 'User deleted successfully'}), 200
+
 
 @bp.route('/assign-role', methods=['POST'])
 @login_required

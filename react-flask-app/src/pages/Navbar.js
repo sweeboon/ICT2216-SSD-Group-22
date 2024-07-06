@@ -17,7 +17,7 @@ const Navbar = () => {
         {isLoggedIn && <li><Link to="/cart">Cart</Link></li>}
         {isLoggedIn && <li><Link to="/orders">Orders</Link></li>}
         {isLoggedIn && <li><Link to="/profile">Profile</Link></li>}
-        {isAdmin && <li><Link to="/assign-role">Assign Role</Link></li>}
+        {isAdmin && <li><Link to="/manage-users">Manage Users</Link></li>}
         {isAdmin && <li><Link to="/manage-orders">Manage Orders</Link></li>}
         {isAdmin && <li><Link to="/products">Manage Products</Link></li>}
         {!isLoggedIn && <li><Link to="/login">Login</Link></li>}
