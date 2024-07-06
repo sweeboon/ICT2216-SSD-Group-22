@@ -4,12 +4,13 @@ from flask import request, jsonify, abort, current_app, session
 from flask_login import login_required, current_user
 from flask_principal import RoleNeed, Permission
 from werkzeug.security import generate_password_hash, check_password_hash
-from api.models import Product, Cart, Payment, Order,Account
+from api.models import Product, Cart, Payment, Order, Account
 from api import db, csrf
 from api.main import bp
 
-
-
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Check if the cart has items
 @bp.route('/cart/check', methods=['GET'])
@@ -82,9 +83,17 @@ def create_payment():
 @bp.route('/products', methods=['GET'])
 @csrf.exempt
 def get_products():
+    logger.info("Fetching all products")
     products = Product.query.all()
+    if not products:
+        logger.warning("No products found")
+        return jsonify({'message': 'No products found'}), 404
+
     product_list = [{'product_id': p.product_id, 'category_id': p.category_id, 'product_description': p.product_description, 
                      'product_price': p.product_price, 'stock': p.stock, 'image_path': p.image_path} for p in products]
+    logger.info(f"Found {len(product_list)} products")
+    for product in product_list:
+        logger.info(f"Product: {product}")
     return jsonify(product_list), 200
 
 
@@ -92,6 +101,7 @@ def get_products():
 @bp.route('/products/<int:product_id>', methods=['GET'])
 @csrf.exempt
 def get_product(product_id):
+    logger.info(f"Fetching product with ID {product_id}")
     product = Product.query.get_or_404(product_id)
     return jsonify({'product_id': product.product_id, 'category_id': product.category_id, 'product_description': product.product_description, 
                     'product_price': product.product_price, 'stock': product.stock, 'image_path': product.image_path}), 200

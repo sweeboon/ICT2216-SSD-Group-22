@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import '../css/Shop.css';
-import axios from 'axios';
+import axios from '../components/axiosConfig';
+
 
 const Shop = () => {
   const { isLoggedIn, username } = useAuth();
@@ -11,8 +12,10 @@ const Shop = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
+      console.log("Fetching products from API");
       try {
         const response = await axios.get('/main/products');
+        console.log("Products fetched successfully:", response.data);
         setProducts(response.data);
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -63,10 +66,7 @@ const Shop = () => {
         <p>&copy; 2024 Over18. All rights reserved.</p>
       </footer>
     </div>
-    
   );
 };
 
 export default Shop;
-
-
