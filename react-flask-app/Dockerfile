@@ -22,7 +22,8 @@ RUN apt-get update && apt-get install -y bash curl gnupg && \
     apt-get install -y nodejs npm && \
     npm install -g yarn && \
     apt-get clean
-
+# Copy .env file
+COPY ./server/.env /usr/src/app/server/.env
 # Create and activate virtual environment, install dependencies
 RUN cd /usr/src/app/server && \
     python -m venv venv && \
