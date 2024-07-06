@@ -51,8 +51,8 @@ RUN echo '#!/bin/bash\ncd /usr/src/app/server\nsource venv/bin/activate\ncd /usr
 
 # Verify the startup script
 RUN ls -l /usr/src/app/start.sh && cat /usr/src/app/start.sh
-
+RUN ls -l /usr/src/app/src/index.js
 RUN chmod +x /usr/src/app/start.sh
 
 # Start both Flask and React apps using the startup script
-CMD ["/bin/bash", "/usr/src/app/start.sh"]
+CMD ["/bin/bash", "-c", "/usr/src/app/start.sh"]
