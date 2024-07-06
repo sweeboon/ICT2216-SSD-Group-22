@@ -7,7 +7,7 @@ COPY . .
 # Install dependencies and build the React app
 RUN npm install
 RUN npm run build
-
+RUN ls -l /usr/src/app/
 # Stage 2: Setup Flask app
 FROM python:3.11-slim as build-flask
 WORKDIR /usr/src/app
@@ -21,18 +21,17 @@ RUN apt-get update && apt-get install -y bash curl gnupg && \
     apt-get install -y nodejs npm && \
     npm install -g yarn && \
     apt-get clean
-
-
 # Copy the Flask app code
 COPY ./server ./server
 
 # Ensure .env file is included
 COPY ./server/.env /usr/src/app/server/.env
 
+
 # Create and activate virtual environment, install dependencies
 RUN cd /usr/src/app/server && \
     python -m venv venv && \
-    /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt"
+    /bin/bash -c "source venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"
 
 # Set environment variables
 ENV FLASK_APP=wsgi.py
@@ -44,6 +43,8 @@ EXPOSE 3000
 
 # Install Node.js dependencies for the React app
 RUN yarn install
+
+
 # Create a startup script
 RUN echo '#!/bin/bash\n' \
     'cd /usr/src/app/server\n' \
@@ -53,6 +54,11 @@ RUN echo '#!/bin/bash\n' \
     'cd /usr/src/app\n' \
     'yarn start\n' > /usr/src/app/start.sh
 RUN chmod +x /usr/src/app/start.sh
+
+# Verify the directory contents
+RUN ls -l /usr/src/app/
+RUN ls -l /usr/src/app/server/
+RUN ls -l /usr/src/app/server/venv/bin
 
 # Start both Flask and React apps using the startup script
 CMD ["/bin/bash", "/usr/src/app/start.sh"]

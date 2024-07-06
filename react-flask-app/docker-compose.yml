@@ -3,13 +3,15 @@ version: '3.7'
 services:
   react-flask-app:
     build:
-      context: $WORKSPACE/react-flask-app
+      context: $CUSTOM_WORKSPACE/react-flask-app
       dockerfile: Dockerfile
+      args:
+        - ENV_FILE=server/.env
     container_name: react-flask-app
     environment:
       - VIRTUAL_HOST=forteam22ict.xyz
       - VIRTUAL_PORT=3000
-    ports:
+    expose:
       - "3000:3000"
       - "5000:5000"
     networks:
