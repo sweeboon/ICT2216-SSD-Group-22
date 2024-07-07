@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../components/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
+import '../css/ManageUsers.css'; // Ensure the CSS file is correctly imported
+
 
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
@@ -112,10 +114,11 @@ const ManageUsers = () => {
   };
 
   return (
-    <div>
+    <div className="manage-users-page">
+    <main className="manage-users-container">
       <h1>Manage Users</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {success && <p style={{ color: 'green' }}>{success}</p>}
+      {error && <p className="error-message">{error}</p>}
+      {success && <p className="success-message">{success}</p>}
       <div>
         <label>User:</label>
         <select onChange={handleUserSelect} value={selectedUser ? selectedUser.account_id : ''}>
@@ -157,6 +160,10 @@ const ManageUsers = () => {
           <button onClick={handleUserDelete} disabled={selectedUser.roles.includes('Admin')}>Delete User</button>
         </div>
       )}
+      <footer className="footer">
+        <p>&copy; 2024 Over18. All rights reserved.</p>
+      </footer>
+      </main>
     </div>
   );
 };
