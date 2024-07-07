@@ -14,6 +14,7 @@ import { useAuth } from './hooks/useAuth';
 import Navbar from './pages/Navbar';
 import ManageOrders from './pages/ManageOrders';
 import Shop from './pages/Shop'; // Import ShoppingPage component
+import AuditLogPage from './pages/AuditLogPage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ManageUsers from './pages/ManageUsers';
@@ -42,6 +43,7 @@ const App = () => {
         <Route path="/confirm-result" element={<ConfirmationResult />} />
         <Route path="/manage-users" element={isLoggedIn && isAdmin ? <ManageUsers /> : <Navigate to="/manage-users" />} />
         <Route path="/manage-orders" element={isLoggedIn && isAdmin ? <ManageOrders /> : <Navigate to="/manage-orders" />} />  
+        <Route path="/audit-logs" element={isLoggedIn && isAdmin ? <AuditLogPage /> : <Navigate to="/audit-logs" />} />
         <Route path="/shop" element={isLoggedIn ? <Shop /> : <Navigate to="/login" state={{ from: '/shop' }} />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />

@@ -14,7 +14,7 @@ import pyotp
 import secrets
 import bleach, re
 from flask import Flask
-
+from api.admin.routes import log_audit_event, get_ip_address  # Import the function
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ def reset_password_request():
         send_email('Reset Your Password', account.email, 'email/reset_password', reset_url=reset_url)
         account.confirmation_email_sent_at = now
         db.session.commit()
-
+        log_audit_event(account.account_id, account.name, 'Reset Password Request', 'Password reset link sent', get_ip_address())
     return jsonify({'message': 'If an account with that email exists, a password reset link has been sent.'}), 200
 
 @bp.route('/reset_password', methods=['POST'])
@@ -100,6 +100,7 @@ def resend_confirmation_email():
 
     now = datetime.now()
     if account.confirmation_email_sent_at and now < account.confirmation_email_sent_at + timedelta(minutes=1):
+        log_audit_event(account.account_id, account.name, 'Resend Confirmation Email', 'Confirmation email resent', get_ip_address())
         return jsonify({'message': 'Confirmation email already sent. Please wait a minute before requesting a new one.'}), 400
 
     token = generate_token(account.email)
@@ -109,7 +110,7 @@ def resend_confirmation_email():
     account.confirmation_token = token  
     account.confirmation_email_sent_at = now  
     db.session.commit()
-
+    log_audit_event(account.account_id, account.name, 'Resend Confirmation Email', 'Confirmation email resent', get_ip_address())
     return jsonify({'message': 'Confirmation email sent. Please check your email.'}), 200
 
 @bp.route('/initiate_login', methods=['POST'])
@@ -153,6 +154,7 @@ def initiate_login():
 
     if login_attempt.lockout_time and datetime.now() < login_attempt.lockout_time:
         logger.debug('Account is locked for email: %s', email)
+        log_audit_event(account.account_id, account.name, "Locked User's Account", get_ip_address())
         return jsonify({'message': 'Account is locked. Please try again later.'}), 403
 
     if not pbkdf2_sha256.verify(password, account.password):
@@ -190,6 +192,7 @@ def verify_otp_and_login():
     login_attempt = LoginAttempt.query.filter_by(account_id=account.account_id).first()
     if login_attempt.lockout_time and datetime.now() < login_attempt.lockout_time:
         logger.debug('Account is locked for email: %s', data['email'])
+        log_audit_event(account.account_id, account.name, "Locked User;s account", get_ip_address())
         return jsonify({'message': 'Account is locked. Please try again later.'}), 403
 
     try:
@@ -250,6 +253,7 @@ def request_otp():
     db.session.commit()
 
     send_otp(account, otp)
+    log_audit_event(account.account_id, account.name, 'Request OTP', 'OTP requested', get_ip_address())
     return jsonify({'message': 'OTP sent to email.'}), 200
 
 @bp.route('/verify_otp', methods=['POST'])

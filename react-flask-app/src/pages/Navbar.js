@@ -20,6 +20,7 @@ const Navbar = () => {
         {isAdmin && <li><Link to="/manage-users">Manage Users</Link></li>}
         {isAdmin && <li><Link to="/manage-orders">Manage Orders</Link></li>}
         {isAdmin && <li><Link to="/products">Manage Products</Link></li>}
+        {isAdmin && <li><Link to="/audit-logs">Audit Logs</Link></li>}
         {!isLoggedIn && <li><Link to="/login">Login</Link></li>}
         {!isLoggedIn && <li><Link to="/register">Register</Link></li>}
         {isLoggedIn && (
