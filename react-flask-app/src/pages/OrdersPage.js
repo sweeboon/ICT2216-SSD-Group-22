@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../components/axiosConfig';
+import '../css/Orders.css';
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -18,24 +19,29 @@ const OrdersPage = () => {
   }, []);
 
   return (
-    <div>
+    <div  className="orders-page">
+    <main className="orders-container">
       <h2>Your Orders</h2>
       {orders.length > 0 ? (
         <ul>
           {orders.map(order => (
             <li key={order.order_id}>
-              <p>Order ID: {order.order_id}</p>
-              <p>Product: {order.product_description}</p>
-              <p>Quantity: {order.quantity}</p>
-              <p>Price: ${order.order_price.toFixed(2)}</p>
-              <p>Status: {order.order_status}</p>
-              <p>Date: {order.order_date}</p>
+              <p><strong>Order ID:</strong> {order.order_id}</p>
+              <p><strong>Product:</strong> {order.product_description}</p>
+              <p><strong>Quantity:</strong> {order.quantity}</p>
+              <p><strong>Price:</strong> ${order.order_price.toFixed(2)}</p>
+              <p><strong>Status:</strong> {order.order_status}</p>
+              <p><strong>Date:</strong> {order.order_date}</p>
             </li>
           ))}
         </ul>
       ) : (
-        <p>You have no orders.</p>
+        <p className="no-orders">You have no orders.</p>
       )}
+      </main>
+                  <footer className="footer">
+        <p>&copy; 2024 Over18. All rights reserved.</p>
+      </footer>
     </div>
   );
 };

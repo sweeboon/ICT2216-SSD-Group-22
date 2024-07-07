@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from flask_principal import Identity, AnonymousIdentity, identity_changed, RoleNeed, Permission
 from api.auth import bp
 from api.models import Account, Role, LoginAttempt
-from api import db, csrf, mail, limiter
+from api import db, csrf, mail
 from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
 from .utils import generate_token, verify_token, generate_otp, send_otp, verify_otp, send_email
@@ -14,7 +14,7 @@ import pyotp
 import secrets
 import bleach, re
 from flask import Flask
-
+from api.admin.routes import log_audit_event, get_ip_address  # Import the function
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -40,7 +40,6 @@ def validate_password(password):
 
 @bp.route('/reset_password_request', methods=['POST'])
 @csrf.exempt
-@limiter.limit("1 per minute") # Apply rate limiting
 def reset_password_request():
     data = request.get_json()
     email = data.get('email')
@@ -56,12 +55,11 @@ def reset_password_request():
         send_email('Reset Your Password', account.email, 'email/reset_password', reset_url=reset_url)
         account.confirmation_email_sent_at = now
         db.session.commit()
-
+        log_audit_event(account.account_id, account.name, 'Reset Password Request', 'Password reset link sent', get_ip_address())
     return jsonify({'message': 'If an account with that email exists, a password reset link has been sent.'}), 200
 
 @bp.route('/reset_password', methods=['POST'])
 @csrf.exempt
-@limiter.limit("1 per minute") # Apply rate limiting
 def reset_password():
     data = request.get_json()
     token = data.get('token')
@@ -88,7 +86,6 @@ def reset_password():
 
 @bp.route('/resend_confirmation_email', methods=['POST'])
 @csrf.exempt
-@limiter.limit("1 per minute") # Apply rate limiting
 def resend_confirmation_email():
     data = request.get_json()
     if 'email' not in data:
@@ -103,6 +100,7 @@ def resend_confirmation_email():
 
     now = datetime.now()
     if account.confirmation_email_sent_at and now < account.confirmation_email_sent_at + timedelta(minutes=1):
+        log_audit_event(account.account_id, account.name, 'Resend Confirmation Email', 'Confirmation email resent', get_ip_address())
         return jsonify({'message': 'Confirmation email already sent. Please wait a minute before requesting a new one.'}), 400
 
     token = generate_token(account.email)
@@ -112,12 +110,11 @@ def resend_confirmation_email():
     account.confirmation_token = token  
     account.confirmation_email_sent_at = now  
     db.session.commit()
-
+    log_audit_event(account.account_id, account.name, 'Resend Confirmation Email', 'Confirmation email resent', get_ip_address())
     return jsonify({'message': 'Confirmation email sent. Please check your email.'}), 200
 
 @bp.route('/initiate_login', methods=['POST'])
 @csrf.exempt
-@limiter.limit("5 per minute") # Apply rate limiting
 def initiate_login():
     data = request.get_json()
     logger.debug('Received data for initiate_login: %s', data)
@@ -157,6 +154,7 @@ def initiate_login():
 
     if login_attempt.lockout_time and datetime.now() < login_attempt.lockout_time:
         logger.debug('Account is locked for email: %s', email)
+        log_audit_event(account.account_id, account.name, "Locked User's Account", get_ip_address())
         return jsonify({'message': 'Account is locked. Please try again later.'}), 403
 
     if not pbkdf2_sha256.verify(password, account.password):
@@ -177,7 +175,6 @@ def initiate_login():
 
 @bp.route('/verify_otp_and_login', methods=['POST'])
 @csrf.exempt
-@limiter.limit("5 per minute", error_message="2113Too many requests. Please try again later.") # Apply rate limiting
 def verify_otp_and_login():
     print('verify_otp_and_login route hit')
     data = request.get_json()
@@ -195,6 +192,7 @@ def verify_otp_and_login():
     login_attempt = LoginAttempt.query.filter_by(account_id=account.account_id).first()
     if login_attempt.lockout_time and datetime.now() < login_attempt.lockout_time:
         logger.debug('Account is locked for email: %s', data['email'])
+        log_audit_event(account.account_id, account.name, "Locked User;s account", get_ip_address())
         return jsonify({'message': 'Account is locked. Please try again later.'}), 403
 
     try:
@@ -241,7 +239,6 @@ def verify_otp_and_login():
 
 @bp.route('/request_otp', methods=['POST'])
 @csrf.exempt
-@limiter.limit("5 per minute") # Apply rate limiting
 def request_otp():
     data = request.get_json()
     email = data.get('email')
@@ -256,11 +253,11 @@ def request_otp():
     db.session.commit()
 
     send_otp(account, otp)
+    log_audit_event(account.account_id, account.name, 'Request OTP', 'OTP requested', get_ip_address())
     return jsonify({'message': 'OTP sent to email.'}), 200
 
 @bp.route('/verify_otp', methods=['POST'])
 @csrf.exempt
-@limiter.limit("5 per minute") # Apply rate limiting
 def verify_otp_route():
     data = request.get_json()
     email = data.get('email')
@@ -284,7 +281,6 @@ def get_csrf_token():
 
 @bp.route('/register', methods=['POST'])
 @csrf.exempt
-@limiter.limit("5 per minute") # Apply rate limiting
 def register():
     data = request.get_json()
 
@@ -336,7 +332,6 @@ def register():
     return jsonify({'message': 'Account registered successfully. Please check your email to confirm your account.'}), 201
 
 @bp.route('/confirm', methods=['GET'])
-@limiter.limit("5 per minute") # Apply rate limiting
 def confirm_email():
     token = request.args.get('token')
     email = verify_token(token)
@@ -369,7 +364,6 @@ def status():
 
 @bp.route('/logout', methods=['POST'])
 @csrf.exempt
-@limiter.limit("5 per minute") # Apply rate limiting
 @login_required
 def logout():
     logout_user()

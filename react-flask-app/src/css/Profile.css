@@ -1,12 +1,12 @@
 /* Profile.css */
+
 .profile-page {
     display: flex;
     flex-direction: column;
     font-family: 'Arial, sans-serif';
   }
   
-  
-.profile-container {
+  .profile-container {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -27,6 +27,7 @@
   }
   
   .profile-container form {
+    width: 100%;
     display: flex;
     flex-direction: column;
   }
@@ -42,12 +43,14 @@
   .profile-container input[type="email"],
   .profile-container input[type="password"],
   .profile-container input[type="number"] {
+    width: calc(100% - 20px); /* Ensure full width minus padding */
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #ddd;
     border-radius: 5px;
     font-size: 16px;
     color: #333;
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
   }
   
   .profile-container button {
@@ -71,12 +74,13 @@
   }
   
   .profile-container .otp-section input[type="text"] {
-    width: 100%;
+    width: calc(100% - 20px); /* Ensure full width minus padding */
     padding: 10px;
     margin-bottom: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
     font-size: 16px;
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
   }
   
   .profile-container .otp-section button {
@@ -94,6 +98,7 @@
     font-size: 14px;
     text-align: center;
   }
+  
   .footer {
     position: fixed;
     bottom: 0;

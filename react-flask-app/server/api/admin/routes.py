@@ -2,17 +2,34 @@ from flask_login import current_user, login_required
 from flask import request, jsonify, abort, current_app
 from flask_principal import RoleNeed, Permission
 from api.admin import bp
-from api.models import Account, Role, Order, Payment, Product, Category
-from api import db, csrf, limiter
+from api.models import Account, Role, Order, Payment, Product, Category, AuditLog
+from api import db, csrf
 import base64
 from passlib.hash import pbkdf2_sha256
+from datetime import datetime
+from flask import request
 
+def get_ip_address():
+    if request.headers.get('X-Forwarded-For'):
+        ip = request.headers.getlist('X-Forwarded-For')[0]
+    else:
+        ip = request.remote_addr
+    return ip
 admin_permission = Permission(RoleNeed('Admin'))
-
+def log_audit_event(user_id, user_name, action, details, ip_address):
+    audit_log = AuditLog(
+        user_id=user_id,
+        user_name=user_name,
+        action=action,
+        details=details,
+        ip_address=ip_address,
+        timestamp=datetime.utcnow()
+    )
+    db.session.add(audit_log)
+    db.session.commit()
 @bp.route('/users', methods=['GET'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute") # Apply rate limiting
 def get_users():
     users = Account.query.filter(~Account.roles.any(Role.name == 'Admin'), Account.account_id != current_user.account_id).all()
     users_data = []
@@ -30,7 +47,6 @@ def get_users():
 @bp.route('/users/<int:account_id>', methods=['PUT'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute") # Apply rate limiting
 def update_user(account_id):
     data = request.get_json()
     user = Account.query.get(account_id)
@@ -39,7 +55,7 @@ def update_user(account_id):
 
     if any(role.name == 'Admin' for role in user.roles):
         return jsonify({'message': 'Cannot modify admin users'}), 403
-
+    changes = []
     user.email = data.get('email', user.email)
     user.name = data.get('name', user.name)
     user.address = data.get('address', user.address)
@@ -49,13 +65,13 @@ def update_user(account_id):
         user.password = pbkdf2_sha256.hash(new_password)
     
     db.session.commit()
-    
+    ip_address = get_ip_address()
+    log_audit_event(current_user.account_id, current_user.name, 'Update User', f'Updated user {account_id}:{user.name}: {"; ".join(changes)}', ip_address)
     return jsonify({'message': 'User updated successfully'}), 200
 
 @bp.route('/users/<int:account_id>', methods=['DELETE'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute") # Apply rate limiting
 def delete_user(account_id):
     user = Account.query.get(account_id)
     if not user:
@@ -66,19 +82,18 @@ def delete_user(account_id):
 
     db.session.delete(user)
     db.session.commit()
-    
+    ip_address = get_ip_address()
+    log_audit_event(current_user.account_id, current_user.name, 'Delete User', f'Deleted user {account_id}:{user.name}', ip_address)
     return jsonify({'message': 'User deleted successfully'}), 200
 
 
 @bp.route('/assign-role', methods=['POST'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute") # Apply rate limiting
 def assign_role():
     data = request.get_json()
     account_id = data.get('account_id')
     role_name = data.get('role_name')
-
     if not account_id or not role_name:
         return jsonify({'message': 'Account ID and Role Name are required'}), 400
 
@@ -95,13 +110,13 @@ def assign_role():
 
     account.roles = [role]
     db.session.commit()
-
+    ip_address = get_ip_address()
+    log_audit_event(current_user.account_id, current_user.name, 'Assign Role', f'Assigned role {role_name} to user {account_id}:{account.name}',ip_address)
     return jsonify({'message': f'Role {role_name} assigned to account {account.email} successfully'}), 200
 
 @bp.route('/roles', methods=['GET'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute") # Apply rate limiting
 def get_roles():
     roles = Role.query.all()
     roles_data = [{'id': role.id, 'name': role.name} for role in roles]
@@ -110,7 +125,6 @@ def get_roles():
 @bp.route('/orders', methods=['GET'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute") # Apply rate limiting
 def get_all_orders():
     orders = Order.query.all()
     orders_data = [{
@@ -131,7 +145,6 @@ def get_all_orders():
 @bp.route('/orders/<int:order_id>/status', methods=['PUT'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute") # Apply rate limiting
 def update_order_status(order_id):
     order = Order.query.get_or_404(order_id)
     new_status = request.json.get('status')
@@ -142,8 +155,12 @@ def update_order_status(order_id):
     if new_status not in ['Pending', 'Completed']:
         return jsonify({'message': 'Invalid status value'}), 400
 
+    old_status = order.order_status
     order.order_status = new_status
     db.session.commit()
+   
+    ip_address = get_ip_address()
+    log_audit_event(current_user.account_id, current_user.name, 'Update Order Status', f'Updated order {order_id} status from {old_status} to {new_status}',ip_address)
     return jsonify({'message': 'Order status updated successfully'}), 200
 
 # Create a New Product
@@ -151,7 +168,6 @@ def update_order_status(order_id):
 @csrf.exempt
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute") # Apply rate limiting
 def create_product():
     if not request.json or not all(key in request.json for key in ['category_id', 'product_description', 'product_price', 'stock', 'image_path']):
         abort(400)  # Bad request
@@ -178,7 +194,9 @@ def create_product():
 
     db.session.add(new_product)
     db.session.commit()
+    ip_address = get_ip_address()
 
+    log_audit_event(current_user.account_id, current_user.name, 'Create Product', f'Created product {new_product.product_id} with description {new_product.product_description}, price {new_product.product_price}, stock {new_product.stock}', ip_address)
     return jsonify({'product_id': new_product.product_id}), 201
 
 # Update a Product
@@ -186,21 +204,32 @@ def create_product():
 @csrf.exempt
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute") # Apply rate limiting
 def update_product(product_id):
     product = Product.query.get_or_404(product_id)
     
     if not request.json:
         abort(400)
     
-    product.category_id = request.json.get('category_id', product.category_id)
-    product.product_description = request.json.get('product_description', product.product_description)
-    product.product_price = request.json.get('product_price', product.product_price)
-    product.stock = request.json.get('stock', product.stock)
-    product.image_path = request.json.get('image_path', product.image_path)
+    changes = []
+    if request.json.get('category_id') and request.json['category_id'] != product.category_id:
+        changes.append(f"category_id: {product.category_id} -> {request.json['category_id']}")
+        product.category_id = request.json['category_id']
+    if request.json.get('product_description') and request.json['product_description'] != product.product_description:
+        changes.append(f"description: {product.product_description} -> {request.json['product_description']}")
+        product.product_description = request.json['product_description']
+    if request.json.get('product_price') and request.json['product_price'] != product.product_price:
+        changes.append(f"price: {product.product_price} -> {request.json['product_price']}")
+        product.product_price = request.json['product_price']
+    if request.json.get('stock') and request.json['stock'] != product.stock:
+        changes.append(f"stock: {product.stock} -> {request.json['stock']}")
+        product.stock = request.json['stock']
+    if request.json.get('image_path') and request.json['image_path'] != product.image_path:
+        changes.append(f"image_path: {product.image_path} -> {request.json['image_path']}")
+        product.image_path = request.json['image_path']
     
     db.session.commit()
-    
+    ip_address = get_ip_address()
+    log_audit_event(current_user.account_id, current_user.name, 'Update Product', f'Updated product {product_id} :{product.product_description}: {"; ".join(changes)}', ip_address)
     return jsonify({'product_id': product.product_id}), 200
 
 # Delete a Product
@@ -208,19 +237,41 @@ def update_product(product_id):
 @csrf.exempt
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute") # Apply rate limiting
 def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
     db.session.delete(product)
     db.session.commit()
-    
+    ip_address = get_ip_address()
+    log_audit_event(current_user.account_id, current_user.name, 'Delete Product', f'Deleted product {product_id} with description {product.product_description}', ip_address)
     return '', 204
 
 @bp.route('/categories', methods=['GET'])
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute") # Apply rate limiting
 def get_categories():
     categories = Category.query.all()
     categories_data = [{'category_id': category.category_id, 'category_name': category.category_name} for category in categories]
     return jsonify(categories_data), 200
+@bp.route('/audit_logs', methods=['GET'])
+@login_required
+@admin_permission.require(http_exception=403)
+def get_audit_logs():
+    try:
+        print("Fetching audit logs...")
+        logs = AuditLog.query.all()
+        if not logs:
+            print("No audit logs found")
+        logs_data = [{
+            'id': log.id,
+            'user_id': log.user_id,
+            'user_name': log.user_name,
+            'action': log.action,
+            'details': log.details,
+            'timestamp': log.timestamp,
+            'ip_address': log.ip_address  # Fetching IP address
+        } for log in logs]
+        print(f"Fetched {len(logs_data)} audit logs")
+        return jsonify(logs_data), 200
+    except Exception as e:
+        print(f"Error fetching audit logs: {e}")
+        return jsonify({"error": "Error fetching audit logs"}), 500
