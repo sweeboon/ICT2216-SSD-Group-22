@@ -6,7 +6,7 @@ from flask_principal import RoleNeed, Permission
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from api.models import Product, Cart, Payment, Order, Account
-from api import db, csrf
+from api import db, csrf, limiter
 from api.main import bp
 from .encryption import encrypt_data, decrypt_data, generate_key
 import logging
@@ -29,6 +29,7 @@ def validate_numeric(value):
 # Check if the cart has items
 @bp.route('/cart/check', methods=['GET'])
 @login_required
+@limiter.limit("10 per minute") # Apply rate limiting
 def check_cart():
     account_id = current_user.account_id
     cart_items = Cart.query.filter_by(account_id=account_id).all()
@@ -41,6 +42,8 @@ def check_cart():
 @bp.route('/payment', methods=['POST'])
 @login_required
 @csrf.exempt
+@limiter.limit("10 per minute") # Apply rate limiting
+
 def create_payment():
     try:
         data = request.get_json()
@@ -115,6 +118,7 @@ def create_payment():
 @bp.route('/products', methods=['GET'])
 @login_required
 @csrf.exempt
+@limiter.limit("10 per minute") # Apply rate limiting
 def get_products():
     logger.info("Fetching all products")
     products = Product.query.all()
@@ -133,6 +137,7 @@ def get_products():
 # Read a Single Product
 @bp.route('/products/<int:product_id>', methods=['GET'])
 @csrf.exempt
+@limiter.limit("10 per minute") # Apply rate limiting
 def get_product(product_id):
     logger.info(f"Fetching product with ID {product_id}")
     product = Product.query.get_or_404(product_id)
@@ -184,6 +189,7 @@ def upload_image():
 
 @bp.route('/cart', methods=['GET'])
 @login_required
+@limiter.limit("10 per minute") # Apply rate limiting
 def get_cart_items():
     account_id = current_user.get_id() if current_user.is_authenticated else None
 
@@ -208,6 +214,7 @@ def get_cart_items():
 @bp.route('/cart', methods=['POST'])
 @login_required
 @csrf.exempt
+@limiter.limit("10 per minute") # Apply rate limiting
 def add_to_cart():
     data = request.json
     if current_user.is_authenticated:
@@ -237,6 +244,7 @@ def add_to_cart():
 @bp.route('/cart/<int:cart_id>', methods=['DELETE'])
 @login_required
 @csrf.exempt
+@limiter.limit("10 per minute") # Apply rate limiting
 def remove_from_cart(cart_id):
     cart_item = Cart.query.get_or_404(cart_id)
     db.session.delete(cart_item)
@@ -245,6 +253,7 @@ def remove_from_cart(cart_id):
 
 @bp.route('/cart/total', methods=['GET'])
 @login_required
+@limiter.limit("10 per minute") # Apply rate limiting
 def get_cart_total():
     account_id = current_user.account_id
     cart_items = Cart.query.filter_by(account_id=account_id).all()
@@ -257,6 +266,7 @@ def get_cart_total():
 
 @bp.route('/orders', methods=['GET'])
 @login_required
+@limiter.limit("10 per minute") # Apply rate limiting
 def get_orders():
     account_id = current_user.account_id
     orders = Order.query.filter_by(account_id=account_id).all()

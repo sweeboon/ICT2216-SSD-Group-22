@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required
 from api.models import Account
-from api import db, csrf
+from api import db, csrf, limiter
 import logging
 from datetime import datetime
 from ..auth.utils import generate_otp, verify_otp, send_otp
@@ -36,6 +36,7 @@ def sanitize_input(input):
 @bp.route('/request-otp', methods=['POST'])
 @login_required
 @csrf.exempt
+@limiter.limit("5 per minute") # Apply rate limiting
 def request_otp():
     try:
         data = request.get_json()
@@ -71,6 +72,7 @@ def request_otp():
 @bp.route('/verify-otp', methods=['POST'])
 @login_required
 @csrf.exempt
+@limiter.limit("5 per minute") # Apply rate limiting
 def verify_otp_route():
     try:
         data = request.get_json()
@@ -103,6 +105,7 @@ def verify_otp_route():
 
 @bp.route('/', methods=['GET'])
 @login_required
+@limiter.limit("5 per minute") # Apply rate limiting
 def get_profile():
     try:
         account = current_user
@@ -120,6 +123,7 @@ def get_profile():
 @bp.route('/', methods=['PUT'])
 @login_required
 @csrf.exempt
+@limiter.limit("5 per minute") # Apply rate limiting
 def update_profile():
     try:
         data = request.get_json()

@@ -1,4 +1,4 @@
-from flask import Flask, current_app, request
+from flask import Flask, current_app, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import Config
@@ -8,6 +8,8 @@ from flask_mailman import Mail
 from flask_wtf import CSRFProtect
 from flask_login import LoginManager, current_user
 from flask_principal import Principal, RoleNeed, UserNeed, identity_loaded, Identity, AnonymousIdentity, IdentityContext
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import jwt
 from datetime import datetime, timedelta
 from supabase import create_client, Client
@@ -19,6 +21,10 @@ mail = Mail()
 csrf = CSRFProtect()
 login_manager = LoginManager()
 principal = Principal()
+limiter = Limiter(
+    get_remote_address,
+    default_limits=["10 per minute"]
+)
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -31,6 +37,9 @@ def create_app(config_class=Config):
     principal.init_app(app)
     login_manager.init_app(app)
     CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
+
+    #Initialize Flask-limiter
+    limiter.init_app(app)
 
     app.supabase = create_client(app.config["SUPABASE_URL"], app.config["SUPABASE_KEY"])
 
@@ -46,6 +55,10 @@ def create_app(config_class=Config):
     from api.admin import bp as admin_bp
     app.register_blueprint(admin_bp, url_prefix='/admin')
 
+    @app.errorhandler(429)
+    def ratelimit_handler(e):
+        return jsonify(error="ratelimit exceeded", message="You have hit the rate limit. Please try again later."), 429
+    
     @identity_loaded.connect_via(app)
     def on_identity_loaded(sender, identity):
         identity.user = current_user
