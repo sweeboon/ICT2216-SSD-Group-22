@@ -59,8 +59,6 @@ def request_otp():
             current_user.new_email = new_email
 
         otp = generate_otp(current_user)
-        current_user.otp = otp
-        current_user.otp_generated_at = datetime.now()
         db.session.commit()
 
         send_otp(current_user, otp)
