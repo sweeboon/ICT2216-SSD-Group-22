@@ -16,8 +16,8 @@ class AuditLog(db.Model):
     user_name = db.Column(db.String(120), nullable=False)
     action = db.Column(db.String(50), nullable=False)
     details = db.Column(db.Text, nullable=False)
+    ip_address = db.Column(db.String(45), nullable=False)  # IP address field
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True)
