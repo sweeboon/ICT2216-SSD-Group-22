@@ -13,7 +13,10 @@ import logging
 import pyotp
 import secrets
 import bleach, re
+from flask import Flask
 
+app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 MAX_FAILED_ATTEMPTS = 5
@@ -113,14 +116,17 @@ def resend_confirmation_email():
 @csrf.exempt
 def initiate_login():
     data = request.get_json()
+    logger.debug('Received data for initiate_login: %s', data)
 
     email = data.get('email')
     password = data.get('password')
 
     if not email or not password:
+        logger.debug('Email or password not provided')
         return jsonify({'message': 'Email and password are required'}), 400
 
     if not validate_email(email):
+        logger.debug('Invalid email format: %s', email)
         return jsonify({'message': 'Invalid email format'}), 400
 
     email = sanitize_input(email)
@@ -128,9 +134,11 @@ def initiate_login():
 
     account = Account.query.filter_by(email=email).first()
     if account is None:
+        logger.debug('Account not found for email: %s', email)
         return jsonify({'message': 'Invalid email or password'}), 401
 
     if not account.confirmed:
+        logger.debug('Account not confirmed for email: %s', email)
         return jsonify({
             'message': 'Account not confirmed. Do you want to resend the confirmation email?',
             'resend_confirmation': True
@@ -138,14 +146,17 @@ def initiate_login():
 
     login_attempt = LoginAttempt.query.filter_by(account_id=account.account_id).first()
     if not login_attempt:
+        logger.debug('Creating new login attempt record for account id: %s', account.account_id)
         login_attempt = LoginAttempt(account_id=account.account_id)
         db.session.add(login_attempt)
         db.session.commit()
 
     if login_attempt.lockout_time and datetime.now() < login_attempt.lockout_time:
+        logger.debug('Account is locked for email: %s', email)
         return jsonify({'message': 'Account is locked. Please try again later.'}), 403
 
     if not pbkdf2_sha256.verify(password, account.password):
+        logger.debug('Invalid password for email: %s', email)
         login_attempt.failed_attempts += 1
         if login_attempt.failed_attempts >= MAX_FAILED_ATTEMPTS:
             login_attempt.lockout_time = datetime.now() + LOCKOUT_TIME
@@ -157,30 +168,41 @@ def initiate_login():
 
     otp = generate_otp(account)
     send_otp(account, otp)
+    logger.debug('OTP sent to email: %s', email)
     return jsonify({'message': 'OTP sent to email.', 'otp_required': True}), 200
 
 @bp.route('/verify_otp_and_login', methods=['POST'])
 @csrf.exempt
 def verify_otp_and_login():
+    print('verify_otp_and_login route hit')
     data = request.get_json()
+    logger.debug('Received data for verify_otp_and_login: %s', data)
+
     if 'email' not in data or 'otp' not in data:
+        logger.debug('Email or OTP not in data')
         return jsonify({'message': 'Email and OTP are required'}), 400
 
     account = Account.query.filter_by(email=data['email']).first()
     if account is None:
+        logger.debug('Account not found for email: %s', data['email'])
         return jsonify({'message': 'Invalid email address'}), 401
 
     login_attempt = LoginAttempt.query.filter_by(account_id=account.account_id).first()
     if login_attempt.lockout_time and datetime.now() < login_attempt.lockout_time:
+        logger.debug('Account is locked for email: %s', data['email'])
         return jsonify({'message': 'Account is locked. Please try again later.'}), 403
 
     try:
         if verify_otp(account, data['otp']):
+            logger.debug('OTP verified for email: %s', data['email'])
             login_attempt.failed_attempts = 0
             login_attempt.lockout_time = None
             login_attempt.last_login_at = datetime.now()
             login_attempt.login_count += 1
             db.session.commit()
+
+            # Clear existing session to ensure new session starts clean
+            session.clear()
 
             token = jwt.encode({
                 'sub': account.email,
@@ -193,15 +215,19 @@ def verify_otp_and_login():
             roles = [role.name for role in account.roles]
 
             response = make_response(jsonify({'message': 'Login successful', 'username': account.email, 'roles': roles}))
+            logger.debug('Setting cookie with token: %s', token)
             response.set_cookie('token', token, httponly=True, secure=True, samesite='Strict')
+
             return response, 200
         else:
+            logger.debug('Invalid or expired OTP for email: %s', data['email'])
             login_attempt.failed_attempts += 1
             if login_attempt.failed_attempts >= MAX_FAILED_ATTEMPTS:
                 login_attempt.lockout_time = datetime.now() + LOCKOUT_TIME
             db.session.commit()
             return jsonify({'message': 'Invalid or expired OTP'}), 400
     except ValueError as e:
+        logger.debug('Error verifying OTP for email: %s, error: %s', data['email'], str(e))
         login_attempt.failed_attempts += 1
         if login_attempt.failed_attempts >= MAX_FAILED_ATTEMPTS:
             login_attempt.lockout_time = datetime.now() + LOCKOUT_TIME
@@ -363,6 +389,8 @@ def refresh_token():
 
         response = jsonify({'message': 'Token refreshed'})
         response.set_cookie('token', new_token, httponly=True, secure=True, samesite='Strict')
+
+
         return response
     except jwt.ExpiredSignatureError:
         return jsonify({'message': 'Token has expired'}), 403

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://forteam22ict.xyz', //baseURL: 'http://127.0.0.1:5000', //for live server change to need to use this line if testing on local, change back to 127.0.0.1
+  baseURL: 'http://localhost:5000',//baseURL: 'https://forteam22ict.xyz', // //for live server change to need to use this line if testing on local, change back to 127.0.0.1
   withCredentials: true,
 });
 
