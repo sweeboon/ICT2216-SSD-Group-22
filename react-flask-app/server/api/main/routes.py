@@ -81,6 +81,7 @@ def create_payment():
 
 # Read All Products
 @bp.route('/products', methods=['GET'])
+@login_required
 @csrf.exempt
 def get_products():
     logger.info("Fetching all products")
@@ -108,6 +109,7 @@ def get_product(product_id):
 
 
 @bp.route('/cart', methods=['GET'])
+@login_required
 def get_cart_items():
     account_id = current_user.get_id() if current_user.is_authenticated else None
 
@@ -130,6 +132,7 @@ def get_cart_items():
     return jsonify(cart_list), 200
 
 @bp.route('/cart', methods=['POST'])
+@login_required
 @csrf.exempt
 def add_to_cart():
     data = request.json
@@ -158,6 +161,7 @@ def add_to_cart():
     return jsonify({'message': 'Item added to cart'}), 201
 
 @bp.route('/cart/<int:cart_id>', methods=['DELETE'])
+@login_required
 @csrf.exempt
 def remove_from_cart(cart_id):
     cart_item = Cart.query.get_or_404(cart_id)

@@ -30,17 +30,21 @@ def send_otp_email(recipient, otp):
     msg.send()
 
 def generate_and_store_otp_secret(account):
+    otp_record = OTP.query.filter_by(account_id=account.account_id).first()
     otp_secret_key = pyotp.random_base32()
-    new_otp = OTP(account_id=account.account_id, otp_secret_key=otp_secret_key)
-    db.session.add(new_otp)
+    if otp_record:
+        otp_record.otp_secret_key = otp_secret_key
+    else:
+        otp_record = OTP(account_id=account.account_id, otp_secret_key=otp_secret_key)
+        db.session.add(otp_record)
     db.session.commit()
+
 
 def generate_otp(account):
     try:
         otp_record = OTP.query.filter_by(account_id=account.account_id).first()
-        if not otp_record:
-            generate_and_store_otp_secret(account)
-            otp_record = OTP.query.filter_by(account_id=account.account_id).first()
+        generate_and_store_otp_secret(account)
+        otp_record = OTP.query.filter_by(account_id=account.account_id).first()
         totp = pyotp.TOTP(otp_record.otp_secret_key, interval=300)
         otp = totp.now()
         otp_record.otp = otp
