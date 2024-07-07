@@ -33,7 +33,48 @@ const PaymentPage = () => {
         fetchTotalAmount();
     }, [navigate]);
 
+    const validateCreditCardNumber = (number) => {
+        const re = /^[0-9]{16}$/;
+        return re.test(number);
+    };
+
+    const validateExpiryDate = (date) => {
+        const re = /^(0[1-9]|1[0-2])\/\d{2}$/;
+        if (!re.test(date)) {
+            return false;
+        }
+        const [month, year] = date.split('/').map(str => parseInt(str, 10));
+        const currentYear = new Date().getFullYear() % 100; // Last two digits of the current year
+        const currentMonth = new Date().getMonth() + 1; // getMonth() returns 0-11
+
+        // Check if the expiry date is in the future
+        if (year < currentYear || (year === currentYear && month < currentMonth)) {
+            return false;
+        }
+        return true;
+    };
+
+    const validateCVV = (cvv) => {
+        const re = /^[0-9]{3}$/;
+        return re.test(cvv);
+    };
+
     const handlePayment = async () => {
+        if (paymentMethod === 'Credit Card') {
+            if (!validateCreditCardNumber(creditCardNumber)) {
+                setMessage('Invalid credit card number.');
+                return;
+            }
+            if (!validateExpiryDate(expiryDate)) {
+                setMessage('Invalid expiry date. Please use MM/YY format and ensure it is a future date.');
+                return;
+            }
+            if (!validateCVV(cvv)) {
+                setMessage('Invalid CVV. It should be 3 digits.');
+                return;
+            }
+        }
+
         console.log("Credit Card Number:", creditCardNumber);
         console.log("Expiry Date:", expiryDate);
         console.log("CVV:", cvv);
