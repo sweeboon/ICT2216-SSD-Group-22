@@ -166,7 +166,7 @@ def initiate_login():
 
     if login_attempt.lockout_time and datetime.now() < login_attempt.lockout_time:
         logger.debug('Account is locked for email: %s', email)
-        log_audit_event(account.account_id, account.name, "Locked User's Account", get_ip_address())
+        log_audit_event(account.account_id, account.name, "Rate Limiting", "Locked User's Account", get_ip_address())
         return jsonify({'message': 'Account is locked. Please try again later.'}), 403
 
     if not pbkdf2_sha256.verify(password, account.password):
@@ -205,7 +205,7 @@ def verify_otp_and_login():
     login_attempt = LoginAttempt.query.filter_by(account_id=account.account_id).first()
     if login_attempt.lockout_time and datetime.now() < login_attempt.lockout_time:
         logger.debug('Account is locked for email: %s', data['email'])
-        log_audit_event(account.account_id, account.name, "Locked User;s account", get_ip_address())
+        log_audit_event(account.account_id, account.name, "Rate Limiting", "Locked User;s account", get_ip_address())
         return jsonify({'message': 'Account is locked. Please try again later.'}), 403
 
     try:
