@@ -9,7 +9,7 @@ import LandingPage from './pages/LandingPage';
 import ConfirmEmail from './pages/ConfirmEmail';
 import ConfirmationResult from './pages/ConfirmEmail';
 import OrdersPage from './pages/OrdersPage';
-import ProductComponent from './components/ProductComponent';
+import ManageProduct from './pages/ManageProduct';
 import { useAuth } from './hooks/useAuth';
 import Navbar from './pages/Navbar';
 import ManageOrders from './pages/ManageOrders';
@@ -38,7 +38,7 @@ const App = () => {
         <Route path="/cart" element={<Cart />} />
         <Route path="/payment" element={isLoggedIn ? <PaymentPage /> : <Navigate to="/login" state={{ from: '/payment' }} />} />
         <Route path="/orders" element={isLoggedIn ? <OrdersPage /> : <Navigate to="/login" state={{ from: '/orders' }} />} />
-        <Route path="/products" element={isLoggedIn && isAdmin ? <ProductComponent /> : <Navigate to="/products" />} />
+        <Route path="/products" element={isLoggedIn && isAdmin ? <ManageProduct /> : <Navigate to="/products" />} />
         <Route path="/confirm" element={<ConfirmEmail />} />
         <Route path="/confirm-result" element={<ConfirmationResult />} />
         <Route path="/manage-users" element={isLoggedIn && isAdmin ? <ManageUsers /> : <Navigate to="/manage-users" />} />
