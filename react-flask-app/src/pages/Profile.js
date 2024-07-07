@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../components/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
 import validator from 'validator';
+import '../css/Profile.css';
 
 const Profile = () => {
   const { isLoggedIn, username } = useAuth();
@@ -130,7 +131,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="profile-container">
+    <div className="profile-page">
+    <main className="profile-container">
       <h2>Profile</h2>
       <form onSubmit={handleSubmit}>
         <div>
@@ -189,7 +191,7 @@ const Profile = () => {
         </div>
         <button type="submit">Update Profile</button>
         {otpRequired && (
-          <div>
+          <div className="otp-section">
             <label>Enter OTP:</label>
             <input
               type="text"
@@ -200,8 +202,12 @@ const Profile = () => {
             <button type="button" onClick={handleVerifyOtp}>Verify OTP</button>
           </div>
         )}
-        {error && <p>{error}</p>}
+        {error && <p className="error">{error}</p>}
       </form>
+      <footer className="footer">
+        <p>&copy; 2024 Over18. All rights reserved.</p>
+      </footer>
+    </main>
     </div>
   );
 };

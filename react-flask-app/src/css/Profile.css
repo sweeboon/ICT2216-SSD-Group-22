@@ -1,0 +1,113 @@
+/* Profile.css */
+.profile-page {
+    display: flex;
+    flex-direction: column;
+    font-family: 'Arial, sans-serif';
+  }
+  
+  
+.profile-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+  }
+  
+  .profile-container h2 {
+    margin-bottom: 20px;
+    text-align: center;
+    color: #333;
+  }
+  
+  .profile-container form {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .profile-container label {
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .profile-container input[type="text"],
+  .profile-container input[type="date"],
+  .profile-container input[type="email"],
+  .profile-container input[type="password"],
+  .profile-container input[type="number"] {
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    color: #333;
+  }
+  
+  .profile-container button {
+    padding: 10px 15px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .profile-container button:hover {
+    background-color: #218838;
+  }
+  
+  .profile-container .otp-section {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
+  .profile-container .otp-section input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+  }
+  
+  .profile-container .otp-section button {
+    width: 100%;
+    background-color: #007bff;
+  }
+  
+  .profile-container .otp-section button:hover {
+    background-color: #0056b3;
+  }
+  
+  .profile-container p {
+    margin-top: 10px;
+    color: red;
+    font-size: 14px;
+    text-align: center;
+  }
+  .footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #000;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+  }
+  
+  .footer p {
+    margin: 0;
+    color: white;
+    font-size: 0.9em;
+    padding: 5px;
+  }
+  
