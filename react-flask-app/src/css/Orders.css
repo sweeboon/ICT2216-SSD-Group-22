@@ -51,9 +51,13 @@
   
   .orders-container .no-orders {
     text-align: center;
-    color: #777;
-    font-size: 18px;
+    color: #000000;
+    font-family: Arial, sans-serif;
     margin-top: 20px;
+  }
+
+  .no-orders p{
+    font-family: Arial, sans-serif;
   }
   .footer {
     position: fixed;

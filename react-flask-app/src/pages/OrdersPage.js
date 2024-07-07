@@ -36,7 +36,7 @@ const OrdersPage = () => {
           ))}
         </ul>
       ) : (
-        <p className="no-orders">You have no orders.</p>
+        <p style={{fontFamily:'Arial,sans serif'}} className="no-orders">You have no orders.</p>
       )}
       </main>
                   <footer className="footer">
