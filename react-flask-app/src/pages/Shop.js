@@ -48,6 +48,7 @@ const Shop = () => {
 
   return (
     <div className="shop">
+      <main className="shop-content">
       <h1>Product Catalog</h1>
       <div className="product-grid">
         {products.map((product) => (
@@ -63,6 +64,7 @@ const Shop = () => {
       <button onClick={handleCheckout} className="checkout-btn">
         Go to Cart
       </button>
+      </main>
       <footer className="shop-page-footer">
         <p>&copy; 2024 Over18. All rights reserved.</p>
       </footer>

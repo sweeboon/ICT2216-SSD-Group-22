@@ -35,7 +35,12 @@ const ManageOrders = () => {
   };
 
   if (!roles.includes('Admin') && !roles.includes('SuperAdmin')) {
-    return <p>You do not have permission to view this page.</p>;
+    return <h2 style={{
+      color: '#333',
+      fontSize: '24px',
+      textAlign: 'center',
+      padding: '20px',
+    }}>You do not have permission to view this page.</h2>;
   }
 
   return (
