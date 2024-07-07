@@ -7,6 +7,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from api.models import Product, Cart, Payment, Order, Account
 from api import db, csrf, limiter
 from api.main import bp
+from .encryption import encrypt_data, decrypt_data, generate_key
+import logging
+
+encryption_key = generate_key()
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -33,7 +37,6 @@ def check_cart():
     
     return jsonify({'message': 'You have items in your cart. You can proceed to checkout.'}), 200
 
-# Create Payment and Process Order
 @bp.route('/payment', methods=['POST'])
 @login_required
 @csrf.exempt
@@ -46,29 +49,40 @@ def create_payment():
         credit_card_number = data.get('credit_card_number')
         expiry_date = data.get('expiry_date')
         cvv = data.get('cvv')
-        
+
+        logging.info(f"Received payment data: {data}")
+
         if not payment_method or not total_amount:
             return jsonify({'message': 'Payment method and total amount are required'}), 400
 
         account_id = current_user.get_id()
         cart_items = Cart.query.filter_by(account_id=account_id).all()
-        
+
         if not cart_items:
             return jsonify({'message': 'Your cart is empty. Add items to your cart before proceeding to checkout.'}), 400
+
+        # Encrypt sensitive information
+        encrypted_credit_card_number = encrypt_data(credit_card_number, encryption_key)
+        encrypted_expiry_date = encrypt_data(expiry_date, encryption_key)
+        encrypted_cvv = encrypt_data(cvv, encryption_key)
+
+        logging.info("Credit card information encrypted successfully.")
 
         # Create Payment
         new_payment = Payment(
             account_id=account_id,
             total_amount=total_amount,
             payment_method=payment_method,
-            credit_card_number=credit_card_number,
-            expiry_date=expiry_date,
-            cvv=cvv,
             payment_status='Pending',  # Set initial status to pending
-            payment_date=datetime.now()
+            payment_date=datetime.now(),
+            credit_card_number=encrypted_credit_card_number.encode('utf-8'),
+            expiry_date=encrypted_expiry_date.encode('utf-8'),
+            cvv=encrypted_cvv.encode('utf-8')
         )
         db.session.add(new_payment)
         db.session.commit()
+
+        logging.info("Payment record created successfully.")
 
         # Process Orders
         for item in cart_items:
@@ -87,6 +101,8 @@ def create_payment():
         db.session.commit()
         new_payment.payment_status = 'Completed'  # Update payment status to completed
         db.session.commit()
+
+        logging.info("Orders processed and payment status updated successfully.")
 
         return jsonify({'message': 'Payment successful and order placed', 'payment_id': new_payment.payment_id}), 201
 
