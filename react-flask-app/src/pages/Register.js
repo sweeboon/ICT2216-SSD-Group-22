@@ -16,6 +16,7 @@ const Register = () => {
     const minLength = 8;
     const hasNumber = /\d/;
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/;
+    const hasAlphabet = /[a-zA-Z]/;
 
     if (password.length < minLength) {
       return 'Password must be at least 8 characters long.';
@@ -26,8 +27,12 @@ const Register = () => {
     if (!hasSpecialChar.test(password)) {
       return 'Password must contain at least one special character.';
     }
+    if (!hasAlphabet.test(password)) {
+      return 'Password must contain at least one alphabet.';
+    }
     return null;
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();

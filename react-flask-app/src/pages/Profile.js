@@ -50,12 +50,34 @@ const Profile = () => {
     setConfirmPassword(e.target.value);
   };
 
+  const validatePassword = (password) => {
+    const minLength = 8;
+    const hasNumber = /\d/;
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/;
+    const hasAlphabet = /[a-zA-Z]/;
+
+    if (password.length < minLength) {
+      return 'Password must be at least 8 characters long.';
+    }
+    if (!hasNumber.test(password)) {
+      return 'Password must contain at least one number.';
+    }
+    if (!hasSpecialChar.test(password)) {
+      return 'Password must contain at least one special character.';
+    }
+    if (!hasAlphabet.test(password)) {
+      return 'Password must contain at least one alphabet.';
+    }
+    return null;
+  };
+
   const requestOtp = async (changeType, newEmail = null) => {
     try {
       const response = await axios.post('/profile/request-otp', { change_type: changeType, new_email: newEmail });
       alert(response.data.message);
       setOtpRequired(true);
       setChangeType(changeType);
+      setError(''); // Clear any previous errors
     } catch (error) {
       console.error('Error requesting OTP:', error);
       setError('Failed to request OTP');
@@ -66,6 +88,12 @@ const Profile = () => {
     e.preventDefault(); // Prevent default form submission
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
+      return;
+    }
+
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
@@ -108,6 +136,7 @@ const Profile = () => {
       const response = await axios.put('/profile', data);
       alert(response.data.message);
       setOtpVerified(false);
+      setError(''); // Clear any previous errors
     } catch (error) {
       console.error('Error updating profile:', error);
       setError('Failed to update profile');
@@ -124,6 +153,7 @@ const Profile = () => {
       if (changeType === 'email' || changeType === 'password') {
         updateProfile(profile);
       }
+      setError(''); // Clear any previous errors
     } catch (error) {
       console.error('Error verifying OTP:', error);
       setError('Failed to verify OTP');
@@ -132,82 +162,82 @@ const Profile = () => {
 
   return (
     <div className="profile-page">
-    <main className="profile-container">
-      <h2>Profile</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Name:</label>
-          <input
-            type="text"
-            name="name"
-            value={profile.name}
-            onChange={handleChange}
-          />
-        </div>
-        <div>
-          <label>Address:</label>
-          <input
-            type="text"
-            name="address"
-            value={profile.address}
-            onChange={handleChange}
-          />
-        </div>
-        <div>
-          <label>Date of Birth:</label>
-          <input
-            type="date"
-            name="date_of_birth"
-            value={profile.date_of_birth}
-            onChange={handleChange}
-          />
-        </div>
-        <div>
-          <label>Email:</label>
-          <input
-            type="email"
-            name="email"
-            value={profile.email}
-            onChange={handleChange}
-          />
-        </div>
-        <div>
-          <label>New Password:</label>
-          <input
-            type="password"
-            name="newPassword"
-            value={newPassword}
-            onChange={handlePasswordChange}
-          />
-        </div>
-        <div>
-          <label>Confirm New Password:</label>
-          <input
-            type="password"
-            name="confirmPassword"
-            value={confirmPassword}
-            onChange={handleConfirmPasswordChange}
-          />
-        </div>
-        <button type="submit">Update Profile</button>
-        {otpRequired && (
-          <div className="otp-section">
-            <label>Enter OTP:</label>
+      <main className="profile-container">
+        <h2>Profile</h2>
+        <form onSubmit={handleSubmit}>
+          <div>
+            <label>Name:</label>
             <input
               type="text"
-              name="otp"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+              name="name"
+              value={profile.name}
+              onChange={handleChange}
             />
-            <button type="button" onClick={handleVerifyOtp}>Verify OTP</button>
           </div>
-        )}
-        {error && <p className="error">{error}</p>}
-      </form>
+          <div>
+            <label>Address:</label>
+            <input
+              type="text"
+              name="address"
+              value={profile.address}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <label>Date of Birth:</label>
+            <input
+              type="date"
+              name="date_of_birth"
+              value={profile.date_of_birth}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <label>Email:</label>
+            <input
+              type="email"
+              name="email"
+              value={profile.email}
+              onChange={handleChange}
+            />
+          </div>
+          <div>
+            <label>New Password:</label>
+            <input
+              type="password"
+              name="newPassword"
+              value={newPassword}
+              onChange={handlePasswordChange}
+            />
+          </div>
+          <div>
+            <label>Confirm New Password:</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={confirmPassword}
+              onChange={handleConfirmPasswordChange}
+            />
+          </div>
+          <button type="submit">Update Profile</button>
+          {otpRequired && (
+            <div className="otp-section">
+              <label>Enter OTP:</label>
+              <input
+                type="text"
+                name="otp"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+              />
+              <button type="button" onClick={handleVerifyOtp}>Verify OTP</button>
+            </div>
+          )}
+          {error && <p className="error">{error}</p>}
+        </form>
+      </main>
       <footer className="footer">
         <p>&copy; 2024 Over18. All rights reserved.</p>
       </footer>
-    </main>
     </div>
   );
 };
