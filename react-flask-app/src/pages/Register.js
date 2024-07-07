@@ -13,7 +13,7 @@ const Register = () => {
   const [registered, setRegistered] = useState(false);
 
   const validatePassword = (password) => {
-    const minLength = 8;
+    const minLength = 12;
     const hasNumber = /\d/;
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/;
     const hasAlphabet = /[a-zA-Z]/;
