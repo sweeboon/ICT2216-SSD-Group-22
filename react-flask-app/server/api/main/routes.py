@@ -1,4 +1,4 @@
-import base64, logging, uuid, re
+import base64, logging, uuid, re, html
 from datetime import datetime
 from flask import request, jsonify, abort, current_app, session
 from flask_login import login_required, current_user
@@ -11,6 +11,14 @@ from api.main import bp
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def sanitize_input(input):
+    if input is None:
+        return None
+    return html.escape(input)
+
+def validate_numeric(value):
+    return value.isdigit()
 
 # Check if the cart has items
 @bp.route('/cart/check', methods=['GET'])
@@ -33,6 +41,9 @@ def create_payment():
         data = request.get_json()
         payment_method = data.get('payment_method')
         total_amount = data.get('total_amount')
+        credit_card_number = data.get('credit_card_number')
+        expiry_date = data.get('expiry_date')
+        cvv = data.get('cvv')
         
         if not payment_method or not total_amount:
             return jsonify({'message': 'Payment method and total amount are required'}), 400
@@ -48,6 +59,9 @@ def create_payment():
             account_id=account_id,
             total_amount=total_amount,
             payment_method=payment_method,
+            credit_card_number=credit_card_number,
+            expiry_date=expiry_date,
+            cvv=cvv,
             payment_status='Pending',  # Set initial status to pending
             payment_date=datetime.now()
         )
