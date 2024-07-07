@@ -1,0 +1,110 @@
+/* PaymentPage.css */
+
+.payment-page {
+    display: flex;
+    flex-direction: column;
+    font-family: 'Arial, sans-serif';
+}
+
+.payment-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+}
+
+.payment-container h2 {
+    margin-bottom: 20px;
+    text-align: center;
+    color: #333;
+}
+
+.payment-container p {
+    font-size: 18px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.payment-methods {
+    margin-bottom: 20px;
+}
+
+.payment-methods label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+.payment-methods input {
+    margin-right: 10px;
+}
+
+.credit-card-details {
+    margin-bottom: 20px;
+}
+
+.credit-card-details label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #333;
+}
+
+.credit-card-details input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.payment-container button {
+    width: 100%;
+    padding: 15px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.payment-container button:hover {
+    background-color: #218838;
+}
+
+.payment-container .message {
+    margin-top: 20px;
+    font-size: 16px;
+    color: rgb(0, 0, 0);
+    text-align: center;
+}
+
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #000;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+  }
+  
+  .footer p {
+    margin: 0;
+    color: white;
+    font-size: 0.9em;
+    padding: 5px;
+  }
+  
