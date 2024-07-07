@@ -18,28 +18,34 @@ def upgrade():
     with op.batch_alter_table('payment', schema=None) as batch_op:
         batch_op.alter_column('credit_card_number',
                               existing_type=sa.String(length=255),
-                              type_=sa.String(length=128),
-                              existing_nullable=True)
+                              type_=sa.LargeBinary(),
+                              existing_nullable=True,
+                              postgresql_using='credit_card_number::bytea')
         batch_op.alter_column('expiry_date',
                               existing_type=sa.String(length=255),
-                              type_=sa.String(length=64),
-                              existing_nullable=True)
+                              type_=sa.LargeBinary(),
+                              existing_nullable=True,
+                              postgresql_using='expiry_date::bytea')
         batch_op.alter_column('cvv',
                               existing_type=sa.String(length=255),
-                              type_=sa.String(length=64),
-                              existing_nullable=True)
+                              type_=sa.LargeBinary(),
+                              existing_nullable=True,
+                              postgresql_using='cvv::bytea')
 
 def downgrade():
     with op.batch_alter_table('payment', schema=None) as batch_op:
         batch_op.alter_column('credit_card_number',
-                              existing_type=sa.String(length=128),
-                              type_=sa.String(length=255),
-                              existing_nullable=True)
+                              existing_type=sa.LargeBinary(),
+                              type_=sa.String(length=128),
+                              existing_nullable=True,
+                              postgresql_using='credit_card_number::text')
         batch_op.alter_column('expiry_date',
-                              existing_type=sa.String(length=64),
-                              type_=sa.String(length=255),
-                              existing_nullable=True)
+                              existing_type=sa.LargeBinary(),
+                              type_=sa.String(length=128),
+                              existing_nullable=True,
+                              postgresql_using='expiry_date::text')
         batch_op.alter_column('cvv',
-                              existing_type=sa.String(length=64),
-                              type_=sa.String(length=255),
-                              existing_nullable=True)
+                              existing_type=sa.LargeBinary(),
+                              type_=sa.String(length=128),
+                              existing_nullable=True,
+                              postgresql_using='cvv::text')
