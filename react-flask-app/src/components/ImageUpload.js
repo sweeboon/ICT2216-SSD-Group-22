@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import '../css/ImageUpload.css'; // Ensure the CSS file is correctly imported
 
-const ImageUpload = ({ onUpload }) => {
+const ImageUpload = ({ onUpload, width = '420px', height = '200px' }) => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -29,8 +30,6 @@ const ImageUpload = ({ onUpload }) => {
         },
       });
 
-      console.log('Server response:', response.data); // Debugging
-
       if (response.status === 200 && response.data.url) {
         const uploadedUrl = response.data.url;
         onUpload(uploadedUrl);
@@ -50,14 +49,18 @@ const ImageUpload = ({ onUpload }) => {
   };
 
   return (
-    <div
-      onDrop={handleDrop}
-      onDragOver={(e) => e.preventDefault()}
-      style={{ border: '2px dashed #ccc', padding: '20px', textAlign: 'center' }}
-    >
-      <input type="file" onChange={handleFileChange} />
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {success && <p style={{ color: 'green' }}>{success}</p>}
+    <div className="image-upload-wrapper">
+      <div
+        className="image-upload-container"
+        style={{ width: width, height: height }} // Set the width and height dynamically
+        onDrop={handleDrop}
+        onDragOver={(e) => e.preventDefault()}
+      >
+        <input type="file" onChange={handleFileChange} />
+        <p>Drag & drop an image here, or click to select one</p>
+      </div>
+      {error && <p className="error-message">{error}</p>}
+      {success && <p className="success-message">{success}</p>}
     </div>
   );
 };
