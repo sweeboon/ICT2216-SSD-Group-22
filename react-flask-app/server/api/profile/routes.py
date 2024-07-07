@@ -92,7 +92,7 @@ def verify_otp_route():
             current_user.new_email = None
         elif change_type == 'password':
             if not validate_password(new_password):
-                return jsonify({'error': 'Password must be at least 8 characters long, contain at least one number, and one special character'}), 400
+                return jsonify({'error': 'Password must be at least 12 characters long, contain at least one number, and one special character'}), 400
             if new_password != confirm_password:
                 return jsonify({'error': 'Passwords do not match'}), 400
             current_user.password = pbkdf2_sha256.hash(new_password)

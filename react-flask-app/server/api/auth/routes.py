@@ -33,11 +33,13 @@ def sanitize_input(input):
     return bleach.clean(input, strip=True)
 
 def validate_password(password):
-    if len(password) < 8:
+    if len(password) < 12:
         return False
     if not any(char.isdigit() for char in password):
         return False
     if not any(char in '!@#$%^&*(),.?":{}|<>' for char in password):
+        return False
+    if not any(char.isalpha() for char in password):  # Check for letters
         return False
     return True
 
@@ -88,7 +90,7 @@ def reset_password():
         return jsonify({'error': 'Invalid email address'}), 404
 
     if not validate_password(new_password):
-        return jsonify({'error': 'Password must be at least 8 characters long, contain at least one number, and one special character'}), 400
+        return jsonify({'error': 'Password must be at least 12 characters long, contain at least one number, and one special character'}), 400
 
     account.password = pbkdf2_sha256.hash(new_password)
     db.session.commit()
@@ -313,7 +315,7 @@ def register():
         return jsonify({'message': 'Invalid email format'}), 400
 
     if not validate_password(password):
-        return jsonify({'message': 'Password must be at least 8 characters long, contain at least one number, and one special character'}), 400
+        return jsonify({'message': 'Password must be at least 12 characters long, contain at least one number, and one special character'}), 400
 
     email = sanitize_input(email)
     username = sanitize_input(username)
