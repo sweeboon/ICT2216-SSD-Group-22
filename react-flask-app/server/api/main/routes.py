@@ -1,12 +1,14 @@
-import base64, logging, uuid, re
+import base64, logging, uuid, re, mimetypes
 from datetime import datetime
 from flask import request, jsonify, abort, current_app, session
 from flask_login import login_required, current_user
 from flask_principal import RoleNeed, Permission
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from api.models import Product, Cart, Payment, Order, Account
 from api import db, csrf
 from api.main import bp
+from config import Config
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -107,6 +109,48 @@ def get_product(product_id):
     return jsonify({'product_id': product.product_id, 'category_id': product.category_id, 'product_description': product.product_description, 
                     'product_price': product.product_price, 'stock': product.stock, 'image_path': product.image_path}), 200
 
+
+@bp.route('/upload-image', methods=['POST'])
+def upload_image():
+    if 'file' not in request.files:
+        current_app.logger.error("No file part in the request")
+        return jsonify({"error": "No file part in the request"}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        current_app.logger.error("No file selected for uploading")
+        return jsonify({"error": "No file selected for uploading"}), 400
+
+    try:
+        filename = secure_filename(file.filename)
+        file_path = f"public/{filename}"
+
+        # Get the MIME type of the file
+        mime_type, _ = mimetypes.guess_type(filename)
+        file_content = file.read()
+
+        # Upload image to Supabase with the correct MIME type
+        supabase = current_app.supabase
+        current_app.logger.info(f"Uploading file: {file_path} with MIME type: {mime_type}")
+        
+        response = supabase.storage.from_("product").upload(file_path, file_content, {"content-type": mime_type})
+
+        if response.status_code != 200:
+            current_app.logger.error(f"Failed to upload image. Response: {response.data}")
+            return jsonify({"error": response.data.get('message', 'Failed to upload image')}), response.status_code
+        
+        current_app.logger.info(f"File uploaded successfully: {file_path}")
+
+        # Retrieve the public URL
+        image_url_response = supabase.storage.from_("product").get_public_url(file_path)
+        current_app.logger.info(f"Retrieved image URL response: {image_url_response}")
+
+        return jsonify({"url": image_url_response}), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Exception occurred during image upload: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @bp.route('/cart', methods=['GET'])
 @login_required

@@ -26,29 +26,46 @@ export const useProduct = () => {
   };
 
   const handleAddProduct = async () => {
+    const requiredFields = [
+      'category_id',
+      'product_description',
+      'product_price',
+      'stock',
+      'image_path'
+    ];
+    
+    for (const field of requiredFields) {
+      if (!newProduct[field] || newProduct[field].toString().trim() === '') {
+        alert(`Please fill in the ${field.replace('_', ' ')}.`);
+        return;
+      }
+    }
+  
+    console.log('Sending newProduct:', newProduct);
+
     try {
       const response = await axios.post('/admin/products', newProduct);
-      setProducts([...products, response.data]);
+      console.log('Product added:', response.data);
+      fetchProducts(); // Refresh the product list
       setNewProduct({
         category_id: '',
-        image_id: '',
         product_description: '',
         product_price: '',
         stock: '',
         image_path: ''
-      });
+      }); // Reset the new product fields
     } catch (error) {
       console.error('Error adding product:', error);
+      throw error;
     }
   };
 
   const handleUpdateProduct = async () => {
     try {
-      if (editProduct) {
-        const response = await axios.put(`/admin/products/${editProduct.product_id}`, editProduct);
-        setProducts(products.map((product) => (product.product_id === editProduct.product_id ? response.data : product)));
-        setEditProduct(null);
-      }
+      const response = await axios.put(`/admin/products/${editProduct.product_id}`, editProduct);
+      console.log('Product updated:', response.data);
+      fetchProducts(); // Refresh the product list
+      setEditProduct(null); // Clear the edit product state after update
     } catch (error) {
       console.error('Error updating product:', error);
     }

@@ -145,33 +145,35 @@ def update_order_status(order_id):
 @login_required
 @admin_permission.require(http_exception=403)
 def create_product():
-    if not request.json or not all(key in request.json for key in ['category_id', 'product_description', 'product_price', 'stock', 'image_path']):
-        abort(400)  # Bad request
-
-    supabase = current_app.supabase
+    data = request.get_json()
     
-    image_data = request.json['image_path']  # Assuming image data is base64 encoded
-    image_name = f"{request.json['product_description'].replace(' ', '_')}.png"
+    current_app.logger.info(f'Received data for new product: {data}')
+    
+    # Check if all required fields are present
+    required_fields = ['category_id', 'product_description', 'product_price', 'stock', 'image_path']
+    if not data or not all(field in data for field in required_fields):
+        missing_fields = [field for field in required_fields if field not in data]
+        current_app.logger.error(f'Missing required fields: {missing_fields}')
+        return jsonify({'message': f'Missing required fields: {missing_fields}'}), 400
 
-    response = supabase.storage.from_("your-bucket-name").upload(image_name, base64.b64decode(image_data))
+    try:
+        new_product = Product(
+            category_id=data['category_id'],
+            product_description=data['product_description'],
+            product_price=data['product_price'],
+            stock=data['stock'],
+            image_path=data['image_path']  # Store the URL of the uploaded image
+        )
 
-    if response['status'] != 'ok':
-        abort(500)  # Handle error
+        db.session.add(new_product)
+        db.session.commit()
 
-    image_url = supabase.storage.from_("your-bucket-name").get_public_url(image_name)
+        current_app.logger.info(f'Product created with ID: {new_product.product_id}')
+        return jsonify({'product_id': new_product.product_id}), 201
 
-    new_product = Product(
-        category_id=request.json['category_id'],
-        product_description=request.json['product_description'],
-        product_price=request.json['product_price'],
-        stock=request.json['stock'],
-        image_path=image_url  # Store the URL of the uploaded image
-    )
-
-    db.session.add(new_product)
-    db.session.commit()
-
-    return jsonify({'product_id': new_product.product_id}), 201
+    except Exception as e:
+        current_app.logger.error(f'Error creating product: {str(e)}')
+        return jsonify({'message': 'Internal Server Error'}), 500
 
 # Update a Product
 @bp.route('/products/<int:product_id>', methods=['PUT'])

@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useProduct } from '../hooks/useProduct';
 import { useAuth } from '../hooks/useAuth';
 import axios from '../components/axiosConfig'; // Ensure this path is correct based on your project structure
+import ImageUpload from '../components/ImageUpload'; // Import the ImageUpload component
 
-const ProductComponent = () => {
+const ManageProduct = () => {
   const { isLoggedIn, roles } = useAuth();
   const {
     products,
@@ -16,6 +17,7 @@ const ProductComponent = () => {
     handleDeleteProduct,
   } = useProduct();
   const [categories, setCategories] = useState([]);
+  const [uploadSuccess, setUploadSuccess] = useState(''); // State for the image upload success message
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -46,12 +48,36 @@ const ProductComponent = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleImageUpload = (uploadedUrl) => {
+    console.log('Image uploaded with URL:', uploadedUrl); // Debugging
     if (editProduct) {
-      handleUpdateProduct();
+      setEditProduct((prevState) => ({
+        ...prevState,
+        image_path: uploadedUrl,
+      }));
     } else {
-      handleAddProduct();
+      setNewProduct((prevState) => ({
+        ...prevState,
+        image_path: uploadedUrl,
+      }));
+      console.log('newProduct after image upload:', { ...newProduct, image_path: uploadedUrl }); // Debugging
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log('Submitting newProduct:', { ...newProduct }); // Debugging
+    try {
+      if (editProduct) {
+        await handleUpdateProduct();
+        setUploadSuccess('Product saved successfully!');
+      } else {
+        await handleAddProduct();
+        setUploadSuccess('Product saved successfully!');
+      }
+    } catch (error) {
+      alert('An error occurred while saving the product. Please try again.');
+      console.error('Error saving product:', error);
     }
   };
 
@@ -76,7 +102,7 @@ const ProductComponent = () => {
           </select>
           <textarea
             name="product_description"
-            placeholder="Description"
+            placeholder="Product Name"
             value={editProduct ? editProduct.product_description : newProduct.product_description}
             onChange={editProduct ? handleEditChange : handleChange}
           />
@@ -97,13 +123,8 @@ const ProductComponent = () => {
             value={editProduct ? editProduct.stock : newProduct.stock}
             onChange={editProduct ? handleEditChange : handleChange}
           />
-          <input
-            type="text"
-            name="image_path"
-            placeholder="Image Path"
-            value={editProduct ? editProduct.image_path : newProduct.image_path}
-            onChange={editProduct ? handleEditChange : handleChange}
-          />
+          <ImageUpload onUpload={handleImageUpload} /> {/* Use the ImageUpload component */}
+          {uploadSuccess && <p style={{ color: 'green' }}>{uploadSuccess}</p>}
           <button type="submit">{editProduct ? 'Update Product' : 'Add Product'}</button>
         </form>
       )}
@@ -112,7 +133,7 @@ const ProductComponent = () => {
           <li key={product.product_id}>
             {product.product_description} - ${product.product_price}
             <p>{product.stock} in stock</p>
-            <p>{product.image_path}</p>
+            <img src={product.image_path} alt={product.product_description} style={{ width: '100px', height: '100px' }} />
             {isLoggedIn && isAdmin && (
               <>
                 <button onClick={() => setEditProduct(product)}>Edit</button>
@@ -126,4 +147,4 @@ const ProductComponent = () => {
   );
 };
 
-export default ProductComponent;
+export default ManageProduct;
