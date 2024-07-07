@@ -191,24 +191,12 @@ def create_product():
 
         db.session.add(new_product)
         db.session.commit()
+        ip_address = get_ip_address()
 
         current_app.logger.info(f'Product created with ID: {new_product.product_id}')
+        log_audit_event(current_user.account_id, current_user.name, 'Create Product', f'Created product {new_product.product_id} with description {new_product.product_description}, price {new_product.product_price}, stock {new_product.stock}', ip_address)
         return jsonify({'product_id': new_product.product_id}), 201
-
-    new_product = Product(
-        category_id=request.json['category_id'],
-        product_description=request.json['product_description'],
-        product_price=request.json['product_price'],
-        stock=request.json['stock'],
-        image_path=image_url  # Store the URL of the uploaded image
-    )
-
-    db.session.add(new_product)
-    db.session.commit()
-    ip_address = get_ip_address()
-
-    log_audit_event(current_user.account_id, current_user.name, 'Create Product', f'Created product {new_product.product_id} with description {new_product.product_description}, price {new_product.product_price}, stock {new_product.stock}', ip_address)
-    return jsonify({'product_id': new_product.product_id}), 201
+    
     except Exception as e:
         current_app.logger.error(f'Error creating product: {str(e)}')
         return jsonify({'message': 'Internal Server Error'}), 500
