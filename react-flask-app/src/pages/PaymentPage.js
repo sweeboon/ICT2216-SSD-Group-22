@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../components/axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import '../css/Payment.css'; // Import the CSS file
+
 
 const PaymentPage = () => {
     const [paymentMethod, setPaymentMethod] = useState('Cash On Delivery');
@@ -60,10 +62,11 @@ const PaymentPage = () => {
     };
 
     return (
-        <div>
+        <div className="payment-page">
+        <main className="payment-container">
             <h2>Payment Page</h2>
             <p>Total Amount: ${totalAmount}</p>
-            <div>
+            <div className="payment-methods">
                 <label>
                     <input
                         type="radio"
@@ -84,7 +87,7 @@ const PaymentPage = () => {
                 </label>
             </div>
             {paymentMethod === 'Credit Card' && (
-                <div>
+                <div className="credit-card-details">
                     <label>
                         Credit Card Number:
                         <input 
@@ -115,7 +118,11 @@ const PaymentPage = () => {
                 </div>
             )}
             <button onClick={handlePayment}>Submit Payment</button>
-            {message && <p>{message}</p>}
+            {message && <p className="message">{message}</p>}
+            <footer className="footer">
+        <p>&copy; 2024 Over18. All rights reserved.</p>
+      </footer>
+        </main>
         </div>
     );
 };
