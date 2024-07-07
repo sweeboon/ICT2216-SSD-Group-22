@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, current_user, login_required
 from flask_principal import Identity, AnonymousIdentity, identity_changed, RoleNeed, Permission
 from api.auth import bp
 from api.models import Account, Role, LoginAttempt
-from api import db, csrf, mail, limiter
+from api import db, csrf, mail
 from datetime import datetime, timedelta
 from passlib.hash import pbkdf2_sha256
 from .utils import generate_token, verify_token, generate_otp, send_otp, verify_otp, send_email
@@ -40,7 +40,6 @@ def validate_password(password):
 
 @bp.route('/reset_password_request', methods=['POST'])
 @csrf.exempt
-@limiter.limit("1 per minute") # Apply rate limiting
 def reset_password_request():
     data = request.get_json()
     email = data.get('email')
@@ -61,7 +60,6 @@ def reset_password_request():
 
 @bp.route('/reset_password', methods=['POST'])
 @csrf.exempt
-@limiter.limit("1 per minute") # Apply rate limiting
 def reset_password():
     data = request.get_json()
     token = data.get('token')
@@ -88,7 +86,6 @@ def reset_password():
 
 @bp.route('/resend_confirmation_email', methods=['POST'])
 @csrf.exempt
-@limiter.limit("1 per minute") # Apply rate limiting
 def resend_confirmation_email():
     data = request.get_json()
     if 'email' not in data:
@@ -117,7 +114,6 @@ def resend_confirmation_email():
 
 @bp.route('/initiate_login', methods=['POST'])
 @csrf.exempt
-@limiter.limit("5 per minute") # Apply rate limiting
 def initiate_login():
     data = request.get_json()
     logger.debug('Received data for initiate_login: %s', data)
@@ -177,7 +173,6 @@ def initiate_login():
 
 @bp.route('/verify_otp_and_login', methods=['POST'])
 @csrf.exempt
-@limiter.limit("5 per minute", error_message="2113Too many requests. Please try again later.") # Apply rate limiting
 def verify_otp_and_login():
     print('verify_otp_and_login route hit')
     data = request.get_json()
@@ -241,7 +236,6 @@ def verify_otp_and_login():
 
 @bp.route('/request_otp', methods=['POST'])
 @csrf.exempt
-@limiter.limit("5 per minute") # Apply rate limiting
 def request_otp():
     data = request.get_json()
     email = data.get('email')
@@ -260,7 +254,6 @@ def request_otp():
 
 @bp.route('/verify_otp', methods=['POST'])
 @csrf.exempt
-@limiter.limit("5 per minute") # Apply rate limiting
 def verify_otp_route():
     data = request.get_json()
     email = data.get('email')
@@ -284,7 +277,6 @@ def get_csrf_token():
 
 @bp.route('/register', methods=['POST'])
 @csrf.exempt
-@limiter.limit("5 per minute") # Apply rate limiting
 def register():
     data = request.get_json()
 
@@ -336,7 +328,6 @@ def register():
     return jsonify({'message': 'Account registered successfully. Please check your email to confirm your account.'}), 201
 
 @bp.route('/confirm', methods=['GET'])
-@limiter.limit("5 per minute") # Apply rate limiting
 def confirm_email():
     token = request.args.get('token')
     email = verify_token(token)
@@ -369,7 +360,6 @@ def status():
 
 @bp.route('/logout', methods=['POST'])
 @csrf.exempt
-@limiter.limit("5 per minute") # Apply rate limiting
 @login_required
 def logout():
     logout_user()
