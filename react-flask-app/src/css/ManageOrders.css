@@ -1,0 +1,83 @@
+.manage-orders-page {
+    display: flex;
+    flex-direction: column;
+    font-family: 'Arial, sans-serif';
+    padding: 20px;
+}
+
+.manage-orders-content{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+}
+.manage-orders-page h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.manage-orders-page table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.manage-orders-page th,
+.manage-orders-page td {
+    padding: 10px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.manage-orders-page th {
+    background-color: #f4f4f4;
+}
+
+.manage-orders-page tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.manage-orders-page tr:hover {
+    background-color: #f1f1f1;
+}
+
+.manage-orders-page button {
+    padding: 5px 10px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.manage-orders-page button:hover {
+    background-color: #218838;
+}
+
+.manage-orders-page .error {
+    color: red;
+    text-align: center;
+    margin-bottom: 20px;
+}
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #000;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+  }
+  
+  .footer p {
+    margin: 0;
+    color: white;
+    font-size: 0.9em;
+    padding: 5px;
+  }
+  
