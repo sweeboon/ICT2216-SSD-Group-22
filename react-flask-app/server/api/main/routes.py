@@ -1,4 +1,4 @@
-import base64, logging, uuid, re, mimetypes
+import base64, logging, uuid, re, html, mimetypes
 from datetime import datetime
 from flask import request, jsonify, abort, current_app, session
 from flask_login import login_required, current_user
