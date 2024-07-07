@@ -55,10 +55,7 @@ def create_app(config_class=Config):
     from api.admin import bp as admin_bp
     app.register_blueprint(admin_bp, url_prefix='/admin')
 
-    @app.errorhandler(429)
-    def ratelimit_handler(e):
-        return jsonify(error="ratelimit exceeded", message="You have hit the rate limit. Please try again later."), 429
-    
+        
     @identity_loaded.connect_via(app)
     def on_identity_loaded(sender, identity):
         identity.user = current_user

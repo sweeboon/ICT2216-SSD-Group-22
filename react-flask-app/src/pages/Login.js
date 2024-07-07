@@ -53,7 +53,9 @@ const Login = () => {
       if (error.response && error.response.status === 403 && error.response.data.resend_confirmation) {
         setResendConfirmation(true);
       } else {
-        if (error.response && error.response.status === 403) {
+        if (error.response && error.response.status === 429) {
+          setError(error.response.data.message);  // Handle rate limit error
+        } else if (error.response && error.response.status === 403) {
           setError('Account is locked. Please try again later.');
         } else if (error.response && error.response.status === 400 && error.response.data.message.includes('Confirmation email already sent')) {
           setResendCooldown(true);

@@ -15,6 +15,9 @@ import secrets
 import bleach, re
 from flask import Flask
 from api.admin.routes import log_audit_event, get_ip_address  # Import the function
+from flask_limiter.errors import RateLimitExceeded
+
+
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -37,6 +40,11 @@ def validate_password(password):
     if not any(char in '!@#$%^&*(),.?":{}|<>' for char in password):
         return False
     return True
+
+# Custom error handler for rate limit exceeded
+@bp.errorhandler(429)
+def ratelimit_handler(e):
+    return jsonify(error="ratelimit exceeded", message="You have hit the rate limit for verify OTP and login. Please try again later."), 429
 
 @bp.route('/reset_password_request', methods=['POST'])
 @csrf.exempt
@@ -179,7 +187,7 @@ def initiate_login():
 
 @bp.route('/verify_otp_and_login', methods=['POST'])
 @csrf.exempt
-@limiter.limit("5 per minute", error_message="2113Too many requests. Please try again later.") # Apply rate limiting
+@limiter.limit("5 per minute", error_message="Too many requests. Please try again later.") # Apply rate limiting
 def verify_otp_and_login():
     print('verify_otp_and_login route hit')
     data = request.get_json()
