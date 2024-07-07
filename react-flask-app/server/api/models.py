@@ -91,6 +91,9 @@ class Payment(db.Model):
     payment_method = db.Column(db.String(255))
     payment_status = db.Column(db.String(255))
     payment_date = db.Column(db.DateTime(), default=datetime.now)
+    credit_card_number = db.Column(db.String(16), nullable=True)  # New field for credit card details
+    expiry_date = db.Column(db.String(5), nullable=True)          # New field for credit card details
+    cvv = db.Column(db.String(3), nullable=True)                  # New field for credit card details
     orders = db.relationship('Order', backref='payment', lazy=True)
 
 class Order(db.Model):
