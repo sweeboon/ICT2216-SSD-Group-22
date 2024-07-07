@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../components/axiosConfig';
 import { useAuth } from '../hooks/useAuth';
+import '../css/ManageOrders.css';
 
 const ManageOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -38,9 +39,10 @@ const ManageOrders = () => {
   }
 
   return (
-    <div>
+    <div className="manage-orders-page">
+    <main className="manage-orders-content">
       <h1>Manage Orders</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="error">{error}</p>}
       <table>
         <thead>
           <tr>
@@ -79,6 +81,11 @@ const ManageOrders = () => {
           ))}
         </tbody>
       </table>
+      <footer className="footer">
+        <p>&copy; 2024 Over18. All rights reserved.</p>
+      </footer>
+      </main>
+      
     </div>
   );
 };
