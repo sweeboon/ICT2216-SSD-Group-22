@@ -49,7 +49,6 @@ RUN yarn install
 RUN echo '#!/bin/bash\n' \
     'cd /usr/src/app/server\n' \
     '. venv/bin/activate\n' \
-    'flask db migrate\n' \
     'flask db upgrade\n' \
     'cd /usr/src/app\n' \
     'yarn start\n' > /usr/src/app/start.sh
