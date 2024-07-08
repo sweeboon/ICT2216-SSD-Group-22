@@ -91,8 +91,8 @@ pipeline {
                     echo 'Running Tests...'
                     sh '''
                         . venv/bin/activate
-                        export PYTHONPATH=$PYTHONPATH:${CUSTOM_WORKSPACE}/react-flask-app/server
-                        python3 -m unittest discover -s test
+                        export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server
+                        python3 -m unittest discover -s tests
                     '''
                 }
             }
