@@ -1,6 +1,7 @@
 import pytest
 from api.models import Account, OTP
 from api.auth.utils import generate_token
+from api import db
 import logging
 
 # Setup URLs for API endpoints
