@@ -71,6 +71,14 @@ pipeline {
                 }
             }
         }
+        stage('Run Unit Tests') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'bash -c "set -a && source .env.temp && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
+                  
+                }
+            }
+        }
         stage('Build and Start Docker Containers') {
             agent {
                 docker {
@@ -95,14 +103,7 @@ pipeline {
                 }
             }
         }
-        stage('Run API Tests') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c "set -a && source .env.temp && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
-                    sh 'ls -l'  // List files to verify if report.xml is generated
-                }
-            }
-        }
+        
     }
     post {
         always {
