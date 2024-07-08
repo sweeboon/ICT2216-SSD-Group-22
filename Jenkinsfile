@@ -41,7 +41,7 @@ pipeline {
                 }
             }
         }
-        stage('Copy .env File') {
+       stage('Copy .env File') {
             steps {
                 script {
                     withCredentials([file(credentialsId: '177c064b-8394-453c-aaf9-252718ad9498', variable: 'SECRET_ENV_FILE')]) {
@@ -93,20 +93,6 @@ pipeline {
                 }
             }
         }
-         stage('Convert .env to Unix Line Endings') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c "sed -i \'s/\r$//\' .env"'
-                }
-            }
-        }
-        stage('Run Tests') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c "source .env && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && lask db upgrade && pytest test/test_api.py --junitxml=report.xml"'
-                }
-            }
-        }
         stage('Deploy Application') {
             agent {
                 docker {
@@ -124,7 +110,20 @@ pipeline {
                 }
             }
         }
-        
+        stage('Convert .env to Unix Line Endings') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'bash -c "sed -i \'s/\r$//\' .env"'
+                }
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'bash -c "set -a && source .env && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && flask db upgrade && pytest test/test_api.py --junitxml=report.xml"'
+                }
+            }
+        }
     }
     post {
         always {
