@@ -9,13 +9,16 @@ from passlib.hash import pbkdf2_sha256
 from datetime import datetime
 from flask import request
 import os
+
+admin_permission = Permission(RoleNeed('Admin'))
+
 def get_ip_address():
     if request.headers.get('X-Forwarded-For'):
         ip = request.headers.getlist('X-Forwarded-For')[0]
     else:
         ip = request.remote_addr
     return ip
-admin_permission = Permission(RoleNeed('Admin'))
+
 def log_audit_event(user_id, user_name, action, details, ip_address):
     audit_log = AuditLog(
         user_id=user_id,
@@ -27,6 +30,7 @@ def log_audit_event(user_id, user_name, action, details, ip_address):
     )
     db.session.add(audit_log)
     db.session.commit()
+
 @bp.route('/users', methods=['GET'])
 @login_required
 @admin_permission.require(http_exception=403)
@@ -88,7 +92,6 @@ def delete_user(account_id):
     ip_address = get_ip_address()
     log_audit_event(current_user.account_id, current_user.name, 'Delete User', f'Deleted user {account_id}:{user.name}', ip_address)
     return jsonify({'message': 'User deleted successfully'}), 200
-
 
 @bp.route('/assign-role', methods=['POST'])
 @login_required

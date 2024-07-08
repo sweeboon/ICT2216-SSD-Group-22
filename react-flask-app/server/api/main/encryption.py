@@ -6,8 +6,6 @@ from cryptography.hazmat.primitives import padding
 import os
 import base64
 
-
-
 # Generate a key
 def generate_key():
     password = b"!ThIsIsa5tr0nGP@ssW0rd!"

@@ -10,6 +10,7 @@ roles_accounts = db.Table('roles_accounts',
     db.Column('role_id', db.Integer, db.ForeignKey('role.id'), primary_key=True),
     extend_existing=True
 )
+
 class AuditLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, nullable=False)
@@ -18,6 +19,7 @@ class AuditLog(db.Model):
     details = db.Column(db.Text, nullable=False)
     ip_address = db.Column(db.String(45), nullable=False)  # IP address field
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True)
@@ -109,4 +111,3 @@ class Order(db.Model):
 class Category(db.Model):
     category_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     category_name = db.Column(db.String(255), nullable = False)
-
