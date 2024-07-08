@@ -57,6 +57,7 @@ pipeline {
                         python3 -m venv venv
                         . venv/bin/activate
                         pip install -r requirements.txt
+                        export $(grep -v '^#' .env | xargs)
                         flask db upgrade
                     '''
                 }
@@ -95,8 +96,9 @@ pipeline {
                     echo 'Running Tests...'
                     sh '''
                         . venv/bin/activate
+                        export $(grep -v '^#' .env | xargs)
                         export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server
-                        python3 -m unittest discover -s test
+                        python3 -m unittest discover -s tests
                     '''
                 }
             }
