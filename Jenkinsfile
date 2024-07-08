@@ -42,6 +42,14 @@ pipeline {
                 }
             }
         }
+        stage('Create Temp .env for Tests') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'cp .env .env.temp'
+                    sh 'sed -i -e "s/\r//g" .env.temp'
+                }
+            }
+        }
         stage('Setup Python Environment') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
