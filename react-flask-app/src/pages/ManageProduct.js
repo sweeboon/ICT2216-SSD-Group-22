@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useProduct } from '../hooks/useProduct';
 import { useAuth } from '../hooks/useAuth';
-import axios from '../components/axiosConfig';
-import ImageUpload from '../components/ImageUpload';
+import axios from '../components/axiosConfig'; // Ensure this path is correct based on your project structure
+import ImageUpload from '../components/ImageUpload'; // Import the ImageUpload component
 import '../css/ManageProduct.css';
 
 const ManageProduct = () => {
@@ -18,7 +18,7 @@ const ManageProduct = () => {
     handleDeleteProduct,
   } = useProduct();
   const [categories, setCategories] = useState([]);
-  const [uploadSuccess, setUploadSuccess] = useState('');
+  const [uploadSuccess, setUploadSuccess] = useState(''); // State for the image upload success message
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -50,21 +50,32 @@ const ManageProduct = () => {
   };
 
   const handleImageUpload = (uploadedUrl) => {
-    setNewProduct((prevState) => ({
-      ...prevState,
-      image_path: uploadedUrl,
-    }));
+    console.log('Image uploaded with URL:', uploadedUrl); // Debugging
+    if (editProduct) {
+      setEditProduct((prevState) => ({
+        ...prevState,
+        image_path: uploadedUrl,
+      }));
+    } else {
+      setNewProduct((prevState) => ({
+        ...prevState,
+        image_path: uploadedUrl,
+      }));
+      console.log('newProduct after image upload:', { ...newProduct, image_path: uploadedUrl }); // Debugging
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Submitting newProduct:', { ...newProduct }); // Debugging
     try {
       if (editProduct) {
         await handleUpdateProduct();
+        setUploadSuccess('Product saved successfully!');
       } else {
         await handleAddProduct();
+        setUploadSuccess('Product saved successfully!');
       }
-      setUploadSuccess('Product saved successfully!');
     } catch (error) {
       alert('An error occurred while saving the product. Please try again.');
       console.error('Error saving product:', error);
@@ -80,9 +91,8 @@ const ManageProduct = () => {
         <form onSubmit={handleSubmit}>
           <select
             name="category_id"
-            value={newProduct.category_id}
-            onChange={handleChange}
-            className="category_id"
+            value={editProduct ? editProduct.category_id : newProduct.category_id}
+            onChange={editProduct ? handleEditChange : handleChange}
           >
             <option value="">Select Category</option>
             {categories.map((category) => (
@@ -93,9 +103,9 @@ const ManageProduct = () => {
           </select>
           <textarea
             name="product_description"
-            placeholder="Product Description"
-            value={newProduct.product_description}
-            onChange={handleChange}
+            placeholder="Product Name"
+            value={editProduct ? editProduct.product_description : newProduct.product_description}
+            onChange={editProduct ? handleEditChange : handleChange}
           />
           <input
             type="number"
@@ -103,36 +113,36 @@ const ManageProduct = () => {
             placeholder="Price"
             min="0"
             step="0.01"
-            value={newProduct.product_price}
-            onChange={handleChange}
+            value={editProduct ? editProduct.product_price : newProduct.product_price}
+            onChange={editProduct ? handleEditChange : handleChange}
           />
           <input
             type="number"
             name="stock"
             placeholder="Stock"
             min="0"
-            value={newProduct.stock}
-            onChange={handleChange}
+            value={editProduct ? editProduct.stock : newProduct.stock}
+            onChange={editProduct ? handleEditChange : handleChange}
           />
-          <ImageUpload onUpload={handleImageUpload} />
-          {uploadSuccess && <p className="upload-success">{uploadSuccess}</p>}
+          <ImageUpload onUpload={handleImageUpload} /> {/* Use the ImageUpload component */}
+          {uploadSuccess && <p style={{ color: 'green' }}>{uploadSuccess}</p>}
           <button type="submit">{editProduct ? 'Update Product' : 'Add Product'}</button>
         </form>
       )}
       <ul>
         {products.map((product) => (
           <li key={product.product_id}>
-            <div className="product-info">
-              <h3>{product.product_description}</h3>
-              <p>${product.product_price}</p>
-              <p>{product.stock} in stock</p>
-            </div>
-            <img src={product.image_path} alt={product.product_description} />
+            {product.product_description} - ${product.product_price}
+            <p>{product.stock} in stock</p>
+            <img src={product.image_path} alt={product.product_description} style={{ width: '100px', height: '100px' }} />
             {isLoggedIn && isAdmin && (
-              <div className="product-actions">
+              <div className='product-management-buttons'>
+    
+
                 <button onClick={() => setEditProduct(product)}>Edit</button>
                 <button className="delete-button" onClick={() => handleDeleteProduct(product.product_id)}>Delete</button>
               </div>
+            
             )}
           </li>
         ))}

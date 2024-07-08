@@ -1,154 +1,142 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+
 .product-management {
-    display: flex;
-    flex-direction: column;
-    font-family: 'Arial, sans-serif';
-    padding: 20px;
-    background-color: #f4f4f4;
-    min-height: 100vh;
-    align-items: center;
-  }
-  
-  .product-management h2 {
-    text-align: center;
-    color: #333;
-    margin-bottom: 20px;
-    font-size: 26px;
-    font-weight: 600;
-  }
-  
-  .product-management form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 500px;
-    padding: 20px;
-    background: #fff;
-    border-radius: 8px;
-  }
-  
-  .product-management select
-  {
-    width: 430px;
-    padding: 12px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 16px;
-    background: #f9f9f9;
-    margin-bottom: 20px;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
 
-  .product-management textarea,
-  .product-management input {
-    width: 400px;
-    padding: 12px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 16px;
-    background: #f9f9f9;
-  }
+.product-management h2 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 26px;
+}
 
-  
-  
-  .product-management button {
-    padding: 12px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 10px;
-    font-size: 16px;
-    width: 100%;
-  }
-  
-  
-  .product-management .upload-success {
-    color: green;
-    margin-top: 10px;
-    font-weight: 600;
-  }
-  
-  .product-management ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    max-width: 800px;
-  }
-  
-  .product-management li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 10px;
-    width: 520px;
-    margin: 20px 130px;
-    margin-bottom: 10px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-  
-  .product-management img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 4px;
-    margin-right: 20px;
-  }
-  
-  .product-management .product-info {
-    flex-grow: 1;
-    margin-right: 20px;
-  }
-  
-  .product-management .product-info h3 {
-    margin: 0;
-    font-size: 18px;
-    color: #333;
-  }
-  
-  .product-management .product-info p {
-    margin: 5px 0;
-    color: #666;
-  }
-  
-  .product-management .product-actions {
-    display: flex;
-    gap: 10px;
-  }
-  
-  .product-management .product-actions button {
-    padding: 8px 12px;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-  }
-  
-  .product-management .delete-button {
-    background-color: #dc3545;
-  }
-  
-  
-  .footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background-color: #000;
-    color: white;
-    text-align: center;
-    padding: 10px 0;
-  }
-  
-  .footer p {
-    margin: 0;
-    color: white;
-    font-size: 0.9em;
-    padding: 5px;
-  }
-  
-  
+.product-management form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 600px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.product-management select,
+.product-management textarea,
+.product-management input {
+  width: 430px;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  background-color: #f9f9f9;
+}
+
+.product-management select{
+  width: 450px;
+}
+
+.product-management textarea {
+  resize: vertical;
+  height: 100px;
+}
+
+.product-management button {
+  padding: 10px 20px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+
+
+.product-management ul {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+  max-width: 800px;
+}
+
+.product-management li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  margin-bottom: 10px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.product-management li img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.product-management li button {
+  padding: 5px 10px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin: 5px;
+}
+
+
+.product-management li button:nth-child(2) {
+  background-color: #dc3545;
+}
+
+
+.footer {
+  background-color: #000;
+  color: white;
+  text-align: center;
+  padding: 10px 0;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+}
+
+.footer p {
+  margin: 0;
+}
+.product-management .product-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.product-management .product-actions button {
+  padding: 8px 12px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.product-management button {
+
+  background-color: #007bff;
+}
+
+.product-management .delete-button {
+  background-color: #dc3545;
+}

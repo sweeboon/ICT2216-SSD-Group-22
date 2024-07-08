@@ -25,17 +25,17 @@ const ImageUpload = ({ onUpload, width = '420px', height = '200px' }) => {
       formData.append('file', file);
 
       //for live server
-      const response = await axios.post('https://forteam22ict.xyz/main/upload-image', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      //for localhost
-      // const response = await axios.post('http://localhost:5000/main/upload-image', formData, {
+      // const response = await axios.post('https://forteam22ict.xyz/main/upload-image', formData, {
       //   headers: {
       //     'Content-Type': 'multipart/form-data',
       //   },
       // });
+      //for localhost
+      const response = await axios.post('http://localhost:5000/main/upload-image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       if (response.status === 200 && response.data.file_path) {
         const uploadedUrl = response.data.file_path;
         onUpload(uploadedUrl);
