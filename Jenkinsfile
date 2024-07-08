@@ -19,7 +19,7 @@ pipeline {
         //         dependencyCheckPublisher pattern: 'dependency-check-report.xml'
         //     }
         // }
-         stage('Clean Workspace') {
+        stage('Clean Workspace') {
             steps {
                 deleteDir()
             }
@@ -54,7 +54,7 @@ pipeline {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
                     sh 'python3 -m venv venv'
-                    sh 'source venv/bin/activate && pip install -r requirements.txt'
+                    sh '. venv/bin/activate && pip install -r requirements.txt'
                 }
             }
         }
@@ -92,7 +92,6 @@ pipeline {
                     sh '''
                         . venv/bin/activate
                         export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server
-                        echo $PYTHONPATH
                         python3 -m unittest discover -s test
                     '''
                 }
