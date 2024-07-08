@@ -1,12 +1,14 @@
 import logging
 from flask.testing import FlaskClient
 import pytest
+from api.auth.utils import generate_token
 
 logging.basicConfig(level=logging.DEBUG)
 
 URL_REGISTER_USER = "/auth/register"
 URL_INITIATE_LOGIN = "/auth/initiate_login"
 URL_VERIFY_OTP_AND_LOGIN = "/auth/verify_otp_and_login"
+URL_CONFIRM_EMAIL = "/auth/confirm"
 
 test_userdata = {
     "email": "testuser@example.com",
@@ -16,6 +18,12 @@ test_userdata = {
     "address": "123 Test Street"
 }
 
+def confirm_account(client: FlaskClient, email: str):
+    token = generate_token(email)
+    confirm_url = f"{URL_CONFIRM_EMAIL}?token={token}"
+    response = client.get(confirm_url)
+    assert response.status_code == 200, f"Failed to confirm account: {response.data}"
+
 def test_register_user(client: FlaskClient):
     response = client.post(URL_REGISTER_USER, json=test_userdata)
     logging.debug(f"Request data: {test_userdata}")
@@ -23,8 +31,11 @@ def test_register_user(client: FlaskClient):
     assert response.status_code == 201
 
 def test_initiate_login(client: FlaskClient, init_database):
-    # Clear database and register user
+    # Register user
     client.post(URL_REGISTER_USER, json=test_userdata)
+
+    # Confirm the account
+    confirm_account(client, test_userdata['email'])
 
     # Login with the newly registered user
     login_data = {
@@ -39,8 +50,11 @@ def test_initiate_login(client: FlaskClient, init_database):
     assert response.status_code == 200
 
 def test_verify_otp_and_login(client: FlaskClient, init_database):
-    # Clear database and register user
+    # Register user
     client.post(URL_REGISTER_USER, json=test_userdata)
+
+    # Confirm the account
+    confirm_account(client, test_userdata['email'])
 
     # Login with the newly registered user
     login_data = {
