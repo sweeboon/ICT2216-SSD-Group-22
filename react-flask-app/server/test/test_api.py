@@ -26,6 +26,8 @@ def test_initiate_login(client: FlaskClient, init_database):
     response = client.post(URL_REGISTER_USER, json=test_userdata)
     logging.debug(f"Request data: {test_userdata}")
     logging.debug(f"Response: {response.status_code}, {response.get_json()}")
+    if response.status_code != 201:
+        logging.error(f"Error response: {response.get_json()}")
     assert response.status_code == 201
 
     login_data = {
@@ -35,12 +37,16 @@ def test_initiate_login(client: FlaskClient, init_database):
     response = client.post(URL_INITIATE_LOGIN, json=login_data)
     logging.debug(f"Login data: {login_data}")
     logging.debug(f"Response: {response.status_code}, {response.get_json()}")
+    if response.status_code != 200:
+        logging.error(f"Error response: {response.get_json()}")
     assert response.status_code == 200
 
 def test_verify_otp_and_login(client: FlaskClient, init_database):
     response = client.post(URL_REGISTER_USER, json=test_userdata)
     logging.debug(f"Request data: {test_userdata}")
     logging.debug(f"Response: {response.status_code}, {response.get_json()}")
+    if response.status_code != 201:
+        logging.error(f"Error response: {response.get_json()}")
     assert response.status_code == 201
 
     login_data = {
@@ -50,6 +56,8 @@ def test_verify_otp_and_login(client: FlaskClient, init_database):
     response = client.post(URL_INITIATE_LOGIN, json=login_data)
     logging.debug(f"Login data: {login_data}")
     logging.debug(f"Response: {response.status_code}, {response.get_json()}")
+    if response.status_code != 200:
+        logging.error(f"Error response: {response.get_json()}")
     assert response.status_code == 200
 
     otp_response = response.get_json()
@@ -65,4 +73,6 @@ def test_verify_otp_and_login(client: FlaskClient, init_database):
     response = client.post(URL_VERIFY_OTP_AND_LOGIN, json=verify_otp_data)
     logging.debug(f"Verify OTP data: {verify_otp_data}")
     logging.debug(f"Response: {response.status_code}, {response.get_json()}")
+    if response.status_code != 200:
+        logging.error(f"Error response: {response.get_json()}")
     assert response.status_code == 200
