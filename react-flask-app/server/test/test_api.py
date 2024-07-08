@@ -21,11 +21,13 @@ test_userdata = {
 def confirm_account(client: FlaskClient, email: str):
     token = generate_token(email)
     logging.debug(f"Generated token: {token}")
-    
+
     # Verifying the token right after generation to ensure it works
     email_from_token = verify_token(token)
     logging.debug(f"Email from token: {email_from_token}")
-    
+
+    assert email_from_token == email, "Generated token does not match email"
+
     confirm_url = f"{URL_CONFIRM_EMAIL}?token={token}"
     response = client.get(confirm_url)
     logging.debug(f"Confirm URL: {confirm_url}")
