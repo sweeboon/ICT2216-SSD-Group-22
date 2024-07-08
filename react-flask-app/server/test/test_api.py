@@ -7,10 +7,10 @@ from api.auth.utils import generate_token, verify_token
 import logging
 
 # Setup URLs for API endpoints
-URL_REGISTER_USER = '/register'
-URL_CONFIRM_EMAIL = '/confirm'
-URL_INITIATE_LOGIN = '/login'
-URL_VERIFY_OTP = '/verify-otp'
+URL_REGISTER_USER = 'api/auth/register'
+URL_CONFIRM_EMAIL = 'api/auth/confirm'
+URL_INITIATE_LOGIN = 'api/auth/login'
+URL_VERIFY_OTP = 'api/auth/verify-otp'
 
 # Test user data
 test_userdata = {
