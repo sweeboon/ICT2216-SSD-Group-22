@@ -23,13 +23,10 @@ def test_register_user(client: FlaskClient):
     assert response.status_code == 201
 
 def test_initiate_login(client: FlaskClient, init_database):
-    response = client.post(URL_REGISTER_USER, json=test_userdata)
-    logging.debug(f"Request data: {test_userdata}")
-    logging.debug(f"Response: {response.status_code}, {response.get_json()}")
-    if response.status_code != 201:
-        logging.error(f"Error response: {response.get_json()}")
-    assert response.status_code == 201
+    # Clear database and register user
+    client.post(URL_REGISTER_USER, json=test_userdata)
 
+    # Login with the newly registered user
     login_data = {
         "email": test_userdata["email"],
         "password": test_userdata["password"]
@@ -42,13 +39,10 @@ def test_initiate_login(client: FlaskClient, init_database):
     assert response.status_code == 200
 
 def test_verify_otp_and_login(client: FlaskClient, init_database):
-    response = client.post(URL_REGISTER_USER, json=test_userdata)
-    logging.debug(f"Request data: {test_userdata}")
-    logging.debug(f"Response: {response.status_code}, {response.get_json()}")
-    if response.status_code != 201:
-        logging.error(f"Error response: {response.get_json()}")
-    assert response.status_code == 201
+    # Clear database and register user
+    client.post(URL_REGISTER_USER, json=test_userdata)
 
+    # Login with the newly registered user
     login_data = {
         "email": test_userdata["email"],
         "password": test_userdata["password"]
