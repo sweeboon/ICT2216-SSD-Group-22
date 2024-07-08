@@ -129,10 +129,24 @@ pipeline {
         always {
             cleanWs()
             //archive report
-            junit 'report.xml'
+            
         // success {
         //     dependencyCheckPublisher pattern: 'dependency-check-report.xml'
         // }
+        }
+        success {
+            script {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    junit 'report.xml'
+                }
+            }
+        }
+        failure {
+            script {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    junit 'report.xml'
+                }
+            }
         }
     }
 }
