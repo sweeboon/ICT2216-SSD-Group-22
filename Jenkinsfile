@@ -66,13 +66,6 @@ pipeline {
                 }
             }
         }
-        stage('Run Tests') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c "export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
-                }
-            }
-        }
         stage('Clean Up') {
             agent {
                 docker {
@@ -97,6 +90,13 @@ pipeline {
             steps {
                 script {
                     sh 'docker-compose -f $CUSTOM_WORKSPACE/react-flask-app/docker-compose.yml down'
+                }
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'bash -c "source .env && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
                 }
             }
         }
