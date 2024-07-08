@@ -60,11 +60,13 @@ def confirm_account(client, email):
     assert response.status_code == 200, f"Failed to confirm account: {response.data}"
 
 def test_register_user(client, init_database):
+    logging.debug(f"Test user data: {test_userdata}")
     response = client.post(URL_REGISTER_USER, json=test_userdata)
     logging.debug(f"Register response: {response.status_code}, {response.data}")
     assert response.status_code == 201, f"Unexpected status code: {response.status_code}, {response.data}"
 
 def test_initiate_login(client, init_database):
+    logging.debug(f"Test user data: {test_userdata}")
     # Register user
     register_response = client.post(URL_REGISTER_USER, json=test_userdata)
     logging.debug(f"Register response: {register_response.status_code}, {register_response.data}")
@@ -98,6 +100,7 @@ def test_initiate_login(client, init_database):
     assert response.status_code == 200, f"OTP verification failed: {response.status_code}, {response.data}"
 
 def test_verify_otp_and_login(client, init_database):
+    logging.debug(f"Test user data: {test_userdata}")
     # Register user
     register_response = client.post(URL_REGISTER_USER, json=test_userdata)
     logging.debug(f"Register response: {register_response.status_code}, {register_response.data}")
