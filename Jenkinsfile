@@ -50,6 +50,12 @@ pipeline {
                 }
             }
         }
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing dependencies...'
+                sh 'pip install -r $CUSTOM_WORKSPACE/server/requirements.txt'
+            }
+        }
         stage('Clean Up') {
             agent {
                 docker {
