@@ -52,7 +52,12 @@ def test_verify_otp_and_login(client: FlaskClient, init_database):
     logging.debug(f"Response: {response.status_code}, {response.get_json()}")
     assert response.status_code == 200
 
-    otp = response.get_json().get('otp')
+    otp_response = response.get_json()
+    if 'otp' not in otp_response:
+        logging.error(f"OTP not found in response: {otp_response}")
+        pytest.fail("OTP not found in response")
+
+    otp = otp_response['otp']
     verify_otp_data = {
         "email": test_userdata["email"],
         "otp": otp

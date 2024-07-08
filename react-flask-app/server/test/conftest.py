@@ -31,6 +31,8 @@ def db(app):
 def init_database(db, app):
     """Initialize the database with a user for testing."""
     with app.app_context():
+        db.drop_all()
+        db.create_all()
         user = Account(
             email="testuser@example.com",
             password="Password123!",
