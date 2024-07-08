@@ -35,7 +35,7 @@ pipeline {
          stage('Copy .env File') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: '177c064b-8394-453c-aaf9-252718ad9498', variable: 'SECRET_ENV_FILE')]) {
+                    withCredentials([file(credentialsId: 'f2a5fe51-2885-431f-80cf-3d7a85218f5b', variable: 'SECRET_ENV_FILE')]) {
                         sh 'cp $SECRET_ENV_FILE $CUSTOM_WORKSPACE/react-flask-app/server/.env'
                         sh 'ls -l $CUSTOM_WORKSPACE/react-flask-app/server/.env'  // Verify the .env file is copied
                     }
@@ -57,12 +57,7 @@ pipeline {
                 }
             }
         }
-        stage('Print Environment Variables') {
-                steps {
-                    sh 'printenv'
-                }
-            }
-
+       
         stage('Setup Python Environment') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
