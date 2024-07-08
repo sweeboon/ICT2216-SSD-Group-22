@@ -137,12 +137,12 @@ pipeline {
         always {
             // Archive test results and clean workspace
             dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                archiveArtifacts artifacts: 'report.xml', allowEmptyArchive: true
+                junit 'report.xml'
             }
             // dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client/cypress/results") {
             //     archiveArtifacts artifacts: '*.xml', allowEmptyArchive: true
             // }
-            cleanWs()
+            
         }
     }
 }
