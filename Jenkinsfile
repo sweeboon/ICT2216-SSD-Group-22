@@ -5,17 +5,20 @@ pipeline {
     }
 
     stages {
-        stage('OWASP Dependency-Check Vulnerabilities') {
-      steps {
-        dependencyCheck additionalArguments: ''' 
-                    -o './'
-                    -s './'
-                    -f 'ALL' 
-                    --prettyPrint''', odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
-        
-        dependencyCheckPublisher pattern: 'dependency-check-report.xml'
-      }
-    }
+         stage('OWASP Dependency-Check Vulnerabilities') {
+            steps {
+                withCredentials([string(credentialsId: 'da57b8b1-87d1-412c-93c7-849084a0db38', variable: 'NVD_API_KEY')]) {
+                    dependencyCheck additionalArguments: ''' 
+                        -o './'
+                        -s './'
+                        -f 'ALL' 
+                        --prettyPrint
+                        --nvdApiKey $NVD_API_KEY''', odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
+
+                    dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+                }
+            }
+        }
         stage('Clean Workspace') {
             steps {
                 deleteDir()
