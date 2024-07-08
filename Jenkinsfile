@@ -7,12 +7,14 @@ pipeline {
     stages {
          stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
-                dependencyCheck additionalArguments: ''' 
-                            -o './'
-                            -s './'
-                            -f 'ALL' 
-                            --prettyPrint''', odcInstallation: 'OWASP Dependency-Check Vulnerabilities', --nvdApiKey:'ae60ce14-527f-411f-8f50-6de6638bed18'
-                
+                dependencyCheck additionalArguments: """
+                    -o './'
+                    -s './'
+                    -f 'ALL'
+                    --prettyPrint
+                    --nvdApiKey ae60ce14-527f-411f-8f50-6de6638bed18
+                """, odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
+
                 dependencyCheckPublisher pattern: 'dependency-check-report.xml'
             }
         }
