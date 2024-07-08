@@ -65,53 +65,53 @@ pipeline {
                 }
             }
         }
-        stage('Create Temp .env for Tests') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'cp .env .env.temp'
-                    sh 'sed -i -e "s/\r//g" .env.temp'
-                }
-            }
-        }
-        stage('Convert .env.temp to Unix Line Endings') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'sed -i -e "s/\r//g" .env.temp'
-                }
-            }
-        }
+        // stage('Create Temp .env for Tests') {
+        //     steps {
+        //         dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+        //             sh 'cp .env .env.temp'
+        //             sh 'sed -i -e "s/\r//g" .env.temp'
+        //         }
+        //     }
+        // }
+        // stage('Convert .env.temp to Unix Line Endings') {
+        //     steps {
+        //         dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+        //             sh 'sed -i -e "s/\r//g" .env.temp'
+        //         }
+        //     }
+        // }
        
-        stage('Setup Python Environment') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c "python3 -m venv venv"'
-                    sh 'bash -c ". venv/bin/activate && pip install -r requirements.txt"'
-                }
-            }
-        }
+        // stage('Setup Python Environment') {
+        //     steps {
+        //         dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+        //             sh 'bash -c "python3 -m venv venv"'
+        //             sh 'bash -c ". venv/bin/activate && pip install -r requirements.txt"'
+        //         }
+        //     }
+        // }
        
-        stage('Install Frontend Dependencies') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
-                    sh 'yarn install'
-                }
-            }
-        }
-         stage('Database Migration') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c ". venv/bin/activate && flask db upgrade"'
-                }
-            }
-        }
-        stage('Run Tests') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c "set -a && source .env.temp && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
-                    sh 'ls -l'  // List files to verify if report.xml is generated
-                }
-            }
-        }
+        // stage('Install Frontend Dependencies') {
+        //     steps {
+        //         dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
+        //             sh 'yarn install'
+        //         }
+        //     }
+        // }
+        //  stage('Database Migration') {
+        //     steps {
+        //         dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+        //             sh 'bash -c ". venv/bin/activate && flask db upgrade"'
+        //         }
+        //     }
+        // }
+        // stage('Run Tests') {
+        //     steps {
+        //         dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+        //             sh 'bash -c "set -a && source .env.temp && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
+        //             sh 'ls -l'  // List files to verify if report.xml is generated
+        //         }
+        //     }
+        // }
     
 
         stage('Stop and Remove Existing Containers') {
@@ -128,27 +128,27 @@ pipeline {
             }
         
         }
-       
-       
+       stage('Deploy Application') {
+            agent {
+                docker {
+                    image 'docker/compose:latest'
+                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            steps {
+                script {
+                    dir("${env.CUSTOM_WORKSPACE}") {
+                        sh 'echo "Current workspace during deploy: $CUSTOM_WORKSPACE"'
+                        sh 'ls -l $CUSTOM_WORKSPACE/react-flask-app/server/.env'  // Ensure .env file is present before build
+                        sh 'docker-compose -f $CUSTOM_WORKSPACE/react-flask-app/docker-compose.yml up -d --build'
+                    }
+                }
+            }
+        }
     
-        // stage('Deploy Application') {
-        //     agent {
-        //         docker {
-        //             image 'docker/compose:latest'
-        //             args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-        //         }
-        //     }
-        //     steps {
-        //         script {
-        //             dir("${env.CUSTOM_WORKSPACE}") {
-        //                 sh 'echo "Current workspace during deploy: $CUSTOM_WORKSPACE"'
-        //                 sh 'ls -l $CUSTOM_WORKSPACE/react-flask-app/server/.env'  // Ensure .env file is present before build
-        //                 sh 'docker-compose -f $CUSTOM_WORKSPACE/react-flask-app/docker-compose.yml up -d --build'
-        //             }
-        //         }
-        //     }
-        // }
-    }
+       
+
+        
 
     post {
         always {
