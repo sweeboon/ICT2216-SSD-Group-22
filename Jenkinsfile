@@ -125,7 +125,8 @@ pipeline {
         //         }
         //     }
         // }
-}
+    }
+
     post {
         always {
             //archive report
@@ -136,8 +137,11 @@ pipeline {
         //     dependencyCheckPublisher pattern: 'dependency-check-report.xml'
         // }
         }
-        
+        }
+    
         
     }
+    
 }
+
 
