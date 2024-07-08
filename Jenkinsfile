@@ -128,6 +128,8 @@ pipeline {
     post {
         always {
             cleanWs()
+            //archive report
+            junit 'report.xml'
         // success {
         //     dependencyCheckPublisher pattern: 'dependency-check-report.xml'
         // }
