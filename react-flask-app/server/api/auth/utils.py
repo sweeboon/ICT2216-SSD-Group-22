@@ -7,11 +7,7 @@ from api import db
 import logging
 from flask_mailman import EmailMessage
 
-import logging
-
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
-
 
 def send_email(subject, recipient, template, **kwargs):
     msg = EmailMessage(
@@ -90,12 +86,20 @@ def get_serializer():
 
 def generate_token(data):
     serializer = get_serializer()
-    return serializer.dumps(data, salt=current_app.config['SECURITY_PASSWORD_SALT'])
+    salt = current_app.config['SECURITY_PASSWORD_SALT']
+    logging.debug(f"Generating token with data: {data} and salt: {salt}")
+    token = serializer.dumps(data, salt=salt)
+    logging.debug(f"Generated token: {token}")
+    return token
 
 def verify_token(token, max_age=3600):
     serializer = get_serializer()
+    salt = current_app.config['SECURITY_PASSWORD_SALT']
+    logging.debug(f"Verifying token: {token} with salt: {salt}")
     try:
-        data = serializer.loads(token, salt=current_app.config['SECURITY_PASSWORD_SALT'], max_age=max_age)
+        data = serializer.loads(token, salt=salt, max_age=max_age)
+        logging.debug(f"Token is valid, data: {data}")
+        return data
     except Exception as e:
+        logging.error(f"Token verification failed: {e}")
         return False
-    return data
