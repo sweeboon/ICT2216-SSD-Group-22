@@ -14,16 +14,21 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Submitting password reset form');
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
+      console.log('Passwords do not match');
       return;
     }
     try {
+      console.log('Sending password reset request');
       const response = await axios.post(`/auth/reset_password`, { token, new_password: newPassword, confirm_password: confirmPassword });
+      console.log('Password reset response:', response);
       setMessage(response.data.message);
       setError('');
       setTimeout(() => navigate('/login'), 3000); // Redirect to login page after 3 seconds
     } catch (error) {
+      console.error('Error resetting password:', error);
       setError('Error resetting password. Please try again.');
       setMessage('');
     }
@@ -32,6 +37,7 @@ const ResetPassword = () => {
   useEffect(() => {
     if (!token) {
       setError('Invalid or expired token.');
+      console.log('Invalid or expired token');
     }
   }, [token]);
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Navigate, useLocation } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
 import '../css/Auth.css';
@@ -135,6 +135,9 @@ const Login = () => {
             </div>
           )}
           {resendCooldown && <p>Please wait {resendCooldownTime} seconds before requesting a new confirmation email.</p>}
+          <div>
+            <Link to="/forgot-password">Forgot Password?</Link>
+          </div>
         </div>
       </div>
       <footer className="footer">

@@ -17,7 +17,6 @@ from flask import Flask
 from api.admin.routes import log_audit_event, get_ip_address  # Import the function
 from flask_limiter.errors import RateLimitExceeded
 
-
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -73,27 +72,35 @@ def reset_password_request():
 @csrf.exempt
 @limiter.limit("1 per minute") # Apply rate limiting
 def reset_password():
+    logger.debug('Reset password request received')
     data = request.get_json()
     token = data.get('token')
     new_password = data.get('new_password')
     confirm_password = data.get('confirm_password')
 
+    logger.debug('Data received: %s', data)
+
     if new_password != confirm_password:
+        logger.debug('Passwords do not match')
         return jsonify({'error': 'Passwords do not match'}), 400
 
     email = verify_token(token)
     if email is False:
+        logger.debug('Invalid or expired token')
         return jsonify({'error': 'Invalid or expired token'}), 400
 
     account = Account.query.filter_by(email=email).first()
     if not account:
+        logger.debug('Invalid email address: %s', email)
         return jsonify({'error': 'Invalid email address'}), 404
 
     if not validate_password(new_password):
+        logger.debug('Password validation failed for password: %s', new_password)
         return jsonify({'error': 'Password must be at least 12 characters long, contain at least one number, and one special character'}), 400
 
     account.password = pbkdf2_sha256.hash(new_password)
     db.session.commit()
+    logger.debug('Password reset successful for email: %s', email)
     return jsonify({'message': 'Password reset successful'}), 200
 
 @bp.route('/resend_confirmation_email', methods=['POST'])
@@ -413,7 +420,6 @@ def refresh_token():
 
         response = jsonify({'message': 'Token refreshed'})
         response.set_cookie('token', new_token, httponly=True, secure=True, samesite='Strict')
-
 
         return response
     except jwt.ExpiredSignatureError:
