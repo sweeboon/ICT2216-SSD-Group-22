@@ -50,10 +50,11 @@ pipeline {
                 }
             }
         }
-        stage('Install Dependencies') {
+         stage('Install Python Dependencies') {
             steps {
-                echo 'Installing dependencies...'
-                sh 'pip install -r $CUSTOM_WORKSPACE/server/requirements.txt'
+                script {
+                    sh 'bash -c "source ${WORKSPACE}/${VENV_PATH}/bin/activate && pip install -r ${WORKSPACE}/react-flask-app/server/requirements.txt"'
+                }
             }
         }
         stage('Clean Up') {
