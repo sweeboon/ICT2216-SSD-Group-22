@@ -93,6 +93,13 @@ pipeline {
                 }
             }
         }
+        stage('Convert .env to Unix Line Endings') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'bash -c "dos2unix .env"'
+                }
+            }
+        }
         stage('Run Tests') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
