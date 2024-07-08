@@ -67,6 +67,7 @@ def test_register_user(client, init_database):
 def test_initiate_login(client, init_database):
     # Register user
     register_response = client.post(URL_REGISTER_USER, json=test_userdata)
+    logging.debug(f"Register response: {register_response.status_code}, {register_response.data}")
     assert register_response.status_code == 201, f"Registration failed: {register_response.status_code}, {register_response.data}"
 
     # Confirm the account
@@ -99,6 +100,7 @@ def test_initiate_login(client, init_database):
 def test_verify_otp_and_login(client, init_database):
     # Register user
     register_response = client.post(URL_REGISTER_USER, json=test_userdata)
+    logging.debug(f"Register response: {register_response.status_code}, {register_response.data}")
     assert register_response.status_code == 201, f"Registration failed: {register_response.status_code}, {register_response.data}"
 
     # Confirm the account
