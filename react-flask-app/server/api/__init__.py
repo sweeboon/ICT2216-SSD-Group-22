@@ -1,7 +1,7 @@
 from flask import Flask, current_app, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from config import Config
+from config import Config, TestingConfig
 from flask_cors import CORS
 from dotenv import load_dotenv
 from flask_mailman import Mail
@@ -28,7 +28,10 @@ limiter = Limiter(
 
 def create_app(config_class=Config):
     app = Flask(__name__)
+    if config_class == 'testing':
+        config_class = TestingConfig
     app.config.from_object(config_class)
+
     
     db.init_app(app)
     migrate.init_app(app, db)

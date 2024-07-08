@@ -36,3 +36,8 @@ class Config:
 
     # Frontend configurations
     FRONTEND_BASE_URL = os.environ.get('FRONTEND_BASE_URL')
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+     # disable CSRF for testing
+    WTF_CSRF_ENABLED = False 
