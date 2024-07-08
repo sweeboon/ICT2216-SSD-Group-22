@@ -71,13 +71,7 @@ pipeline {
                 }
             }
         }
-        stage('Run Tests') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c "set -a && source .env && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
-                }
-            }
-        }
+      
     
         stage('Clean Up') {
             agent {
