@@ -85,6 +85,7 @@ pipeline {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
                     sh 'bash -c "set -a && source .env.temp && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
+                    sh 'ls -l'  // List files to verify if report.xml is generated
                 }
             }
         }
@@ -127,27 +128,16 @@ pipeline {
 }
     post {
         always {
-            cleanWs()
             //archive report
-            
+            dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                junit 'report.xml'  // Archive the test results
+                cleanWs()
         // success {
         //     dependencyCheckPublisher pattern: 'dependency-check-report.xml'
         // }
         }
-        success {
-            script {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    junit 'report.xml'
-                }
-            }
-        }
-        failure {
-            script {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    junit 'report.xml'
-                }
-            }
-        }
+        
+        
     }
 }
 
