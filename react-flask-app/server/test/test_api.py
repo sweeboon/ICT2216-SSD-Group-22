@@ -1,49 +1,65 @@
-import logging
-from flask.testing import FlaskClient
 import pytest
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from api.models import Account, OTP
+from api import create_app, db
 from api.auth.utils import generate_token, verify_token
+import logging
 
-logging.basicConfig(level=logging.DEBUG)
+# Setup URLs for API endpoints
+URL_REGISTER_USER = '/auth/register'
+URL_CONFIRM_EMAIL = '/auth/confirm'
+URL_INITIATE_LOGIN = '/auth/login'
+URL_VERIFY_OTP = '/auth/verify-otp'
 
-URL_REGISTER_USER = "/auth/register"
-URL_INITIATE_LOGIN = "/auth/initiate_login"
-URL_VERIFY_OTP_AND_LOGIN = "/auth/verify_otp_and_login"
-URL_CONFIRM_EMAIL = "/auth/confirm"
-
+# Test user data
 test_userdata = {
     "email": "testuser@example.com",
     "password": "Password123!",
-    "username": "testuser",
+    "name": "testuser",
     "date_of_birth": "2000-01-01",
     "address": "123 Test Street"
 }
 
-def confirm_account(client: FlaskClient, email: str):
+@pytest.fixture(scope='session')
+def app():
+    app = create_app('testing')
+    app.config.update({
+        'TESTING': True,
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
+    })
+    return app
+
+@pytest.fixture(scope='session')
+def client(app):
+    return app.test_client()
+
+@pytest.fixture(scope='function')
+def init_database():
+    db.create_all()
+    yield db
+    db.session.remove()
+    db.drop_all()
+
+def confirm_account(client, email):
+    account = Account.query.filter_by(email=email).first()
     token = generate_token(email)
-    logging.debug(f"Generated token: {token}")
+    account.confirmation_token = token
+    db.session.commit()
 
-    # Verifying the token right after generation to ensure it works
-    email_from_token = verify_token(token)
-    logging.debug(f"Email from token: {email_from_token}")
-
-    assert email_from_token == email, "Generated token does not match email"
-
-    confirm_url = f"{URL_CONFIRM_EMAIL}?token={token}"
-    response = client.get(confirm_url)
-    logging.debug(f"Confirm URL: {confirm_url}")
-    logging.debug(f"Confirm response: {response.status_code}, {response.data}")
+    response = client.get(f"{URL_CONFIRM_EMAIL}?token={token}")
+    logging.debug(f"Confirm URL response: {response.status_code}, {response.data}")
     assert response.status_code == 200, f"Failed to confirm account: {response.data}"
 
-def test_register_user(client: FlaskClient):
+def test_register_user(client, init_database):
     response = client.post(URL_REGISTER_USER, json=test_userdata)
-    logging.debug(f"Request data: {test_userdata}")
-    logging.debug(f"Response: {response.status_code}, {response.get_json()}")
+    logging.debug(f"Register response: {response.status_code}, {response.data}")
     assert response.status_code == 201
 
-def test_initiate_login(client: FlaskClient, init_database):
+def test_initiate_login(client, init_database):
     # Register user
     client.post(URL_REGISTER_USER, json=test_userdata)
-
+    
     # Confirm the account
     confirm_account(client, test_userdata['email'])
 
@@ -55,14 +71,12 @@ def test_initiate_login(client: FlaskClient, init_database):
     response = client.post(URL_INITIATE_LOGIN, json=login_data)
     logging.debug(f"Login data: {login_data}")
     logging.debug(f"Response: {response.status_code}, {response.get_json()}")
-    if response.status_code != 200:
-        logging.error(f"Error response: {response.get_json()}")
     assert response.status_code == 200
 
-def test_verify_otp_and_login(client: FlaskClient, init_database):
+def test_verify_otp_and_login(client, init_database):
     # Register user
     client.post(URL_REGISTER_USER, json=test_userdata)
-
+    
     # Confirm the account
     confirm_account(client, test_userdata['email'])
 
@@ -74,23 +88,18 @@ def test_verify_otp_and_login(client: FlaskClient, init_database):
     response = client.post(URL_INITIATE_LOGIN, json=login_data)
     logging.debug(f"Login data: {login_data}")
     logging.debug(f"Response: {response.status_code}, {response.get_json()}")
-    if response.status_code != 200:
-        logging.error(f"Error response: {response.get_json()}")
     assert response.status_code == 200
 
-    otp_response = response.get_json()
-    if 'otp' not in otp_response:
-        logging.error(f"OTP not found in response: {otp_response}")
-        pytest.fail("OTP not found in response")
+    # Retrieve the OTP sent
+    account = Account.query.filter_by(email=test_userdata['email']).first()
+    otp_record = OTP.query.filter_by(account_id=account.account_id).first()
+    otp = otp_record.otp
 
-    otp = otp_response['otp']
-    verify_otp_data = {
+    # Verify the OTP
+    otp_data = {
         "email": test_userdata["email"],
         "otp": otp
     }
-    response = client.post(URL_VERIFY_OTP_AND_LOGIN, json=verify_otp_data)
-    logging.debug(f"Verify OTP data: {verify_otp_data}")
-    logging.debug(f"Response: {response.status_code}, {response.get_json()}")
-    if response.status_code != 200:
-        logging.error(f"Error response: {response.get_json()}")
+    response = client.post(URL_VERIFY_OTP, json=otp_data)
+    logging.debug(f"Verify OTP response: {response.status_code}, {response.get_json()}")
     assert response.status_code == 200
