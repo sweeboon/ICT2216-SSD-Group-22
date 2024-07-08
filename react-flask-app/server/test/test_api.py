@@ -4,9 +4,9 @@ import pytest
 
 logging.basicConfig(level=logging.DEBUG)
 
-URL_REGISTER_USER = "/api/auth/register"
-URL_INITIATE_LOGIN = "/api/auth/initiate_login"
-URL_VERIFY_OTP_AND_LOGIN = "/api/auth/verify_otp_and_login"
+URL_REGISTER_USER = "/auth/register"
+URL_INITIATE_LOGIN = "/auth/initiate_login"
+URL_VERIFY_OTP_AND_LOGIN = "/auth/verify_otp_and_login"
 
 test_userdata = {
     "email": "testuser@example.com",

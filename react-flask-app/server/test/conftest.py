@@ -22,20 +22,21 @@ def db(app):
     """A new database for each test."""
     with app.app_context():
         _db.create_all()
-    yield _db
-    _db.session.remove()
-    _db.drop_all()
+        yield _db
+        _db.session.remove()
+        _db.drop_all()
 
 @pytest.fixture(scope='function')
-def init_database(db):
+def init_database(db, app):
     """Initialize the database with a user for testing."""
-    user = Account(
-        email="testuser@example.com",
-        password="Password123!",
-        name="testuser",
-        date_of_birth="2000-01-01",
-        address="123 Test Street"
-    )
-    db.session.add(user)
-    db.session.commit()
+    with app.app_context():
+        user = Account(
+            email="testuser@example.com",
+            password="Password123!",
+            name="testuser",
+            date_of_birth="2000-01-01",
+            address="123 Test Street"
+        )
+        db.session.add(user)
+        db.session.commit()
     yield db
