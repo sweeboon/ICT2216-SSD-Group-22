@@ -51,25 +51,25 @@ pipeline {
                 }
             }
         }
-         stage('Setup Python Environment') {
+        stage('Setup Python Environment') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'python -m venv venv'
-                    sh '. venv/bin/activate && pip install -r requirements.txt'
+                    sh 'bash -c "python3 -m venv venv"'
+                    sh 'bash -c ". venv/bin/activate && pip install -r requirements.txt"'
                 }
             }
         }
         stage('Database Migration') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh '. venv/bin/activate && flask db upgrade'
+                    sh 'bash -c ". venv/bin/activate && flask db upgrade"'
                 }
             }
         }
-         stage('Run Tests') {
+        stage('Run Tests') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh '. venv/bin/activate && pytest test_api.py --junitxml=report.xml'
+                    sh 'bash -c ". venv/bin/activate && pytest test_api.py --junitxml=report.xml"'
                 }
             }
         }
