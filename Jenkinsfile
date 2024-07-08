@@ -78,7 +78,7 @@ pipeline {
                 }
             }
         }
-    }
+    
         stage('Clean Up') {
             agent {
                 docker {
@@ -127,7 +127,7 @@ pipeline {
                 }
             }
         }
-    
+}
     post {
         always {
             cleanWs()
