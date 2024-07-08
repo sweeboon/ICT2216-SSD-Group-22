@@ -51,7 +51,7 @@ pipeline {
                 }
             }
         }
-        stage('Setup Python Environment') {
+         stage('Setup Python Environment') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
                     sh 'bash -c "python3 -m venv venv"'
@@ -69,7 +69,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c ". venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
+                    sh 'bash -c "PYTHONPATH=${env.CUSTOM_WORKSPACE}/react-flask-app/server . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
                 }
             }
         }
