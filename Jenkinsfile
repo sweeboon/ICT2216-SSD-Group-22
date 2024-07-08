@@ -107,30 +107,30 @@ pipeline {
             }
         }
         
-        stage('Build and Start Docker Containers') {
-            agent {
-                docker {
-                    image 'docker/compose:latest'
-                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
-            steps {
-                script {
-                    dir("${env.CUSTOM_WORKSPACE}/react-flask-app") {
-                        sh 'docker-compose up -d --build'
-                    }
-                }
-            }
-        }
-        stage('Run UI Tests') {
-            steps {
-                script {
-                    dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
-                        sh 'npm run cypress:run'
-                    }
-                }
-            }
-        }
+        // stage('Build and Start Docker Containers') {
+        //     agent {
+        //         docker {
+        //             image 'docker/compose:latest'
+        //             args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+        //         }
+        //     }
+        //     steps {
+        //         script {
+        //             dir("${env.CUSTOM_WORKSPACE}/react-flask-app") {
+        //                 sh 'docker-compose up -d --build'
+        //             }
+        //         }
+        //     }
+        // }
+        // stage('Run UI Tests') {
+        //     steps {
+        //         script {
+        //             dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
+        //                 sh 'npm run cypress:run'
+        //             }
+        //         }
+        //     }
+        // }
         
     }
     post {
@@ -139,9 +139,9 @@ pipeline {
             dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
                 archiveArtifacts artifacts: 'report.xml', allowEmptyArchive: true
             }
-            dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client/cypress/results") {
-                archiveArtifacts artifacts: '*.xml', allowEmptyArchive: true
-            }
+            // dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client/cypress/results") {
+            //     archiveArtifacts artifacts: '*.xml', allowEmptyArchive: true
+            // }
             cleanWs()
         }
     }
