@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import '../css/ImageUpload.css'; // Ensure the CSS file is correctly imported
+import '../css/ImageUpload.css';
 
 const ImageUpload = ({ onUpload, width = '420px', height = '200px' }) => {
   const [error, setError] = useState(null);
@@ -24,14 +24,20 @@ const ImageUpload = ({ onUpload, width = '420px', height = '200px' }) => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await axios.post('http://localhost:5000/main/upload-image', formData, {
+      //for live server
+      const response = await axios.post('https://forteam22ict.xyz/main/upload-image', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-
-      if (response.status === 200 && response.data.url) {
-        const uploadedUrl = response.data.url;
+      //for localhost
+      // const response = await axios.post('http://localhost:5000/main/upload-image', formData, {
+      //   headers: {
+      //     'Content-Type': 'multipart/form-data',
+      //   },
+      // });
+      if (response.status === 200 && response.data.file_path) {
+        const uploadedUrl = response.data.file_path;
         onUpload(uploadedUrl);
         setSuccess('Image uploaded successfully.');
       } else if (response.data.error) {

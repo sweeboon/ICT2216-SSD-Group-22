@@ -4,11 +4,11 @@ from flask_principal import RoleNeed, Permission
 from api.admin import bp
 from api.models import Account, Role, Order, Payment, Product, Category, AuditLog
 from api import db, csrf, limiter
-import base64
+import base64,mimetypes
 from passlib.hash import pbkdf2_sha256
 from datetime import datetime
 from flask import request
-
+import os
 def get_ip_address():
     if request.headers.get('X-Forwarded-For'):
         ip = request.headers.getlist('X-Forwarded-For')[0]
@@ -175,7 +175,7 @@ def update_order_status(order_id):
 @csrf.exempt
 @login_required
 @admin_permission.require(http_exception=403)
-@limiter.limit("10 per minute") # Apply rate limiting
+@limiter.limit("10 per minute")  # Apply rate limiting
 def create_product():
     data = request.get_json()
     
@@ -189,12 +189,15 @@ def create_product():
         return jsonify({'message': f'Missing required fields: {missing_fields}'}), 400
 
     try:
+        image_path = data['image_path']
+        
+        # Save product to the database
         new_product = Product(
             category_id=data['category_id'],
             product_description=data['product_description'],
             product_price=data['product_price'],
             stock=data['stock'],
-            image_path=data['image_path']  # Store the URL of the uploaded image
+            image_path=image_path  # Store the URL of the uploaded image
         )
 
         db.session.add(new_product)
@@ -203,6 +206,7 @@ def create_product():
 
         current_app.logger.info(f'Product created with ID: {new_product.product_id}')
         log_audit_event(current_user.account_id, current_user.name, 'Create Product', f'Created product {new_product.product_id} with description {new_product.product_description}, price {new_product.product_price}, stock {new_product.stock}', ip_address)
+
         return jsonify({'product_id': new_product.product_id}), 201
     
     except Exception as e:

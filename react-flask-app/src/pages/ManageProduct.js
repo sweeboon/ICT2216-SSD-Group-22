@@ -50,17 +50,10 @@ const ManageProduct = () => {
   };
 
   const handleImageUpload = (uploadedUrl) => {
-    if (editProduct) {
-      setEditProduct((prevState) => ({
-        ...prevState,
-        image_path: uploadedUrl,
-      }));
-    } else {
-      setNewProduct((prevState) => ({
-        ...prevState,
-        image_path: uploadedUrl,
-      }));
-    }
+    setNewProduct((prevState) => ({
+      ...prevState,
+      image_path: uploadedUrl,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -87,8 +80,8 @@ const ManageProduct = () => {
         <form onSubmit={handleSubmit}>
           <select
             name="category_id"
-            value={editProduct ? editProduct.category_id : newProduct.category_id}
-            onChange={editProduct ? handleEditChange : handleChange}
+            value={newProduct.category_id}
+            onChange={handleChange}
             className="category_id"
           >
             <option value="">Select Category</option>
@@ -101,8 +94,8 @@ const ManageProduct = () => {
           <textarea
             name="product_description"
             placeholder="Product Description"
-            value={editProduct ? editProduct.product_description : newProduct.product_description}
-            onChange={editProduct ? handleEditChange : handleChange}
+            value={newProduct.product_description}
+            onChange={handleChange}
           />
           <input
             type="number"
@@ -110,16 +103,16 @@ const ManageProduct = () => {
             placeholder="Price"
             min="0"
             step="0.01"
-            value={editProduct ? editProduct.product_price : newProduct.product_price}
-            onChange={editProduct ? handleEditChange : handleChange}
+            value={newProduct.product_price}
+            onChange={handleChange}
           />
           <input
             type="number"
             name="stock"
             placeholder="Stock"
             min="0"
-            value={editProduct ? editProduct.stock : newProduct.stock}
-            onChange={editProduct ? handleEditChange : handleChange}
+            value={newProduct.stock}
+            onChange={handleChange}
           />
           <ImageUpload onUpload={handleImageUpload} />
           {uploadSuccess && <p className="upload-success">{uploadSuccess}</p>}

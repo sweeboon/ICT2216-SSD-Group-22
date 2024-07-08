@@ -10,14 +10,36 @@ from api import db, csrf, limiter
 from api.main import bp
 from .encryption import encrypt_data, decrypt_data, generate_key
 import logging
-
+import os
+from defusedxml.ElementTree import parse as safe_parse, ParseError,  EntitiesForbidden
+import requests
 encryption_key = generate_key()
 from config import Config
-
+from concurrent.futures import ThreadPoolExecutor
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+UPLOAD_FOLDER = 'public/'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+MAX_CONTENT_LENGTH = 2 * 1024 * 1024  # 2mb max
+VIRUSTOTAL_API_KEY = '348f1df07a7b57c0e39b5990c700ce57de4a1bb178bb5a97d6293dac4e0f9b91'
+executor = ThreadPoolExecutor(max_workers=4)
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def scan_file_with_virustotal(api_key, file_path):
+    url = 'https://www.virustotal.com/vtapi/v2/file/scan'
+    with open(file_path, 'rb') as file:
+        files = {'file': (os.path.basename(file_path), file)}
+        params = {'apikey': api_key}
+        response = requests.post(url, files=files, params=params)
+        return response.json()
+
+def get_scan_report(api_key, resource):
+    url = 'https://www.virustotal.com/vtapi/v2/file/report'
+    params = {'apikey': api_key, 'resource': resource}
+    response = requests.get(url, params=params)
+    return response.json()
 def sanitize_input(input):
     if input is None:
         return None
@@ -145,6 +167,8 @@ def get_product(product_id):
                     'product_price': product.product_price, 'stock': product.stock, 'image_path': product.image_path}), 200
 
 
+from defusedxml.ElementTree import parse as safe_parse, ParseError
+
 @bp.route('/upload-image', methods=['POST'])
 def upload_image():
     if 'file' not in request.files:
@@ -157,35 +181,73 @@ def upload_image():
         current_app.logger.error("No file selected for uploading")
         return jsonify({"error": "No file selected for uploading"}), 400
 
+    if not allowed_file(file.filename):
+        current_app.logger.error("Invalid file extension")
+        return jsonify({"error": "Invalid file extension"}), 400
+
     try:
         filename = secure_filename(file.filename)
-        file_path = f"public/{filename}"
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
 
-        # Get the MIME type of the file
-        mime_type, _ = mimetypes.guess_type(filename)
-        file_content = file.read()
+        # Ensure the upload directory exists
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-        # Upload image to Supabase with the correct MIME type
-        supabase = current_app.supabase
-        current_app.logger.info(f"Uploading file: {file_path} with MIME type: {mime_type}")
-        
-        response = supabase.storage.from_("product").upload(file_path, file_content, {"content-type": mime_type})
+        # Check file size
+        file.seek(0, os.SEEK_END)
+        file_length = file.tell()
+        file.seek(0)
+        if file_length > MAX_CONTENT_LENGTH:
+            current_app.logger.error("File size exceeds limit")
+            return jsonify({"error": "File size exceeds limit"}), 400
 
-        if response.status_code != 200:
-            current_app.logger.error(f"Failed to upload image. Response: {response.data}")
-            return jsonify({"error": response.data.get('message', 'Failed to upload image')}), response.status_code
-        
-        current_app.logger.info(f"File uploaded successfully: {file_path}")
+        # Read file content to validate as XML
+        file_content = file.read().decode('utf-8', errors='ignore')
+        file.seek(0)
 
-        # Retrieve the public URL
-        image_url_response = supabase.storage.from_("product").get_public_url(file_path)
-        current_app.logger.info(f"Retrieved image URL response: {image_url_response}")
+        if filename.lower().endswith(('png', 'jpg', 'jpeg')):
+            try:
+                # Securely parse XML content
+                safe_parse(file)
+                current_app.logger.error("XML content detected in image file")
+                return jsonify({"error": "Invalid image file containing XML content"}), 400
+            except EntitiesForbidden:
+                current_app.logger.error("XXE attempt detected in the uploaded file")
+                return jsonify({"error": "Invalid image file containing XXE payload"}), 400
+            except ParseError:
+                current_app.logger.info("No XML content detected, proceeding with file upload")
+                file.seek(0)  # Reset file pointer after parsing
 
-        return jsonify({"url": image_url_response}), 200
+        # Save the file locally
+        with open(file_path, 'wb') as f:
+            f.write(file.read())
+
+        # Scan the file using VirusTotal
+        scan_result = scan_file_with_virustotal(VIRUSTOTAL_API_KEY, file_path)
+        if scan_result.get('response_code') != 1:
+            return jsonify({"error": "File scan failed"}), 500
+
+        # Get scan report asynchronously
+        resource = scan_result['resource']
+        future_report = executor.submit(get_scan_report, VIRUSTOTAL_API_KEY, resource)
+        report = future_report.result()
+
+        # Check for malware
+        positives = report.get('positives')
+        if positives is not None and positives > 0:
+            os.remove(file_path)
+            return jsonify({'error': 'Malware detected in file'}), 400
+
+        current_app.logger.info(f"Image stored successfully: {file_path}")
+
+        # Return the temporary file path
+        return jsonify({"file_path": file_path}), 200
 
     except Exception as e:
         current_app.logger.error(f"Exception occurred during image upload: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+
 
 @bp.route('/cart', methods=['GET'])
 @login_required
