@@ -39,7 +39,6 @@ def generate_and_store_otp_secret(account):
         db.session.add(otp_record)
     db.session.commit()
 
-
 def generate_otp(account):
     try:
         otp_record = OTP.query.filter_by(account_id=account.account_id).first()
@@ -54,7 +53,6 @@ def generate_otp(account):
     except Exception as e:
         logger.error(f'Error generating OTP: {e}')
         raise
-
 
 def send_otp(account, otp):
     try:
@@ -82,6 +80,7 @@ def verify_otp(account, otp):
         logger.error(f'Error verifying OTP: {e}')
         return False
 
+# Used for serializing and deserializing data
 def get_serializer():
     return URLSafeTimedSerializer(current_app.config['SIGNER_SECRET_KEY'])
 

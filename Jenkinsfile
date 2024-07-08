@@ -13,12 +13,12 @@ pipeline {
         //             -f 'ALL'
         //             --prettyPrint
         //             --nvdApiKey ae60ce14-527f-411f-8f50-6de6638bed18
-        //             --format HTML --format XML
         //         """, odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
 
         //         dependencyCheckPublisher pattern: 'dependency-check-report.xml'
         //     }
-        // }
+        
+
         stage('Clean Workspace') {
             steps {
                 deleteDir()
@@ -50,25 +50,10 @@ pipeline {
                 }
             }
         }
-         
-       
-        
-         stage('Set Up Python Environment') {
+         stage('Convert .env to Unix Line Endings') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'python3 -m venv venv'
-                    sh '. venv/bin/activate && pip install -r requirements.txt'
-                }
-            }
-        }
-        stage('Test') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    echo 'Running Tests...'
-                    sh '''
-                        . venv/bin/activate
-                        python3 -m unittest discover -s tests
-                    '''
+                    sh 'sed -i -e "s/\r//g" .env'
                 }
             }
         }
@@ -98,6 +83,22 @@ pipeline {
                     sh 'docker-compose -f $CUSTOM_WORKSPACE/react-flask-app/docker-compose.yml down'
                 }
             }
+        
+        }
+        stage('Setup Python Environment') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'bash -c "python3 -m venv venv"'
+                    sh 'bash -c ". venv/bin/activate && pip install -r requirements.txt"'
+                }
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'bash -c "set -a && source .env && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && flask db upgrade && pytest test/test_api.py --junitxml=report.xml"'
+                }
+            }
         }
         stage('Deploy Application') {
             agent {
@@ -120,9 +121,10 @@ pipeline {
     post {
         always {
             cleanWs()
-        }
         // success {
-		// 	dependencyCheckPublisher pattern: 'dependency-check-report.xml'
-		// }
+        //     dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+        // }
+        }
     }
 }
+

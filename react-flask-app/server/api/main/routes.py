@@ -13,9 +13,11 @@ import logging
 import os
 from defusedxml.ElementTree import parse as safe_parse, ParseError,  EntitiesForbidden
 import requests
-encryption_key = generate_key()
 from config import Config
 from concurrent.futures import ThreadPoolExecutor
+
+encryption_key = generate_key()
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,6 +26,7 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 MAX_CONTENT_LENGTH = 2 * 1024 * 1024  # 2mb max
 VIRUSTOTAL_API_KEY = '348f1df07a7b57c0e39b5990c700ce57de4a1bb178bb5a97d6293dac4e0f9b91'
 executor = ThreadPoolExecutor(max_workers=4)
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -40,6 +43,7 @@ def get_scan_report(api_key, resource):
     params = {'apikey': api_key, 'resource': resource}
     response = requests.get(url, params=params)
     return response.json()
+
 def sanitize_input(input):
     if input is None:
         return None
@@ -65,7 +69,6 @@ def check_cart():
 @login_required
 @csrf.exempt
 @limiter.limit("10 per minute") # Apply rate limiting
-
 def create_payment():
     try:
         data = request.get_json()
