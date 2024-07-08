@@ -75,7 +75,7 @@ def test_initiate_login(client, init_database):
     # Confirm the account
     confirm_account(client, test_userdata['email'])
 
-    # Login with the newly registered user
+    # Initiate login with the newly registered user
     login_data = {
         "email": test_userdata["email"],
         "password": test_userdata["password"]
@@ -109,7 +109,7 @@ def test_verify_otp_and_login(client, init_database):
     # Confirm the account
     confirm_account(client, test_userdata['email'])
 
-    # Login with the newly registered user
+    # Initiate login with the newly registered user
     login_data = {
         "email": test_userdata["email"],
         "password": test_userdata["password"]
