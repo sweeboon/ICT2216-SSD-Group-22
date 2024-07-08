@@ -14,9 +14,9 @@ URL_VERIFY_OTP = '/auth/verify-otp'
 
 # Test user data
 test_userdata = {
+    "name": "testuser",
     "email": "testuser@example.com",
     "password": "Password123!",
-    "name": "testuser",
     "date_of_birth": "2000-01-01",
     "address": "123 Test Street"
 }
