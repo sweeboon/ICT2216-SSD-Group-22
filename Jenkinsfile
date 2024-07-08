@@ -63,8 +63,13 @@ pipeline {
         }
         stage('Test') {
             steps {
-                echo 'Running Tests...'
-                sh 'python3 -m unittest discover -s $CUSTOM_WORKSPACE/react-flask-app/server/test'
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    echo 'Running Tests...'
+                    sh '''
+                        . venv/bin/activate
+                        python3 -m unittest discover -s tests
+                    '''
+                }
             }
         }
         stage('Clean Up') {
