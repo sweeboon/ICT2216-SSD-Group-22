@@ -79,6 +79,33 @@ pipeline {
                 }
             }
         }
+        stage('Clean Up') {
+            agent {
+                docker {
+                    image 'docker/compose:latest'
+                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            steps {
+                script {
+                    sh 'docker system prune -af'
+                    sh 'docker volume prune -f'
+                }
+            }
+        }
+        stage('Stop and Remove Existing Containers') {
+            agent {
+                docker {
+                    image 'docker/compose:latest'
+                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            steps {
+                script {
+                    sh 'docker-compose -f $CUSTOM_WORKSPACE/react-flask-app/docker-compose.yml down'
+                }
+            }
+        }
         stage('Build and Start Docker Containers') {
             agent {
                 docker {
