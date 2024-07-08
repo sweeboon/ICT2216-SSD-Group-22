@@ -349,6 +349,14 @@ def register():
 
     return jsonify({'message': 'Account registered successfully. Please check your email to confirm your account.'}), 201
 
+from flask import Blueprint, request, jsonify, current_app
+from api.auth.utils import verify_token, generate_token, send_email
+from api.models import Account
+from api import db
+from datetime import datetime
+
+bp = Blueprint('auth', __name__)
+
 @bp.route('/confirm', methods=['GET'])
 @limiter.limit("5 per minute") # Apply rate limiting
 def confirm_email():

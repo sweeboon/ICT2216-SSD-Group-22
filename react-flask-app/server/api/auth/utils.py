@@ -1,6 +1,6 @@
+from flask import render_template, current_app
 import logging
 from itsdangerous import URLSafeTimedSerializer
-from flask import current_app
 from api.models import Account, OTP
 from api import db
 import pyotp
