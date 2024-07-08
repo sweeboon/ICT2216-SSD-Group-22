@@ -46,7 +46,7 @@ def validate_password(password):
 # Custom error handler for rate limit exceeded
 @bp.errorhandler(429)
 def ratelimit_handler(e):
-    return jsonify(error="ratelimit exceeded", message="You have hit the rate limit for verify OTP and login. Please try again later."), 429
+    return jsonify(error="ratelimit exceeded", message="You have hit the rate limit for sending too many requests. Please try again later."), 429
 
 @bp.route('/reset_password_request', methods=['POST'])
 @csrf.exempt
