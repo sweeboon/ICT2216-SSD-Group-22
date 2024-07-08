@@ -50,6 +50,13 @@ pipeline {
                 }
             }
         }
+        stage('Convert .env to Unix Line Endings') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'tr -d "\r" < .env > .env.tmp && mv .env.tmp .env'
+                }
+            }
+        }
         stage('Clean Up') {
             agent {
                 docker {
