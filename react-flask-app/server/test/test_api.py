@@ -10,25 +10,26 @@ import os
 # Load environment variables
 load_dotenv()
 
-# Database configuration for testing with Supabase
-SQLALCHEMY_DATABASE_URL = os.getenv('DATABASE_URL')
+# Database configuration for testing with an in-memory SQLite database
+SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 @pytest.fixture(scope="module")
 def test_db():
     Base.metadata.create_all(bind=engine)  # Create tables
-    yield TestingSessionLocal()  # Provide the session to the tests
+    db = TestingSessionLocal()
+    yield db  # Provide the session to the tests
+    db.close()
     Base.metadata.drop_all(bind=engine)  # Drop tables after tests
 
 @pytest.fixture(scope="module")
 def client(test_db):
     def override_get_db():
         try:
-            db = test_db
-            yield db
+            yield test_db
         finally:
-            db.close()
+            test_db.close()
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
