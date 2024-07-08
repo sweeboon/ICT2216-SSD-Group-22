@@ -17,7 +17,7 @@ pipeline {
 
         //         dependencyCheckPublisher pattern: 'dependency-check-report.xml'
         //     }
-        }
+        
 
         stage('Clean Workspace') {
             steps {
@@ -117,5 +117,7 @@ pipeline {
         // success {
         //     dependencyCheckPublisher pattern: 'dependency-check-report.xml'
         // }
+        }
     }
 }
+
