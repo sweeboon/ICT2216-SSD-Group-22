@@ -1,6 +1,7 @@
 import pytest
 from api import create_app, db as _db
 from api.models import Account
+from datetime import datetime
 
 @pytest.fixture(scope='session')
 def app():
@@ -34,7 +35,7 @@ def init_database(db, app):
             email="testuser@example.com",
             password="Password123!",
             name="testuser",
-            date_of_birth="2000-01-01",
+            date_of_birth=datetime.strptime("2000-01-01", "%Y-%m-%d").date(),
             address="123 Test Street"
         )
         db.session.add(user)
