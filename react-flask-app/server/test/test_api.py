@@ -1,50 +1,22 @@
 import pytest
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from api.models import Account, OTP
-from api import create_app, db
-from api.auth.utils import generate_token, verify_token
+from api.auth.utils import generate_token
 import logging
 
 # Setup URLs for API endpoints
-URL_REGISTER_USER = 'api/auth/register'
-URL_CONFIRM_EMAIL = 'api/auth/confirm'
-URL_INITIATE_LOGIN = 'api/auth/login'
-URL_VERIFY_OTP = 'api/auth/verify-otp'
+URL_REGISTER_USER = '/auth/register'
+URL_CONFIRM_EMAIL = '/auth/confirm'
+URL_INITIATE_LOGIN = '/auth/initiate_login'
+URL_VERIFY_OTP_AND_LOGIN = '/auth/verify_otp_and_login'
 
 # Test user data
 test_userdata = {
     "email": "testuser@example.com",
     "password": "Password123!",
-    "name": "testuser",
+    "username": "testuser",
     "date_of_birth": "2000-01-01",
     "address": "123 Test Street"
 }
-
-@pytest.fixture(scope='session')
-def app():
-    app = create_app('testing')
-    app.config.update({
-        'TESTING': True,
-        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
-    })
-    with app.app_context():
-        db.create_all()
-        yield app
-        db.session.remove()
-        db.drop_all()
-
-@pytest.fixture(scope='session')
-def client(app):
-    return app.test_client()
-
-@pytest.fixture(scope='function')
-def init_database(app):
-    with app.app_context():
-        db.create_all()
-        yield db
-        db.session.remove()
-        db.drop_all()
 
 def confirm_account(client, email):
     account = Account.query.filter_by(email=email).first()
@@ -95,7 +67,7 @@ def test_initiate_login(client, init_database):
         "email": test_userdata["email"],
         "otp": otp
     }
-    response = client.post(URL_VERIFY_OTP, json=otp_data)
+    response = client.post(URL_VERIFY_OTP_AND_LOGIN, json=otp_data)
     logging.debug(f"Verify OTP response: {response.status_code}, {response.get_json()}")
     assert response.status_code == 200, f"OTP verification failed: {response.status_code}, {response.data}"
 
@@ -129,7 +101,7 @@ def test_verify_otp_and_login(client, init_database):
         "email": test_userdata["email"],
         "otp": otp
     }
-    response = client.post(URL_VERIFY_OTP, json=otp_data)
+    response = client.post(URL_VERIFY_OTP_AND_LOGIN, json=otp_data)
     logging.debug(f"Verify OTP response: {response.status_code}, {response.get_json()}")
     assert response.status_code == 200, f"OTP verification failed: {response.status_code}, {response.data}"
 

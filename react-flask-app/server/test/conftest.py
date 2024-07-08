@@ -1,45 +1,28 @@
 import pytest
-from api import create_app, db as _db
-from api.models import Account
-from datetime import datetime
+from api import create_app, db
+from config import TestingConfig
 
 @pytest.fixture(scope='session')
 def app():
-    """Create and configure a new app instance for each test session."""
-    app = create_app('testing')
+    app = create_app(TestingConfig)
+    app.config.update({
+        'TESTING': True,
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
+    })
     with app.app_context():
-        _db.create_all()
-    yield app
-    with app.app_context():
-        _db.drop_all()
+        db.create_all()
+        yield app
+        db.session.remove()
+        db.drop_all()
 
 @pytest.fixture(scope='session')
 def client(app):
-    """A test client for the app."""
     return app.test_client()
 
 @pytest.fixture(scope='function')
-def db(app):
-    """A new database for each test."""
+def init_database(app):
     with app.app_context():
-        _db.create_all()
-        yield _db
-        _db.session.remove()
-        _db.drop_all()
-
-@pytest.fixture(scope='function')
-def init_database(db, app):
-    """Initialize the database with a user for testing."""
-    with app.app_context():
-        db.drop_all()
         db.create_all()
-        user = Account(
-            email="testuser@example.com",
-            password="Password123!",
-            name="testuser",
-            date_of_birth=datetime.strptime("2000-01-01", "%Y-%m-%d").date(),
-            address="123 Test Street"
-        )
-        db.session.add(user)
-        db.session.commit()
-    yield db
+        yield db
+        db.session.remove()
+        db.drop_all()

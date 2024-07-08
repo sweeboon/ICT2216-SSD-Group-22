@@ -220,9 +220,7 @@ def upload_image():
                 current_app.logger.info("No XML content detected, proceeding with file upload")
                 file.seek(0)  # Reset file pointer after parsing
 
-        # Save the file locally
-        with open(file_path, 'wb') as f:
-            f.write(file.read())
+       
 
         # Scan the file using VirusTotal
         scan_result = scan_file_with_virustotal(VIRUSTOTAL_API_KEY, file_path)
@@ -241,7 +239,9 @@ def upload_image():
             return jsonify({'error': 'Malware detected in file'}), 400
 
         current_app.logger.info(f"Image stored successfully: {file_path}")
-
+        # Save the file locally
+        with open(file_path, 'wb') as f:
+            f.write(file.read())
         # Return the temporary file path
         return jsonify({"file_path": file_path}), 200
 
