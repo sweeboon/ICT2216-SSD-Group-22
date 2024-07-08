@@ -1,10 +1,10 @@
+import logging
 from itsdangerous import URLSafeTimedSerializer
-from flask import render_template, current_app
-import pyotp
-from datetime import datetime
+from flask import current_app
 from api.models import Account, OTP
 from api import db
-import logging
+import pyotp
+from datetime import datetime
 from flask_mailman import EmailMessage
 
 logger = logging.getLogger(__name__)

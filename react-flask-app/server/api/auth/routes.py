@@ -353,15 +353,24 @@ def register():
 @limiter.limit("5 per minute") # Apply rate limiting
 def confirm_email():
     token = request.args.get('token')
+    current_app.logger.debug(f"Token received: {token}")
+    
     email = verify_token(token)
+    current_app.logger.debug(f"Email from token: {email}")
+    
     if email is False:
+        current_app.logger.error("Token verification failed or expired.")
         return jsonify({'message': 'The confirmation link is invalid or has expired.'}), 400
 
     account = Account.query.filter_by(email=email).first_or_404()
+    current_app.logger.debug(f"Account found: {account.email}")
+    
     if account.confirmation_token != token:
+        current_app.logger.error("Token does not match the stored token.")
         return jsonify({'message': 'The confirmation link is invalid or has expired.'}), 400
 
     if account.confirmed:
+        current_app.logger.info("Account already confirmed.")
         return jsonify({'message': 'Account already confirmed. Please login.'}), 200
     else:
         account.confirmed = True
@@ -370,6 +379,7 @@ def confirm_email():
         account.confirmation_email_sent_at = None
         db.session.add(account)
         db.session.commit()
+        current_app.logger.info("Account confirmed successfully.")
         return jsonify({'message': 'You have confirmed your account. Thanks!'}), 200
 
 @bp.route('/status', methods=['GET'])
