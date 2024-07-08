@@ -5,6 +5,11 @@ pipeline {
     }
 
     stages {
+        stage('OWASP Dependency Check') {
+            steps {
+                dependencyCheck additionalArguments: '''-o ./ --format HTML --format XML --disableYarnAudit''', odcInstallation: 'DependencyCheck-10'
+            }
+        }
         stage('Clean Workspace') {
             steps {
                 deleteDir()
