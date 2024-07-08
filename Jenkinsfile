@@ -93,10 +93,10 @@ pipeline {
                 }
             }
         }
-        stage('Convert .env to Unix Line Endings') {
+         stage('Convert .env to Unix Line Endings') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c "dos2unix .env"'
+                    sh 'bash -c "sed -i \'s/\r$//\' .env"'
                 }
             }
         }
