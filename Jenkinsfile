@@ -31,16 +31,8 @@ pipeline {
                 }
             }
         }
-        stage('Verify Checkout') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}") {
-                    sh 'echo "Current workspace: $CUSTOM_WORKSPACE"'
-                    sh 'ls -l $CUSTOM_WORKSPACE'
-                    sh 'ls -l $CUSTOM_WORKSPACE/react-flask-app'
-                }
-            }
-        }
-        stage('Copy .env File') {
+        
+         stage('Copy .env File') {
             steps {
                 script {
                     withCredentials([file(credentialsId: '177c064b-8394-453c-aaf9-252718ad9498', variable: 'SECRET_ENV_FILE')]) {
@@ -50,7 +42,43 @@ pipeline {
                 }
             }
         }
-        
+        stage('Setup Python Environment') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'bash -c "python3 -m venv venv"'
+                    sh 'bash -c ". venv/bin/activate && pip install -r requirements.txt"'
+                }
+            }
+        }
+        stage('Convert .env to Unix Line Endings') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'sed -i -e "s/\r//g" .env'
+                }
+            }
+        }
+        stage('Install Frontend Dependencies') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
+                    sh 'yarn install'
+                }
+            }
+        }
+         stage('Database Migration') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'bash -c ". venv/bin/activate && flask db upgrade"'
+                }
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'bash -c "set -a && source .env && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
+                }
+            }
+        }
+    }
         stage('Clean Up') {
             agent {
                 docker {
@@ -79,35 +107,9 @@ pipeline {
             }
         
         }
-        stage('Setup Python Environment') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c "python3 -m venv venv"'
-                    sh 'bash -c ". venv/bin/activate && pip install -r requirements.txt"'
-                }
-            }
-        }
-        stage('Convert .env to Unix Line Endings') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'sed -i -e "s/\r//g" .env'
-                }
-            }
-        }
-        stage('Database Migration') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c ". venv/bin/activate && flask db upgrade"'
-                }
-            }
-        }
-         stage('Run Tests') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c "set -a && source .env && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
-                }
-            }
-        }
+       
+       
+    
         stage('Deploy Application') {
             agent {
                 docker {

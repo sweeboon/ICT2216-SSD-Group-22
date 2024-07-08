@@ -2,8 +2,9 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from api.models import Base, Account
-from main import app
+from api import db
+from api.models import Account, Base
+from main import app, get_db
 from dotenv import load_dotenv
 import os
 
