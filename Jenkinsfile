@@ -57,6 +57,9 @@ pipeline {
                         python3 -m venv venv
                         . venv/bin/activate
                         pip install -r requirements.txt
+                        # Clean the .env file to remove spaces around '='
+                        sed -i 's/ = /=/g' .env
+                        sed -i 's/= /=/g' .env
                         export $(grep -v '^#' .env | xargs)
                         flask db upgrade
                     '''
