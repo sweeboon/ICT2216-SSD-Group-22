@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from api import db
-from api.models import Account, Base
+from api.models import Account
 from main import app, get_db
 from dotenv import load_dotenv
 import os
@@ -18,19 +18,21 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 @pytest.fixture(scope="module")
 def test_db():
-    Base.metadata.create_all(bind=engine)  # Create tables
-    db = TestingSessionLocal()
-    yield db  # Provide the session to the tests
-    db.close()
-    Base.metadata.drop_all(bind=engine)  # Drop tables after tests
+    db.app = app
+    app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URL
+    app.config['TESTING'] = True
+    db.create_all()  # Create tables
+    yield db
+    db.session.remove()
+    db.drop_all()  # Drop tables after tests
 
 @pytest.fixture(scope="module")
 def client(test_db):
     def override_get_db():
         try:
-            yield test_db
+            yield test_db.session
         finally:
-            test_db.close()
+            test_db.session.close()
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
