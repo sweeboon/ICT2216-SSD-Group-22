@@ -41,44 +41,44 @@ pipeline {
                 }
             }
         }
-        stage('Create Temp .env for Tests') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'cp .env .env.temp'
-                    sh 'sed -i -e "s/\\r//g" .env.temp'
-                }
-            }
-        }
-        stage('Setup Python Environment') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c "python3 -m venv venv"'
-                    sh 'bash -c ". venv/bin/activate && pip install -r requirements.txt"'
-                }
-            }
-        }
-        stage('Install Frontend Dependencies') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
-                    sh 'yarn install'
-                }
-            }
-        }
-        stage('Database Migration') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c ". venv/bin/activate && flask db upgrade"'
-                }
-            }
-        }
-        stage('Run Unit Tests') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c "set -a && source .env.temp && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
+        // stage('Create Temp .env for Tests') {
+        //     steps {
+        //         dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+        //             sh 'cp .env .env.temp'
+        //             sh 'sed -i -e "s/\\r//g" .env.temp'
+        //         }
+        //     }
+        // }
+        // stage('Setup Python Environment') {
+        //     steps {
+        //         dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+        //             sh 'bash -c "python3 -m venv venv"'
+        //             sh 'bash -c ". venv/bin/activate && pip install -r requirements.txt"'
+        //         }
+        //     }
+        // }
+        // stage('Install Frontend Dependencies') {
+        //     steps {
+        //         dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
+        //             sh 'yarn install'
+        //         }
+        //     }
+        // }
+        // stage('Database Migration') {
+        //     steps {
+        //         dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+        //             sh 'bash -c ". venv/bin/activate && flask db upgrade"'
+        //         }
+        //     }
+        // }
+        // stage('Run Unit Tests') {
+        //     steps {
+        //         dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+        //             sh 'bash -c "set -a && source .env.temp && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
                   
-                }
-            }
-        }
+        //         }
+        //     }
+        // }
         stage('Stop and Remove Existing Containers') {
             agent {
                 docker {
@@ -107,41 +107,41 @@ pipeline {
             }
         }
         
-        // stage('Build and Start Docker Containers') {
-        //     agent {
-        //         docker {
-        //             image 'docker/compose:latest'
-        //             args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-        //         }
-        //     }
-        //     steps {
-        //         script {
-        //             dir("${env.CUSTOM_WORKSPACE}/react-flask-app") {
-        //                 sh 'docker-compose up -d --build'
-        //             }
-        //         }
-        //     }
-        // }
-        // stage('Run UI Tests') {
-        //     steps {
-        //         script {
-        //             dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
-        //                 sh 'npm run cypress:run'
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Build and Start Docker Containers') {
+            agent {
+                docker {
+                    image 'docker/compose:latest'
+                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            steps {
+                script {
+                    dir("${env.CUSTOM_WORKSPACE}/react-flask-app") {
+                        sh 'docker-compose up -d --build'
+                    }
+                }
+            }
+        }
+        stage('Run UI Tests') {
+            steps {
+                script {
+                    dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
+                        sh 'npm run cypress:run'
+                    }
+                }
+            }
+        }
         
     }
     post {
         always {
             // Archive test results and clean workspace
-            dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                junit 'report.xml'
-            }
-            // dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client/cypress/results") {
-            //     archiveArtifacts artifacts: '*.xml', allowEmptyArchive: true
+            // dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+            //     junit 'report.xml'
             // }
+            dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client/cypress/results") {
+                archiveArtifacts artifacts: '*.xml', allowEmptyArchive: true
+            }
             
         }
     }
