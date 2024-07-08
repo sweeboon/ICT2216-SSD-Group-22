@@ -1,7 +1,7 @@
 import logging
 from flask.testing import FlaskClient
 import pytest
-from api.auth.utils import generate_token
+from api.auth.utils import generate_token, verify_token
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -20,8 +20,11 @@ test_userdata = {
 
 def confirm_account(client: FlaskClient, email: str):
     token = generate_token(email)
+    logging.debug(f"Generated token: {token}")
     confirm_url = f"{URL_CONFIRM_EMAIL}?token={token}"
     response = client.get(confirm_url)
+    logging.debug(f"Confirm URL: {confirm_url}")
+    logging.debug(f"Confirm response: {response.status_code}, {response.data}")
     assert response.status_code == 200, f"Failed to confirm account: {response.data}"
 
 def test_register_user(client: FlaskClient):

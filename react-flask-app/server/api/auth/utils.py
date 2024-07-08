@@ -7,7 +7,11 @@ from api import db
 import logging
 from flask_mailman import EmailMessage
 
+import logging
+
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+
 
 def send_email(subject, recipient, template, **kwargs):
     msg = EmailMessage(
