@@ -31,7 +31,6 @@ pipeline {
                 }
             }
         }
-       
         stage('Copy .env File') {
             steps {
                 script {
@@ -46,14 +45,7 @@ pipeline {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
                     sh 'cp .env .env.temp'
-                    sh 'sed -i -e "s/\r//g" .env.temp'
-                }
-            }
-        }
-        stage('Convert .env.temp to Unix Line Endings') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'sed -i -e "s/\r//g" .env.temp'
+                    sh 'sed -i -e "s/\\r//g" .env.temp'
                 }
             }
         }
@@ -79,7 +71,31 @@ pipeline {
                 }
             }
         }
-        stage('Run Tests') {
+        stage('Build and Start Docker Containers') {
+            agent {
+                docker {
+                    image 'docker/compose:latest'
+                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
+            steps {
+                script {
+                    dir("${env.CUSTOM_WORKSPACE}/react-flask-app") {
+                        sh 'docker-compose up -d --build'
+                    }
+                }
+            }
+        }
+        stage('Run UI Tests') {
+            steps {
+                script {
+                    dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
+                        sh 'npm run cypress:run'
+                    }
+                }
+            }
+        }
+        stage('Run API Tests') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
                     sh 'bash -c "set -a && source .env.temp && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
@@ -87,45 +103,17 @@ pipeline {
                 }
             }
         }
-        stage('Stop and Remove Existing Containers') {
-            agent {
-                docker {
-                    image 'docker/compose:latest'
-                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
-            steps {
-                script {
-                    sh 'docker-compose -f $CUSTOM_WORKSPACE/react-flask-app/docker-compose.yml down'
-                }
-            }
-        }
-        stage('Deploy Application') {
-            agent {
-                docker {
-                    image 'docker/compose:latest'
-                    args '--privileged -v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
-            steps {
-                script {
-                    dir("${env.CUSTOM_WORKSPACE}") {
-                        sh 'echo "Current workspace during deploy: $CUSTOM_WORKSPACE"'
-                        sh 'ls -l $CUSTOM_WORKSPACE/react-flask-app/server/.env'  // Ensure .env file is present before build
-                        sh 'docker-compose -f $CUSTOM_WORKSPACE/react-flask-app/docker-compose.yml up -d --build'
-                    }
-                }
-            }
-        }
     }
     post {
         always {
-            // archive report
+            // Archive test results and clean workspace
             dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                // junit 'report.xml'  // Archive the test results
-                
-                cleanWs()
+                archiveArtifacts artifacts: 'report.xml', allowEmptyArchive: true
             }
+            dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client/cypress/results") {
+                archiveArtifacts artifacts: '*.xml', allowEmptyArchive: true
+            }
+            cleanWs()
         }
     }
 }
