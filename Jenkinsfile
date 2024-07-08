@@ -50,13 +50,20 @@ pipeline {
                 }
             }
         }
-        stage('Convert .env.temp to Unix Line Endings') {
+        stage('Convert .env to Unix Line Endings for Tests') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'cp .env .env.temp'
                     sh 'sed -i -e "s/\r//g" .env.temp'
                 }
             }
         }
+        stage('Print Environment Variables') {
+            steps {
+                sh 'printenv'
+            }
+        }
+
         stage('Setup Python Environment') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
