@@ -35,7 +35,7 @@ pipeline {
          stage('Copy .env File') {
             steps {
                 script {
-                    withCredentials([file(credentialsId: 'f2a5fe51-2885-431f-80cf-3d7a85218f5b', variable: 'SECRET_ENV_FILE')]) {
+                    withCredentials([file(credentialsId: '51cacb7c-db19-4619-b7ca-bcc8892add5f', variable: 'SECRET_ENV_FILE')]) {
                         sh 'cp $SECRET_ENV_FILE $CUSTOM_WORKSPACE/react-flask-app/server/.env'
                         sh 'ls -l $CUSTOM_WORKSPACE/react-flask-app/server/.env'  // Verify the .env file is copied
                     }
