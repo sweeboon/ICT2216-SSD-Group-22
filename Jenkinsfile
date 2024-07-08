@@ -19,6 +19,7 @@ pipeline {
         //         dependencyCheckPublisher pattern: 'dependency-check-report.xml'
         //     }
         // }
+      
         stage('Clean Workspace') {
             steps {
                 deleteDir()
@@ -50,19 +51,25 @@ pipeline {
                 }
             }
         }
-        stage('Set Up Python Environment') {
+         stage('Setup Python Environment') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh '''
-                        python3 -m venv venv
-                        . venv/bin/activate
-                        pip install -r requirements.txt
-                        # Clean the .env file to remove spaces around '='
-                        sed -i 's/ = /=/g' .env
-                        sed -i 's/= /=/g' .env
-                        export $(grep -v '^#' .env | xargs)
-                        flask db upgrade
-                    '''
+                    sh 'python -m venv venv'
+                    sh '. venv/bin/activate && pip install -r requirements.txt'
+                }
+            }
+        }
+        stage('Database Migration') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh '. venv/bin/activate && flask db upgrade'
+                }
+            }
+        }
+         stage('Run Tests') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh '. venv/bin/activate && pytest test_api.py --junitxml=report.xml'
                 }
             }
         }
@@ -93,19 +100,7 @@ pipeline {
                 }
             }
         }
-        stage('Test') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    echo 'Running Tests...'
-                    sh '''
-                        . venv/bin/activate
-                        export $(grep -v '^#' .env | xargs)
-                        export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server
-                        python3 -m unittest discover -s tests
-                    '''
-                }
-            }
-        }
+        
         stage('Deploy Application') {
             agent {
                 docker {
@@ -129,7 +124,7 @@ pipeline {
             cleanWs()
         }
         // success {
-        //     dependencyCheckPublisher pattern: 'dependency-check-report.xml'
-        // }
+		// 	dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+		// }
     }
 }
