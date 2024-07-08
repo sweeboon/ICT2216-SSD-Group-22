@@ -53,9 +53,12 @@ pipeline {
         stage('Set Up Python Environment') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'python3 -m venv venv'
-                    sh '. venv/bin/activate && pip install -r requirements.txt'
-                    sh 'flask db upgrade'
+                    sh '''
+                        python3 -m venv venv
+                        . venv/bin/activate
+                        pip install -r requirements.txt
+                        flask db upgrade
+                    '''
                 }
             }
         }
