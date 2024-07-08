@@ -50,26 +50,11 @@ pipeline {
                 }
             }
         }
-         
-       
-        
-         stage('Set Up Python Environment') {
+        stage('Set Up Python Environment') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
                     sh 'python3 -m venv venv'
                     sh '. venv/bin/activate && pip install -r requirements.txt'
-                }
-            }
-        }
-        stage('Test') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    echo 'Running Tests...'
-                    sh '''
-                        source venv/bin/activate
-                        export PYTHONPATH=$PYTHONPATH:${CUSTOM_WORKSPACE}/react-flask-app/server
-                        python3 -m unittest discover -s test
-                    '''
                 }
             }
         }
@@ -100,6 +85,18 @@ pipeline {
                 }
             }
         }
+        stage('Test') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    echo 'Running Tests...'
+                    sh '''
+                        . venv/bin/activate
+                        export PYTHONPATH=$PYTHONPATH:${CUSTOM_WORKSPACE}/react-flask-app/server
+                        python3 -m unittest discover -s tests
+                    '''
+                }
+            }
+        }
         stage('Deploy Application') {
             agent {
                 docker {
@@ -123,7 +120,7 @@ pipeline {
             cleanWs()
         }
         // success {
-		// 	dependencyCheckPublisher pattern: 'dependency-check-report.xml'
-		// }
+        //     dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+        // }
     }
 }
