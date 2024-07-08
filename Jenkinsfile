@@ -50,10 +50,10 @@ pipeline {
                 }
             }
         }
-        stage('Convert .env to Unix Line Endings') {
+         stage('Convert .env to Unix Line Endings') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'tr -d "\r" < .env > .env.tmp && mv .env.tmp .env'
+                    sh 'sed -i -e "s/\r//g" .env'
                 }
             }
         }
