@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from api import db
 from api.models import Account
-from main import app, get_db
+from api.main import app, get_db
 from dotenv import load_dotenv
 import os
 
