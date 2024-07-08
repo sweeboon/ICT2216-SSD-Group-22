@@ -17,6 +17,7 @@ from flask import Flask
 from api.admin.routes import log_audit_event, get_ip_address  # Import the function
 from flask_limiter.errors import RateLimitExceeded
 
+
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -412,6 +413,7 @@ def refresh_token():
 
         response = jsonify({'message': 'Token refreshed'})
         response.set_cookie('token', new_token, httponly=True, secure=True, samesite='Strict')
+
 
         return response
     except jwt.ExpiredSignatureError:
