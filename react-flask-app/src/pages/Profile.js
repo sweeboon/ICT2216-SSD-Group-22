@@ -57,7 +57,7 @@ const Profile = () => {
     const hasAlphabet = /[a-zA-Z]/;
 
     if (password.length < minLength) {
-      return 'Password must be at least 8 characters long.';
+      return 'Password must be at least 12 characters long.';
     }
     if (!hasNumber.test(password)) {
       return 'Password must contain at least one number.';
@@ -86,47 +86,45 @@ const Profile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent default form submission
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
 
-    const passwordError = validatePassword(newPassword);
-    if (passwordError) {
-      setError(passwordError);
-      return;
-    }
-
+    // Check if the email format is valid
     if (!validator.isEmail(profile.email)) {
       setError('Invalid email format.');
       return;
     }
 
-    const sanitizedProfile = {
-      name: validator.escape(profile.name),
-      address: validator.escape(profile.address),
-      date_of_birth: validator.escape(profile.date_of_birth),
-      email: validator.normalizeEmail(profile.email),
-      original_email: profile.original_email
-    };
-
-    if (sanitizedProfile.email !== sanitizedProfile.original_email) {
-      requestOtp('email', sanitizedProfile.email);
-    } else if (newPassword !== '') {
-      requestOtp('password');
-    } else {
-      updateProfile(sanitizedProfile);
+    // If the email has changed, request an OTP
+    if (profile.email !== profile.original_email) {
+      requestOtp('email', profile.email);
+      return;
     }
+
+    // If the new password fields are not empty, validate them
+    if (newPassword || confirmPassword) {
+      if (newPassword !== confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
+
+      const passwordError = validatePassword(newPassword);
+      if (passwordError) {
+        setError(passwordError);
+        return;
+      }
+
+      // Request OTP for password change
+      requestOtp('password');
+      return;
+    }
+
+    // Update profile if no email change or password change is required
+    updateProfile(profile);
   };
 
   const updateProfile = async (sanitizedProfile) => {
     try {
       const data = { ...sanitizedProfile };
       delete data.original_email; // Remove original_email from the payload
-
-      if (sanitizedProfile.email === sanitizedProfile.original_email) {
-        delete data.email; // Remove email if it hasn't changed
-      }
 
       if (otpVerified && changeType === 'password') {
         data.password = newPassword;
