@@ -4,6 +4,10 @@ pipeline {
         CUSTOM_WORKSPACE = '/var/jenkins_home/workspace/ICT2216'
     }
 
+    tools {
+        maven 'Maven' // Use the Maven installation configured in Jenkins
+    }
+
     stages {
         // stage('OWASP Dependency-Check Vulnerabilities') {
         //     steps {
@@ -35,7 +39,9 @@ pipeline {
             steps {
                 script {
                     def mvnHome = tool 'Maven'
-                    sh "${mvnHome}/bin/mvn --batch-mode -V -U -e clean verify -Dsurefire.useFile=false -Dmaven.test.failure.ignore"
+                    dir("${env.CUSTOM_WORKSPACE}/react-flask-app/backend") { // Adjust to the directory containing the pom.xml
+                        sh "${mvnHome}/bin/mvn --batch-mode -V -U -e clean verify -Dsurefire.useFile=false -Dmaven.test.failure.ignore"
+                    }
                 }
             }
         }
@@ -43,7 +49,9 @@ pipeline {
             steps {
                 script {
                     def mvnHome = tool 'Maven'
-                    sh "${mvnHome}/bin/mvn --batch-mode -V -U -e checkstyle:checkstyle pmd:pmd pmd:cpd findbugs:findbugs"
+                    dir("${env.CUSTOM_WORKSPACE}/react-flask-app/backend") { // Adjust to the directory containing the pom.xml
+                        sh "${mvnHome}/bin/mvn --batch-mode -V -U -e checkstyle:checkstyle pmd:pmd pmd:cpd findbugs:findbugs"
+                    }
                 }
             }
         }
