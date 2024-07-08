@@ -1,9 +1,14 @@
 import unittest
-from flask import current_app
+import os
+import sys
+
+# Add the root directory of the project to the Python path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+
 from server.api import create_app, db
 from server.api.models import Account, Cart, Order, Product
 from flask_login import login_user
-
+import datetime
 class MainTests(unittest.TestCase):
 
     @classmethod
