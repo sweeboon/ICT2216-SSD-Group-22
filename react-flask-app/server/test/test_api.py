@@ -28,18 +28,23 @@ def app():
         'TESTING': True,
         'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
     })
-    return app
+    with app.app_context():
+        db.create_all()
+        yield app
+        db.session.remove()
+        db.drop_all()
 
 @pytest.fixture(scope='session')
 def client(app):
     return app.test_client()
 
 @pytest.fixture(scope='function')
-def init_database():
-    db.create_all()
-    yield db
-    db.session.remove()
-    db.drop_all()
+def init_database(app):
+    with app.app_context():
+        yield db
+        db.session.remove()
+        db.drop_all()
+        db.create_all()
 
 def confirm_account(client, email):
     account = Account.query.filter_by(email=email).first()
