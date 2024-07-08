@@ -50,11 +50,28 @@ pipeline {
                 }
             }
         }
-         stage('Install Python Dependencies') {
+          stage('Setup Virtual Environment') {
             steps {
                 script {
-                    sh 'bash -c "source ${WORKSPACE}/${VENV_PATH}/bin/activate && pip install -r ${WORKSPACE}/react-flask-app/server/requirements.txt"'
+                    sh '''
+                        if [ ! -d "$WORKSPACE/$VENV_PATH" ]; then
+                            python3 -m venv $WORKSPACE/$VENV_PATH
+                        fi
+                    '''
                 }
+            }
+        }
+        stage('Install Python Dependencies') {
+            steps {
+                script {
+                    sh 'bash -c "source $WORKSPACE/$VENV_PATH/bin/activate && pip install -r $WORKSPACE/react-flask-app/server/requirements.txt"'
+                }
+            }
+        }
+         stage('Test') {
+            steps {
+                echo 'Running Tests...'
+                sh 'python3 -m unittest discover -s $CUSTOM_WORKSPACE/react-flask-app/server/test'
             }
         }
         stage('Clean Up') {
@@ -84,12 +101,7 @@ pipeline {
                 }
             }
         }
-        stage('Test') {
-            steps {
-                echo 'Running Tests...'
-                sh 'python3 -m unittest discover -s $CUSTOM_WORKSPACE/react-flask-app/server/test'
-            }
-        }
+       
         stage('Deploy Application') {
             agent {
                 docker {
