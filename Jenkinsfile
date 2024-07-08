@@ -5,20 +5,20 @@ pipeline {
     }
 
     stages {
-         stage('OWASP Dependency-Check Vulnerabilities') {
-            steps {
-                dependencyCheck additionalArguments: """
-                    -o './'
-                    -s './'
-                    -f 'ALL'
-                    --prettyPrint
-                    --nvdApiKey ae60ce14-527f-411f-8f50-6de6638bed18
-                """, odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
+        //  stage('OWASP Dependency-Check Vulnerabilities') {
+        //     steps {
+        //         dependencyCheck additionalArguments: """
+        //             -o './'
+        //             -s './'
+        //             -f 'ALL'
+        //             --prettyPrint
+        //             --nvdApiKey ae60ce14-527f-411f-8f50-6de6638bed18
+        //             --format HTML --format XML
+        //         """, odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
 
-                dependencyCheckPublisher pattern: 'dependency-check-report.xml'
-            }
-        }
-
+        //         dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+        //     }
+        // }
         stage('Clean Workspace') {
             steps {
                 deleteDir()
@@ -77,6 +77,12 @@ pipeline {
                 }
             }
         }
+        stage('Test') {
+            steps {
+                echo 'Running Tests...'
+                sh 'python3 -m unittest discover -s $CUSTOM_WORKSPACE/react-flask-app/server/test'
+            }
+        }
         stage('Deploy Application') {
             agent {
                 docker {
@@ -99,5 +105,8 @@ pipeline {
         always {
             cleanWs()
         }
+        success {
+			dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+		}
     }
 }
