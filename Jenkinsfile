@@ -50,13 +50,7 @@ pipeline {
                 }
             }
         }
-         stage('Convert .env to Unix Line Endings') {
-            steps {
-                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'sed -i -e "s/\r//g" .env'
-                }
-            }
-        }
+        
         stage('Clean Up') {
             agent {
                 docker {
@@ -93,10 +87,24 @@ pipeline {
                 }
             }
         }
-        stage('Run Tests') {
+        stage('Convert .env to Unix Line Endings') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
-                    sh 'bash -c "set -a && source .env && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && flask db upgrade && pytest test/test_api.py --junitxml=report.xml"'
+                    sh 'sed -i -e "s/\r//g" .env'
+                }
+            }
+        }
+        stage('Database Migration') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'bash -c ". venv/bin/activate && flask db upgrade"'
+                }
+            }
+        }
+         stage('Run Tests') {
+            steps {
+                dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
+                    sh 'bash -c "set -a && source .env && set +a && export PYTHONPATH=${CUSTOM_WORKSPACE}/react-flask-app/server && . venv/bin/activate && pytest test/test_api.py --junitxml=report.xml"'
                 }
             }
         }
