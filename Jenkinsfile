@@ -4,10 +4,6 @@ pipeline {
         CUSTOM_WORKSPACE = '/var/jenkins_home/workspace/ICT2216'
     }
 
-    tools {
-        maven 'Maven' // Use the Maven installation configured in Jenkins
-    }
-
     stages {
         // stage('OWASP Dependency-Check Vulnerabilities') {
         //     steps {
@@ -35,26 +31,7 @@ pipeline {
                 }
             }
         }
-        stage('Build') {
-            steps {
-                script {
-                    def mvnHome = tool 'Maven'
-                    dir("${env.CUSTOM_WORKSPACE}/react-flask-app/backend") { // Adjust to the directory containing the pom.xml
-                        sh "${mvnHome}/bin/mvn --batch-mode -V -U -e clean verify -Dsurefire.useFile=false -Dmaven.test.failure.ignore"
-                    }
-                }
-            }
-        }
-        stage('Analysis') {
-            steps {
-                script {
-                    def mvnHome = tool 'Maven'
-                    dir("${env.CUSTOM_WORKSPACE}/react-flask-app/backend") { // Adjust to the directory containing the pom.xml
-                        sh "${mvnHome}/bin/mvn --batch-mode -V -U -e checkstyle:checkstyle pmd:pmd pmd:cpd findbugs:findbugs"
-                    }
-                }
-            }
-        }
+       
         stage('Copy .env File') {
             steps {
                 script {
@@ -146,13 +123,7 @@ pipeline {
             // archive report
             dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
                 // junit 'report.xml'  // Archive the test results
-                unit testResults: '**/target/surefire-reports/TEST-*.xml'
-                recordIssues enabledForFailure: true, tools: [mavenConsole(), java(), javaDoc()]
-                recordIssues enabledForFailure: true, tool: checkStyle()
-                recordIssues enabledForFailure: true, tool: spotBugs(pattern:
-                '**/target/findbugsXml.xml')
-                recordIssues enabledForFailure: true, tool: cpd(pattern: '**/target/cpd.xml')
-                recordIssues enabledForFailure: true, tool: pmdParser(pattern: '**/target/pmd.xml')
+                
                 cleanWs()
             }
         }
