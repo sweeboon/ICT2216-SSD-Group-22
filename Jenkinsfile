@@ -5,25 +5,27 @@ pipeline {
     }
 
     stages {
-        // stage('OWASP Dependency-Check Vulnerabilities') {
-        //     steps {
-        //         dependencyCheck additionalArguments: """
-        //             -o './'
-        //             -s './'
-        //             -f 'ALL'
-        //             --prettyPrint
-        //             --nvdApiKey ae60ce14-527f-411f-8f50-6de6638bed18
-        //         """, odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
+        //Stage 1
+        stage('OWASP Dependency-Check Vulnerabilities') {
+            steps {
+                dependencyCheck additionalArguments: """
+                    -o './'
+                    -s './'
+                    -f 'ALL'
+                    --prettyPrint
+                    --nvdApiKey ae60ce14-527f-411f-8f50-6de6638bed18
+                """, odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
 
-        //         dependencyCheckPublisher pattern: 'dependency-check-report.xml'
-        //     }
-        // }
-
+                dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+            }
+        }
+        //Stage 2
         stage('Clean Workspace') {
             steps {
                 deleteDir()
             }
         }
+        //Stage 3
         stage('Checkout') {
             steps {
                 dir("${env.CUSTOM_WORKSPACE}") {
@@ -31,6 +33,7 @@ pipeline {
                 }
             }
         }
+        //Stage 4
         stage('Copy .env File') {
             steps {
                 script {
@@ -41,6 +44,7 @@ pipeline {
                 }
             }
         }
+        //-----------------------------------------------------------------------------uncomment for Unit testing------------------------------------------------------------------
         // stage('Create Temp .env for Tests') {
         //     steps {
         //         dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
@@ -79,6 +83,8 @@ pipeline {
         //         }
         //     }
         // }
+        //----------------------------------------------------------Uncomment for unit testing----------------------------------------------------------------------------------
+        //Stage 5
         stage('Stop and Remove Existing Containers') {
             agent {
                 docker {
@@ -92,6 +98,7 @@ pipeline {
                 }
             }
         }
+        //Stage 6
         stage('Clean Up') {
             agent {
                 docker {
@@ -106,7 +113,7 @@ pipeline {
                 }
             }
         }
-        
+        //Stage 7
         stage('Build and Start Docker Containers') {
             agent {
                 docker {
@@ -122,27 +129,36 @@ pipeline {
                 }
             }
         }
-        stage('Run UI Tests') {
-            steps {
-                script {
-                    dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
-                        sh 'npm run cypress:run'
-                    }
-                }
-            }
-        }
+        //------------------------------------------------------------Uncomment for UI testing----------------------------------------
+        // stage('Run UI Tests') {
+        //     steps {
+        //         script {
+        //             dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
+        //                 sh 'npm run cypress:run'
+        //             }
+        //         }
+        //     }
+        // }
         
     }
+        //------------------------------------------------------------Uncomment for UI testing----------------------------------------
     post {
         always {
+                //------------------------------------------------------------Uncomment for Unit testing----------------------------------------
             // Archive test results and clean workspace
             // dir("${env.CUSTOM_WORKSPACE}/react-flask-app/server") {
             //     junit 'report.xml'
             // }
-            dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client/cypress/results") {
-                archiveArtifacts artifacts: '*.xml', allowEmptyArchive: true
-            }
-            
+             //------------------------------------------------------------Uncomment for Unit testing----------------------------------------
+
+
+                //------------------------------------------------------------Uncomment for UI testing----------------------------------------
+            // dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client/cypress/results") {
+            //     archiveArtifacts artifacts: '*.xml', allowEmptyArchive: true
+            // }
+                //------------------------------------------------------------Uncomment for UI testing----------------------------------------
+            //stage 7
+            cleanWs()
         }
     }
 }
