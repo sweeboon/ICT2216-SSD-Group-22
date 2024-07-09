@@ -20,7 +20,8 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="auth-container">
+    <div className='content'> 
+    <main className="auth-container">
       <h2>Forgot Password</h2>
       <form onSubmit={handleSubmit}>
         <div>
@@ -36,6 +37,10 @@ const ForgotPassword = () => {
         {message && <p className="message">{message}</p>}
         {error && <p className="error">{error}</p>}
       </form>
+      </main>
+      <footer className="footer">
+        <p>&copy; 2024 Over18. All rights reserved.</p>
+      </footer>
     </div>
   );
 };

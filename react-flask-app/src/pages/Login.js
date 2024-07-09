@@ -38,8 +38,8 @@ const Login = () => {
       return;
     }
 
-    if (password.length < 8 || !/\d/.test(password) || !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      setError('Password must be at least 8 characters long and contain at least one number and one special character.');
+    if (password.length < 12) {
+      setError('Password should be at least 12 characters long.');
       return;
     }
 
@@ -135,9 +135,7 @@ const Login = () => {
             </div>
           )}
           {resendCooldown && <p>Please wait {resendCooldownTime} seconds before requesting a new confirmation email.</p>}
-          <div>
-            <Link to="/forgot-password">Forgot Password?</Link>
-          </div>
+          <a href="/forgot-password" className="btn">Forgot Password</a>
         </div>
       </div>
       <footer className="footer">
