@@ -130,15 +130,15 @@ pipeline {
             }
         }
         //------------------------------------------------------------Uncomment for UI testing----------------------------------------
-        // stage('Run UI Tests') {
-        //     steps {
-        //         script {
-        //             dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
-        //                 sh 'npm run cypress:run'
-        //             }
-        //         }
-        //     }
-        // }
+        stage('Run UI Tests') {
+            steps {
+                script {
+                    dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client") {
+                        sh 'npm run cypress:run'
+                    }
+                }
+            }
+        }
         
     }
         //------------------------------------------------------------Uncomment for UI testing----------------------------------------
@@ -153,9 +153,9 @@ pipeline {
 
 
                 //------------------------------------------------------------Uncomment for UI testing----------------------------------------
-            // dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client/cypress/results") {
-            //     archiveArtifacts artifacts: '*.xml', allowEmptyArchive: true
-            // }
+            dir("${env.CUSTOM_WORKSPACE}/react-flask-app/client/cypress/results") {
+                archiveArtifacts artifacts: '*.xml', allowEmptyArchive: true
+            }
                 //------------------------------------------------------------Uncomment for UI testing----------------------------------------
             //stage 7
             cleanWs()
