@@ -9,7 +9,7 @@ describe('Login Page Tests', () => {
     })
   
     it('should show OTP input field for valid credentials', () => {
-      cy.get('input[name="email"]').type('test@example.com') // Use a test email
+      cy.get('input[name="email"]').type('2201906@sit.singaporetech.edu.sg') // Use a test email
       cy.get('input[name="password"]').type('Password123!') // Use a test password
       cy.get('button[type="submit"]').click()
   
@@ -18,7 +18,7 @@ describe('Login Page Tests', () => {
     })
   
     it('should show an error message for invalid OTP', () => {
-      cy.get('input[name="email"]').type('test@example.com') // Use a test email
+      cy.get('input[name="email"]').type('2201906@sit.singaporetech.edu.sg') // Use a test email
       cy.get('input[name="password"]').type('Password123!') // Use a test password
       cy.get('button[type="submit"]').click()
   
