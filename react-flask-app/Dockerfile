@@ -9,7 +9,7 @@ RUN npm install
 RUN npm run build
 RUN ls -l /usr/src/app/
 # Stage 2: Setup Flask app
-FROM python:3.11-slim as build-flask
+FROM python:3.13.0b3-slim as build-flask
 WORKDIR /usr/src/app
 
 # Copy the entire app directory from the build stage
